@@ -89,3 +89,11 @@ class AnimationCode(BaseModel):
     """Model for the complete animation code output"""
     code: str = Field(description="Animation code for the scene (content of the animate function)")
     keyframes: List[AnimationKeyframe] = Field(description="List of keyframes in the animation")
+
+class FinalScenePackage(BaseModel):
+    """Model for the complete packaged Three.js scene"""
+    html: str = Field(description="Complete HTML with embedded Three.js scene")
+    js: str = Field(description="Complete JavaScript code for the scene (standalone)")
+    title: str = Field(description="Title of the visualization")
+    timecode_markers: List[str] = Field(description="List of timecode markers in the animation")
+    total_elements: int = Field(description="Total number of 3D elements in the scene")

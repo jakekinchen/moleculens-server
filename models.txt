@@ -1,0 +1,3 @@
+openai: o1, o3-mini, gpt-4.5-preview
+anthropic: claude-3-7-sonnet-latest, claude-3-5-sonnet-latest
+groq: llama3-70b-8192, qwen-2.5-coder-32b

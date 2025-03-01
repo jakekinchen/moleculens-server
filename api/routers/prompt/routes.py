@@ -6,7 +6,8 @@ from agent_management.agents.domain_bool_agent import DomainValidator
 from agent_management.agents.script_agent import ScriptAgent
 from agent_management.agents.orchestration_agent import OrchestrationAgent
 from agent_management.agents.animation_agent import AnimationAgent
-from agent_management.models import SceneScript, ScriptTimePoint, OrchestrationPlan, AnimationCode
+from agent_management.models import SceneScript, ScriptTimePoint, OrchestrationPlan, AnimationCode, FinalScenePackage
+from agent_management.scene_packager import ScenePackager
 from agent_management.llm_service import LLMService, LLMModelConfig, ProviderType
 import os
 import asyncio
@@ -207,6 +208,19 @@ class AnimationRequest(BaseModel):
 class AnimationResponse(BaseModel):
     code: str
     keyframes: List[Dict[str, Any]]
+    
+class PackagedSceneRequest(BaseModel):
+    script: SceneScript
+    orchestration_plan: OrchestrationPlan
+    object_geometries: Dict[str, Any]
+    animation_code: AnimationCode
+    
+class PackagedSceneResponse(BaseModel):
+    html: str
+    js: str
+    title: str
+    timecode_markers: List[str]
+    total_elements: int
 
 @router.post("/generate-orchestration/", response_model=OrchestrationPlan)
 async def generate_orchestration(request: ScriptRequest):
@@ -332,6 +346,40 @@ async def generate_animation(request: AnimationRequest):
         return {
             "code": animation.code,
             "keyframes": keyframes_dict
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/package-scene/", response_model=PackagedSceneResponse)
+async def package_scene(request: PackagedSceneRequest):
+    """
+    Create a complete, packaged Three.js scene from the generated components.
+    This endpoint combines all outputs from previous steps into a ready-to-use scene.
+    """
+    try:
+        # Use the ScenePackager to create a complete scene
+        scene_package = ScenePackager.create_scene_package(
+            script=request.script,
+            orchestration_plan=request.orchestration_plan,
+            object_geometries=request.object_geometries,
+            animation_code=request.animation_code
+        )
+        
+        # Save the JS file to the static directory
+        import os
+        static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static")
+        os.makedirs(static_dir, exist_ok=True)
+        
+        # Write the JavaScript to a file
+        with open(os.path.join(static_dir, "scene.js"), "w") as f:
+            f.write(scene_package.js)
+        
+        return {
+            "html": scene_package.html,
+            "js": scene_package.js,
+            "title": scene_package.title,
+            "timecode_markers": scene_package.timecode_markers,
+            "total_elements": scene_package.total_elements
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
