@@ -3,7 +3,7 @@ Geometry Agent - Provides static geometry code snippets for the visualization.
 """
 
 import json
-from llm_service import LLMService
+from agent_management.llm_service import LLMService
 
 class GeometryAgent:
     def __init__(self, llm_service: LLMService):

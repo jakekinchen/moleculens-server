@@ -431,7 +431,7 @@ class LLMService:
         return provider.generate_structured(request)
 
 # Example usage with ThreeGroup from models.py 
-from models import ThreeGroup
+from agent_management.models import ThreeGroup
 
 def generate_three_group(service: LLMService, description: str, provider: ProviderType, model_name: str) -> ThreeGroup:
     """Generate a Three.js group from a description using specified provider.
