@@ -2,7 +2,7 @@
 Pydantic models for Three.js structured output generation.
 """
 
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Union
 from pydantic import BaseModel, Field
 
 class Vector3(BaseModel):
@@ -69,7 +69,7 @@ class SceneScript(BaseModel):
 class SceneObject(BaseModel):
     """Model for a discrete 3D object needed in the scene"""
     name: str = Field(description="Unique identifier for the object")
-    description: str = Field(description="Detailed description of what this object represents")
+    description: Union[str, List[str]] = Field(description="Detailed description of what this object represents")
     properties: Dict[str, Any] = Field(description="Key properties of the object (size, color, etc.)")
     appears_at: str = Field(description="Timecode when this object first appears")
     relationships: List[str] = Field(default_factory=list, description="Relationships to other objects")
@@ -78,4 +78,14 @@ class OrchestrationPlan(BaseModel):
     """Model for the complete orchestration plan of objects needed for the scene"""
     scene_title: str = Field(description="Title of the scene")
     objects: List[SceneObject] = Field(description="List of discrete objects needed for the scene")
-    scene_overview: str = Field(description="High-level overview of the overall scene")
+    scene_overview: Optional[str] = Field(default=None, description="High-level overview of the overall scene")
+
+class AnimationKeyframe(BaseModel):
+    """Model for an animation keyframe"""
+    timecode: str = Field(description="Timecode in MM:SS format when this keyframe occurs")
+    actions: List[str] = Field(description="Animation actions to perform at this keyframe")
+    
+class AnimationCode(BaseModel):
+    """Model for the complete animation code output"""
+    code: str = Field(description="Animation code for the scene (content of the animate function)")
+    keyframes: List[AnimationKeyframe] = Field(description="List of keyframes in the animation")

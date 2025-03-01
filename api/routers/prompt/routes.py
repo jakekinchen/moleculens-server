@@ -1,14 +1,16 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from pydantic import BaseModel
-from typing import Optional
-from dependencies.use_llm import use_llm  # Import the dependency
+from typing import Optional, Dict, Any, List
+from dependencies.use_llm import use_llm 
 from agent_management.agents.geometry_agent import GeometryAgent
 from agent_management.agents.domain_bool_agent import DomainValidator
 from agent_management.agents.script_agent import ScriptAgent
 from agent_management.agents.orchestration_agent import OrchestrationAgent
-from agent_management.models import SceneScript, ScriptTimePoint, OrchestrationPlan
+from agent_management.agents.animation_agent import AnimationAgent
+from agent_management.models import SceneScript, ScriptTimePoint, OrchestrationPlan, AnimationCode
 from agent_management.llm_service import LLMService, LLMModelConfig, ProviderType
 import os
+import asyncio
 
 
 router = APIRouter(
@@ -46,9 +48,9 @@ llm_config = LLMModelConfig(
     api_key=os.getenv("OPENAI_API_KEY")
 )
 
-
-
-
+# Simple in-memory job store for geometry generation jobs
+# In a production app, this would use Redis or another persistent store
+geometry_jobs = {}
 
 
 
@@ -194,6 +196,30 @@ async def generate_script(
 class ScriptRequest(BaseModel):
     script: SceneScript
 
+class OrchestrationRequest(BaseModel):
+    plan: OrchestrationPlan
+
+class GeometryGenerationResponse(BaseModel):
+    job_id: str
+    status: str
+    message: str
+
+class GeometryResultResponse(BaseModel):
+    job_id: str
+    status: str
+    completed: int
+    total: int
+    results: Optional[Dict[str, Any]] = None
+    
+class AnimationRequest(BaseModel):
+    script: SceneScript
+    orchestration_plan: OrchestrationPlan
+    object_geometries: Dict[str, Any]
+    
+class AnimationResponse(BaseModel):
+    code: str
+    keyframes: List[Dict[str, Any]]
+
 @router.post("/generate-orchestration/", response_model=OrchestrationPlan)
 async def generate_orchestration(
     request: ScriptRequest,
@@ -213,5 +239,117 @@ async def generate_orchestration(
         # Generate the orchestration plan from the script
         orchestration_plan = orchestration_agent.generate_orchestration_plan(request.script)
         return orchestration_plan
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Background task to generate geometry for all objects in the plan
+async def generate_geometry_task(job_id: str, plan: OrchestrationPlan):
+    """Background task to generate geometry for all objects in the plan"""
+    try:
+        # Initialize job status
+        geometry_jobs[job_id] = {
+            "status": "processing",
+            "total": len(plan.objects),
+            "completed": 0,
+            "results": None
+        }
+        
+        # Generate geometry for all objects
+        results = await orchestration_agent.generate_geometry_from_plan(plan)
+        
+        # Update job status
+        geometry_jobs[job_id]["status"] = "completed"
+        geometry_jobs[job_id]["completed"] = len(plan.objects)
+        geometry_jobs[job_id]["results"] = results
+        
+    except Exception as e:
+        # Update job status in case of error
+        geometry_jobs[job_id]["status"] = "failed"
+        geometry_jobs[job_id]["error"] = str(e)
+
+@router.post("/generate-geometry-for-plan/", response_model=GeometryGenerationResponse)
+async def generate_geometry_for_plan(request: OrchestrationRequest, background_tasks: BackgroundTasks):
+    """
+    Endpoint to generate Three.js geometry for all objects in an orchestration plan.
+    This starts an asynchronous job that processes each object sequentially.
+    """
+    try:
+        if not os.getenv("OPENAI_API_KEY"):
+            raise HTTPException(
+                status_code=500,
+                detail="OPENAI_API_KEY environment variable is not set"
+            )
+        
+        # Generate a unique job ID
+        import uuid
+        job_id = str(uuid.uuid4())
+        
+        # Start the background task to generate geometry
+        background_tasks.add_task(generate_geometry_task, job_id, request.plan)
+        
+        # Return the job ID so the client can check status
+        return {
+            "job_id": job_id,
+            "status": "processing",
+            "message": f"Started processing {len(request.plan.objects)} objects"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/geometry-job-status/{job_id}", response_model=GeometryResultResponse)
+async def get_geometry_job_status(job_id: str):
+    """
+    Check the status of a geometry generation job.
+    Returns the results if the job is completed.
+    """
+    if job_id not in geometry_jobs:
+        raise HTTPException(status_code=404, detail=f"Job ID {job_id} not found")
+    
+    job = geometry_jobs[job_id]
+    
+    return {
+        "job_id": job_id,
+        "status": job["status"],
+        "completed": job.get("completed", 0),
+        "total": job.get("total", 0),
+        "results": job.get("results", None)
+    }
+
+@router.post("/generate-animation/", response_model=AnimationResponse)
+async def generate_animation(
+    request: AnimationRequest,
+    llm_service=Depends(use_llm)
+    ):
+    """
+    Generate animation code for a scene based on the script, orchestration plan, and generated geometries.
+    This endpoint takes the outputs from previous steps in the pipeline.
+    """
+    try:
+        if not os.getenv("OPENAI_API_KEY"):
+            raise HTTPException(
+                status_code=500,
+                detail="OPENAI_API_KEY environment variable is not set"
+            )
+        animation_agent = AnimationAgent(llm_service)
+        # Generate animation code
+        animation = animation_agent.generate_animation_code(
+            script=request.script,
+            object_geometries=request.object_geometries,
+            orchestration_plan=request.orchestration_plan
+        )
+        
+        # Convert keyframes to serializable format
+        keyframes_dict = [
+            {
+                "timecode": keyframe.timecode,
+                "actions": keyframe.actions
+            }
+            for keyframe in animation.keyframes
+        ]
+        
+        return {
+            "code": animation.code,
+            "keyframes": keyframes_dict
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
