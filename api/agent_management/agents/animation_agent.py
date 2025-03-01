@@ -77,7 +77,10 @@ if (elapsedTime > 15 && window.DNA_Double_Helix) {
 """
         
         # Combine everything into the final prompt
-        prompt = f"""You are a Three.js animation expert. Create animation code for a scientific visualization based on the following details:
+        prompt = f"""You are a Three.js animation expert. Pass object references directly: Instead of relying on global window references, your geometry agent should return a clear structure of all created objects that the animator can then reference directly.
+Define a standard for animation code: The animator should produce self-contained animation logic that doesn't depend on external HTML elements unless absolutely necessary.
+Create a standardized interface: Define a standard set of functions like getObject(name) that the animator can use to access geometry without needing to know the exact structure.
+Separate UI from animation: Keep the UI control code (like play/pause buttons) separate from the core animation logic. Create animation code for a scientific visualization based on the following details:
 
 {title_section}
 
