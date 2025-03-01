@@ -20,14 +20,7 @@ app = FastAPI(
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 origins = [
-    "http://localhost:3000",
-    "https://localhost:3000",
-    "http://127.0.0.1:3000",
-    "https://127.0.0.1:3000",
-    "http://meshmo.com",
-    "https://meshmo.com",
-    "http://www.meshmo.com",
-    "https://www.meshmo.com"
+    "*"
 ]
 
 app.add_middleware(
