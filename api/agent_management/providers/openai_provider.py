@@ -44,16 +44,19 @@ class OpenAIProvider(LLMProvider):
             params = {
                 "model": request.llm_config.model_name,
                 "messages": messages,
-                "temperature": request.temperature,
                 "stream": request.stream
             }
+            
+            # Only add temperature if it's supported by the model (o3 models don't support it)
+            if not request.llm_config.model_name.startswith("o3-"):
+                params["temperature"] = request.temperature
             
             # Only add max_tokens if it's not None (omit it entirely for o3 models)
             if request.max_tokens is not None:
                 params["max_tokens"] = request.max_tokens
                 
-            # Add top_p if provided
-            if request.top_p is not None:
+            # Add top_p if provided (o3 models don't support it)
+            if request.top_p is not None and not request.llm_config.model_name.startswith("o3-"):
                 params["top_p"] = request.top_p
                 
             response = self.client.chat.completions.create(**params)
@@ -88,17 +91,20 @@ class OpenAIProvider(LLMProvider):
             params = {
                 "model": request.llm_config.model_name,
                 "messages": messages,
-                "temperature": request.temperature,
                 "response_format": {"type": "json_object"},
                 "stream": request.stream
             }
+            
+            # Only add temperature if it's supported by the model (o3 models don't support it)
+            if not request.llm_config.model_name.startswith("o3-"):
+                params["temperature"] = request.temperature
             
             # Only add max_tokens if it's not None (omit it entirely for o3 models)
             if request.max_tokens is not None:
                 params["max_tokens"] = request.max_tokens
                 
-            # Add top_p if provided
-            if request.top_p is not None:
+            # Add top_p if provided (o3 models don't support it)
+            if request.top_p is not None and not request.llm_config.model_name.startswith("o3-"):
                 params["top_p"] = request.top_p
                 
             response = self.client.chat.completions.create(**params)
