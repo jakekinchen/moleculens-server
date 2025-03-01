@@ -1,17 +1,161 @@
 """
-Animation Agent - Uses LLM to generate Three.js animation code based on user prompts.
+Animation Agent - Generates animation code for Three.js scenes based on script and objects.
 Specialized for scientific visualizations including molecular structures.
 """
 
-from llm_service import LLMService
+from typing import Dict, List, Optional, Any
+import re
+from agent_management.models import SceneScript, OrchestrationPlan, AnimationCode, AnimationKeyframe
+from agent_management.llm_service import LLMService, LLMRequest, StructuredLLMRequest
 
 class AnimationAgent:
     def __init__(self, llm_service: LLMService):
         self.llm_service = llm_service
+        
+    def generate_animation_code(self, 
+                               script: SceneScript, 
+                               object_geometries: Dict[str, Dict],
+                               orchestration_plan: OrchestrationPlan) -> AnimationCode:
+        """
+        Generate Three.js animation code based on the scene script and generated geometries.
+        
+        Args:
+            script: The scene script with timecodes and descriptions
+            object_geometries: Dictionary of object names to their geometry code and metadata
+            orchestration_plan: The orchestration plan with object details
+            
+        Returns:
+            AnimationCode: Animation code with keyframes
+        """
+        # Format script timeline
+        script_timeline = "\n\n".join([
+            f"TIMECODE {point.timecode}:\nDESCRIPTION: {point.description}\nCAPTION: {point.caption}"
+            for point in script.content
+        ])
+        
+        # Prepare a list of available objects with their appearance times
+        object_list = "\n".join([
+            f"- {obj.name} (appears at {obj.appears_at}): {obj.description[:100]}..." 
+            if isinstance(obj.description, str) and len(obj.description) > 100 else
+            f"- {obj.name} (appears at {obj.appears_at}): {obj.description}"
+            for obj in orchestration_plan.objects
+        ])
+        
+        # Count available objects with geometries
+        geometry_count = sum(1 for obj_data in object_geometries.values() 
+                           if obj_data.get("status") == "success")
+        
+        # Format the object availability info
+        objects_with_geometries = "\n".join([
+            f"- {obj_name} (available and ready to animate)"
+            for obj_name, obj_data in object_geometries.items()
+            if obj_data.get("status") == "success" and obj_name != "_summary"
+        ])
+        
+        # Prepare the basic prompt components
+        title_section = f"## SCENE TITLE\n{script.title}"
+        timeline_section = f"## SCRIPT TIMELINE\n{script_timeline}"
+        objects_section = f"## AVAILABLE OBJECTS ({geometry_count} objects with generated geometries)\n{objects_with_geometries}"
+        complete_objects_section = f"## COMPLETE OBJECT LIST\n{object_list}"
+        
+        # Use raw string for the example code to avoid f-string issues
+        example_section = r"""
+IMPORTANT: When referring to time in your code, always first define or access a clock:
+```
+// Get elapsed time in seconds
+const elapsedTime = clock.getElapsedTime();
+```
 
+For example, if the script mentions a DNA double helix rotating at 00:15, you should include code like:
+```javascript
+// At 00:15 - Rotate DNA helix
+const elapsedTime = clock.getElapsedTime();
+if (elapsedTime > 15 && window.DNA_Double_Helix) {
+  window.DNA_Double_Helix.rotation.y += 0.01;
+}
+```
+"""
+        
+        # Combine everything into the final prompt
+        prompt = f"""You are a Three.js animation expert. Create animation code for a scientific visualization based on the following details:
+
+{title_section}
+
+{timeline_section}
+
+{objects_section}
+
+{complete_objects_section}
+
+Your task is to write the animation code that would go INSIDE the animate() function in Three.js.
+DO NOT include the function declaration itself - only provide the code that would go inside the function.
+
+The animation should:
+1. Respect the timecodes in the script
+2. Use window.* references to access objects (e.g., window.DNA_Helix)
+3. Add proper animations and transitions based on the script
+4. Include camera movements where appropriate
+5. Stage the entrance and exit of objects according to their timecodes
+6. Create a cohesive visual experience that follows the script's narrative
+{example_section}
+
+Return ONLY the animation code that would go inside the animate function, not the function declaration itself.
+Include comments with timecodes to make the code clear and maintainable.
+
+REMEMBER:
+- Use clear timecode comments (// At MM:SS - Description) throughout the code
+- Don't include the animate function declaration 
+- Make sure each object has an existence check (if (window.ObjectName)) before accessing it
+- Use deltaTime for smooth animations (multiply by deltaTime)
+"""
+
+        # Create the request
+        request = LLMRequest(
+            user_prompt=prompt,
+            system_prompt="You are an expert Three.js animator specializing in scientific visualizations. Create detailed, timeline-based animation code following the script exactly. Your code should focus ONLY on the animation logic - no function declarations or setup code.",
+            llm_config=self.llm_service.config
+        )
+        
+        # Generate the animation code
+        response = self.llm_service.generate(request)
+        animation_code = response.content.strip()
+        
+        # Extract keyframes from the code by parsing comments with timecodes
+        keyframes = self._extract_keyframes(animation_code)
+        
+        return AnimationCode(
+            code=animation_code,
+            keyframes=keyframes
+        )
+    
+    def _extract_keyframes(self, code: str) -> List[AnimationKeyframe]:
+        """
+        Extract keyframes from animation code by parsing comments with timecodes.
+        """
+        keyframes = []
+        # Look for comments with timecodes in MM:SS format
+        pattern = r'//.*?(\d{2}:\d{2}).*?\n(.*?)(?=//|\n\n|$)'
+        matches = re.findall(pattern, code, re.DOTALL)
+        
+        for timecode, actions_block in matches:
+            # Clean up the actions text and split into separate actions
+            actions = [line.strip() for line in actions_block.split('\n') 
+                      if line.strip() and not line.strip().startswith('//')]
+            
+            if actions:
+                keyframes.append(AnimationKeyframe(
+                    timecode=timecode,
+                    actions=actions
+                ))
+        
+        # Sort keyframes by timecode
+        keyframes.sort(key=lambda k: k.timecode)
+        
+        return keyframes
+        
     def get_animation_snippet(self, user_prompt: str) -> str:
         """
-        Generate Three.js animation code using LLM based on user prompt.
+        Legacy method for generating Three.js animation code using LLM based on user prompt.
         This code will animate the objects created by the GeometryAgent,
         with special focus on scientific visualizations like molecular structures.
         """
@@ -226,7 +370,7 @@ Return your code as a single JavaScript snippet tailored to the user's prompt, w
 """
 
         llm_response = self.llm_service.generate(prompt_for_llm)
-        animation_code = llm_response.strip()
+        animation_code = llm_response.content.strip()
         
         return f"""
 // AnimationAgent LLM-generated code
