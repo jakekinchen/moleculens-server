@@ -220,7 +220,6 @@ async def submit_prompt(
         # Save the JS file to the static directory
         try:
             print("Saving JS file to static directory...")
-            import os
             static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static")
             os.makedirs(static_dir, exist_ok=True)
             
