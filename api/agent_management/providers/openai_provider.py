@@ -40,14 +40,23 @@ class OpenAIProvider(LLMProvider):
 
             messages = self._convert_messages(request)
             
-            response = self.client.chat.completions.create(
-                model=request.llm_config.model_name,
-                messages=messages,
-                temperature=request.temperature,
-                max_tokens=request.max_tokens if request.max_tokens is not None else None,
-                top_p=request.top_p if request.top_p is not None else None,
-                stream=request.stream
-            )
+            # Build parameters dictionary
+            params = {
+                "model": request.llm_config.model_name,
+                "messages": messages,
+                "temperature": request.temperature,
+                "stream": request.stream
+            }
+            
+            # Only add max_tokens if it's not None (omit it entirely for o3 models)
+            if request.max_tokens is not None:
+                params["max_tokens"] = request.max_tokens
+                
+            # Add top_p if provided
+            if request.top_p is not None:
+                params["top_p"] = request.top_p
+                
+            response = self.client.chat.completions.create(**params)
             
             # Cast the response to ChatCompletion since we know it's not a stream
             completion = cast(ChatCompletion, response)
@@ -75,15 +84,24 @@ class OpenAIProvider(LLMProvider):
 
             messages = self._convert_messages(request)
             
-            response = self.client.chat.completions.create(
-                model=request.llm_config.model_name,
-                messages=messages,
-                temperature=request.temperature,
-                response_format={"type": "json_object"},
-                max_tokens=request.max_tokens if request.max_tokens is not None else None,
-                top_p=request.top_p if request.top_p is not None else None,
-                stream=request.stream
-            )
+            # Build parameters dictionary
+            params = {
+                "model": request.llm_config.model_name,
+                "messages": messages,
+                "temperature": request.temperature,
+                "response_format": {"type": "json_object"},
+                "stream": request.stream
+            }
+            
+            # Only add max_tokens if it's not None (omit it entirely for o3 models)
+            if request.max_tokens is not None:
+                params["max_tokens"] = request.max_tokens
+                
+            # Add top_p if provided
+            if request.top_p is not None:
+                params["top_p"] = request.top_p
+                
+            response = self.client.chat.completions.create(**params)
             
             # Cast the response to ChatCompletion since we know it's not a stream
             completion = cast(ChatCompletion, response)
