@@ -7,7 +7,7 @@ from agent_management.agents.domain_bool_agent import DomainValidator
 from agent_management.agents.script_agent import ScriptAgent
 from agent_management.agents.orchestration_agent import OrchestrationAgent
 from agent_management.agents.animation_agent import AnimationAgent
-from agent_management.models import SceneScript, ScriptTimePoint, OrchestrationPlan, AnimationCode, FinalScenePackage
+from agent_management.models import SceneScript, ScriptTimePoint, OrchestrationPlan, AnimationCode, FinalScenePackage, BaseModelWithConfig
 from agent_management.scene_packager import ScenePackager
 from agent_management.llm_service import LLMService, LLMModelConfig, ProviderType
 import os
@@ -221,15 +221,16 @@ class AnimationResponse(BaseModel):
     code: str
     keyframes: List[Dict[str, Any]]
     
-class PackagedSceneRequest(BaseModel):
+class PackagedSceneRequest(BaseModelWithConfig):
     script: SceneScript
     orchestration_plan: OrchestrationPlan
     object_geometries: Dict[str, Any]
     animation_code: AnimationCode
     
-class PackagedSceneResponse(BaseModel):
+class PackagedSceneResponse(BaseModelWithConfig):
     html: str
     js: str
+    minimal_js: str
     title: str
     timecode_markers: List[str]
     total_elements: int
@@ -395,6 +396,7 @@ async def package_scene(request: PackagedSceneRequest):
         return {
             "html": scene_package.html,
             "js": scene_package.js,
+            "minimal_js": scene_package.minimal_js,
             "title": scene_package.title,
             "timecode_markers": scene_package.timecode_markers,
             "total_elements": scene_package.total_elements

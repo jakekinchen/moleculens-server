@@ -40,6 +40,7 @@ class LLMModelConfig(BaseModel):
     model_name: str
     api_key: Optional[str] = None
     
+    # Address warning about model_name field
     model_config = {
         "use_enum_values": True,
         "protected_namespaces": ()  # Remove protection for the 'model_' namespace

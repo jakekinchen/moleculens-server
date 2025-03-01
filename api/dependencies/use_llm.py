@@ -18,6 +18,11 @@ class ModelValidator(BaseModel):
         ModelNameEnum.GPT_3_5, 
         ModelNameEnum.LLAMA_2
     ]
+    
+    # Add configuration to avoid model_name warning
+    model_config = {
+        "protected_namespaces": ()
+    }
 
 def use_llm(model_name: str = Query("o3-mini", alias="model")):
     """

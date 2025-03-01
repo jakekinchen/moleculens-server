@@ -5,6 +5,13 @@ Pydantic models for Three.js structured output generation.
 from typing import List, Dict, Optional, Any, Union
 from pydantic import BaseModel, Field
 
+# Global Pydantic model config to avoid the "model_name" warning
+class BaseModelWithConfig(BaseModel):
+    """Base model with config that disables protected namespaces"""
+    model_config = {
+        "protected_namespaces": ()  # Remove protection for the 'model_' namespace
+    }
+
 class Vector3(BaseModel):
     """Three.js Vector3 representation"""
     x: float = Field(default=0.0, description="X coordinate")
@@ -85,15 +92,16 @@ class AnimationKeyframe(BaseModel):
     timecode: str = Field(description="Timecode in MM:SS format when this keyframe occurs")
     actions: List[str] = Field(description="Animation actions to perform at this keyframe")
     
-class AnimationCode(BaseModel):
+class AnimationCode(BaseModelWithConfig):
     """Model for the complete animation code output"""
     code: str = Field(description="Animation code for the scene (content of the animate function)")
     keyframes: List[AnimationKeyframe] = Field(description="List of keyframes in the animation")
 
-class FinalScenePackage(BaseModel):
+class FinalScenePackage(BaseModelWithConfig):
     """Model for the complete packaged Three.js scene"""
     html: str = Field(description="Complete HTML with embedded Three.js scene")
     js: str = Field(description="Complete JavaScript code for the scene (standalone)")
+    minimal_js: str = Field(description="Minimal JavaScript code without boilerplate for embedding")
     title: str = Field(description="Title of the visualization")
     timecode_markers: List[str] = Field(description="List of timecode markers in the animation")
     total_elements: int = Field(description="Total number of 3D elements in the scene")

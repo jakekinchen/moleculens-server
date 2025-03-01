@@ -54,10 +54,12 @@ class ScenePackager:
         # Create the packaged files
         html = ScenePackager._create_html(title, script)
         js = ScenePackager._create_js(title, all_geometry_code, animation_code.code)
+        minimal_js = ScenePackager._create_minimal_js(all_geometry_code, animation_code.code)
         
         return FinalScenePackage(
             html=html,
             js=js,
+            minimal_js=minimal_js,
             title=title,
             timecode_markers=timecode_markers,
             total_elements=total_elements
@@ -375,3 +377,76 @@ animate();
         )
         
         return js_template
+        
+    @staticmethod
+    def _create_minimal_js(geometry_code: str, animation_code: str) -> str:
+        """
+        Create minimal JavaScript code without boilerplate, for embedding in existing Three.js scenes.
+        
+        Args:
+            geometry_code: Combined geometry code from the geometry agent
+            animation_code: Combined animation code from the animation agent
+            
+        Returns:
+            str: Minimal JavaScript code for embedding
+        """
+        # Create a minimal scene setup with just the essential components
+        minimal_js = """// Scene setup
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x111122);
+
+// Camera setup
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.z = 10;
+
+// Renderer setup
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+document.body.appendChild(renderer.domElement);
+
+// Lighting setup
+const ambientLight = new THREE.AmbientLight(0x404040);
+scene.add(ambientLight);
+
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+directionalLight.position.set(1, 1, 1).normalize();
+scene.add(directionalLight);
+
+// Controls setup
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.25;
+
+// Initialize clock
+const clock = new THREE.Clock();
+
+// Create geometry objects
+"""
+
+        # Add the geometry code
+        minimal_js += geometry_code + "\n\n"
+        
+        # Add the animation function
+        minimal_js += """// Animation function
+function animate() {
+    requestAnimationFrame(animate);
+    
+    // Animation code
+"""
+
+        # Add the animation code
+        minimal_js += animation_code + "\n"
+        
+        # Add the render call
+        minimal_js += """
+    // Update controls and render
+    controls.update();
+    renderer.render(scene, camera);
+}
+
+// Start animation
+animate();
+"""
+        
+        return minimal_js
