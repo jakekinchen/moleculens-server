@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
+from dependencies.use_llm import use_llm 
 from agent_management.agents.geometry_agent import GeometryAgent
 from agent_management.agents.domain_bool_agent import DomainValidator
 from agent_management.agents.script_agent import ScriptAgent
@@ -47,20 +48,18 @@ llm_config = LLMModelConfig(
     model_name="o3-mini",
     api_key=os.getenv("OPENAI_API_KEY")
 )
-llm_service = LLMService(llm_config)
-geometry_agent = GeometryAgent(llm_service)
-domain_validator = DomainValidator(llm_service)
-script_agent = ScriptAgent(llm_service)
-orchestration_agent = OrchestrationAgent(llm_service)
-animation_agent = AnimationAgent(llm_service)
 
 # Simple in-memory job store for geometry generation jobs
 # In a production app, this would use Redis or another persistent store
 geometry_jobs = {}
 
 
+
 @router.post("/", response_model=PromptWorking)
-async def submit_prompt(request: PromptRequest):
+async def submit_prompt(
+    request: PromptRequest,
+    llm_service=Depends(use_llm)
+    ):
     """
     Initial endpoint to validate and submit a prompt for processing.
     Validates if the prompt is scientific before accepting it, then generates:
@@ -76,6 +75,8 @@ async def submit_prompt(request: PromptRequest):
                 detail="OPENAI_API_KEY environment variable is not set"
             )
         
+        domain_validator = DomainValidator(llm_service)
+        
         # Validate that the prompt is scientific
         validation_result = domain_validator.is_scientific(request.prompt)
         
@@ -85,10 +86,10 @@ async def submit_prompt(request: PromptRequest):
                 status_code=400,
                 detail=f"Non-scientific prompt rejected: {validation_result.reasoning}"
             )
-        
+        script_agent = ScriptAgent(llm_service)
         # If scientific, generate an animation script
         animation_script = script_agent.generate_script(request.prompt)
-        
+        orchestration_agent = OrchestrationAgent(llm_service)
         # Generate an orchestration plan based on the script
         orchestration_plan = orchestration_agent.generate_orchestration_plan(animation_script)
         
@@ -103,7 +104,10 @@ async def submit_prompt(request: PromptRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/validate-scientific/", response_model=ValidationResponse)
-async def validate_scientific(request: PromptRequest):
+async def validate_scientific(
+    request: PromptRequest,
+    llm_service=Depends(use_llm)
+    ):
     """
     Endpoint to validate if a prompt is scientific in nature.
     """
@@ -113,7 +117,8 @@ async def validate_scientific(request: PromptRequest):
                 status_code=500,
                 detail="OPENAI_API_KEY environment variable is not set"
             )
-        
+        domain_validator = DomainValidator(llm_service)
+
         validation_result = domain_validator.is_scientific(request.prompt)
         
         return {
@@ -125,7 +130,10 @@ async def validate_scientific(request: PromptRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/generate-geometry/", response_model=GeometryResponse)
-async def generate_geometry(request: GeometryRequest):
+async def generate_geometry(
+    request: GeometryRequest,
+    llm_service=Depends(use_llm)
+    ):
     """
     Endpoint to generate Three.js geometry based on user prompt.
     Only generates geometry for scientific content.
@@ -136,7 +144,8 @@ async def generate_geometry(request: GeometryRequest):
                 status_code=500,
                 detail="OPENAI_API_KEY environment variable is not set"
             )
-        
+        domain_validator = DomainValidator(llm_service)
+
         # First validate that the prompt is scientific
         validation_result = domain_validator.is_scientific(request.prompt)
         
@@ -146,7 +155,7 @@ async def generate_geometry(request: GeometryRequest):
                 status_code=400,
                 detail=f"Non-scientific prompt rejected: {validation_result.reasoning}"
             )
-        
+        geometry_agent = GeometryAgent(llm_service)
         # If scientific, generate the geometry
         generated_code = geometry_agent.get_geometry_snippet(request.prompt)
         return {"result": generated_code}
@@ -154,7 +163,10 @@ async def generate_geometry(request: GeometryRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/generate-script/", response_model=SceneScript)
-async def generate_script(request: PromptRequest):
+async def generate_script(
+    request: PromptRequest,
+    llm_service=Depends(use_llm)
+    ):
     """
     Endpoint to generate a structured scene script based on user prompt.
     Only generates scripts for scientific content.
@@ -175,7 +187,7 @@ async def generate_script(request: PromptRequest):
                 status_code=400,
                 detail=f"Non-scientific prompt rejected: {validation_result.reasoning}"
             )
-        
+        script_agent = ScriptAgent(llm_service)
         # If scientific, generate the script
         animation_script = script_agent.generate_script(request.prompt)
         return animation_script
@@ -223,7 +235,10 @@ class PackagedSceneResponse(BaseModel):
     total_elements: int
 
 @router.post("/generate-orchestration/", response_model=OrchestrationPlan)
-async def generate_orchestration(request: ScriptRequest):
+async def generate_orchestration(
+    request: ScriptRequest,
+    llm_service=Depends(use_llm)
+    ):
     """
     Endpoint to generate an orchestration plan from a scene script.
     Breaks down the script into discrete objects needed for the visualization.
@@ -234,7 +249,7 @@ async def generate_orchestration(request: ScriptRequest):
                 status_code=500,
                 detail="OPENAI_API_KEY environment variable is not set"
             )
-        
+        orchestration_agent = OrchestrationAgent(llm_service)
         # Generate the orchestration plan from the script
         orchestration_plan = orchestration_agent.generate_orchestration_plan(request.script)
         return orchestration_plan
@@ -315,7 +330,10 @@ async def get_geometry_job_status(job_id: str):
     }
 
 @router.post("/generate-animation/", response_model=AnimationResponse)
-async def generate_animation(request: AnimationRequest):
+async def generate_animation(
+    request: AnimationRequest,
+    llm_service=Depends(use_llm)
+    ):
     """
     Generate animation code for a scene based on the script, orchestration plan, and generated geometries.
     This endpoint takes the outputs from previous steps in the pipeline.
@@ -326,7 +344,7 @@ async def generate_animation(request: AnimationRequest):
                 status_code=500,
                 detail="OPENAI_API_KEY environment variable is not set"
             )
-        
+        animation_agent = AnimationAgent(llm_service)
         # Generate animation code
         animation = animation_agent.generate_animation_code(
             script=request.script,
