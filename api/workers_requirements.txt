@@ -1,0 +1,20 @@
+# Requirements for Cloudflare Workers Python runtime
+# Note: Only standard library modules work in production during the beta period
+# This file is for documentation purposes and local development
+
+# Core dependencies
+fastapi>=0.110.0
+pydantic>=2.0.0
+openai>=1.0.0
+httpx>=0.24.0
+
+# Note: The following packages are not yet supported in Cloudflare Workers production:
+# langchain
+# langchain_community 
+# langchain_openai
+# redis
+# celery
+# sqlalchemy
+# python-dotenv
+# python-multipart
+# jsonschema
