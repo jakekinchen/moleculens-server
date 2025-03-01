@@ -1,5 +1,2 @@
-# Cloudflare Workers Python requirements
-# Note: During beta, only stdlib is supported in production
-# This file is kept minimal for Cloudflare Workers deployment
 fastapi==0.110.0
 pydantic==2.0.3
