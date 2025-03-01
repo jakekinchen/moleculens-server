@@ -7,7 +7,7 @@ from agent_management.agents.domain_bool_agent import DomainValidator
 from agent_management.agents.script_agent import ScriptAgent
 from agent_management.agents.orchestration_agent import OrchestrationAgent
 from agent_management.agents.animation_agent import AnimationAgent
-from agent_management.models import SceneScript, ScriptTimePoint, OrchestrationPlan, AnimationCode, FinalScenePackage
+from agent_management.models import SceneScript, ScriptTimePoint, OrchestrationPlan, AnimationCode, FinalScenePackage, BaseModelWithConfig
 from agent_management.scene_packager import ScenePackager
 from agent_management.llm_service import LLMService, LLMModelConfig, ProviderType
 import os
@@ -29,6 +29,15 @@ class PromptWorking(BaseModel):
     working: bool
     script: Optional[SceneScript] = None
     orchestration_plan: Optional[OrchestrationPlan] = None
+    
+class CompletePipelineResponse(BaseModelWithConfig):
+    """Response model for the complete prompt-to-visualization pipeline"""
+    html: str
+    js: str
+    minimal_js: str
+    title: str
+    timecode_markers: List[str]
+    total_elements: int
 
 class GeometryResponse(BaseModel):
     result: str
@@ -55,53 +64,191 @@ geometry_jobs = {}
 
 
 
-@router.post("/", response_model=PromptWorking)
+@router.post("/", response_model=CompletePipelineResponse)
 async def submit_prompt(
     request: PromptRequest,
-    llm_service=Depends(use_llm)
+    llm_service=Depends(use_llm),
+    background_tasks: BackgroundTasks = None
     ):
     """
-    Initial endpoint to validate and submit a prompt for processing.
-    Validates if the prompt is scientific before accepting it, then generates:
-    1. An animation script with timecodes, descriptions, and captions
-    2. An orchestration plan with discrete objects needed for the animation
+    End-to-end endpoint to process a scientific prompt into a complete 3D visualization.
+    This is the main entry point for the entire pipeline:
     
-    This method kicks off the main pipeline for processing scientific visualizations.
+    1. Validates that the prompt is scientific
+    2. Generates an animation script with timecodes, descriptions, and captions
+    3. Creates an orchestration plan with discrete objects needed for the animation
+    4. Generates Three.js geometry for each object in the plan
+    5. Creates animation code based on the script and objects
+    6. Packages everything into a complete scene
+    
+    Returns the full packaged scene ready for rendering.
     """
     try:
+        # Check API key early
         if not os.getenv("OPENAI_API_KEY"):
             raise HTTPException(
                 status_code=500,
                 detail="OPENAI_API_KEY environment variable is not set"
             )
         
-        domain_validator = DomainValidator(llm_service)
+        print(f"Starting processing for prompt: {request.prompt[:50]}...")
         
-        # Validate that the prompt is scientific
-        validation_result = domain_validator.is_scientific(request.prompt)
-        
-        # If not scientific, reject the prompt
-        if not validation_result.is_true:
+        # Initialize all agents
+        try:
+            domain_validator = DomainValidator(llm_service)
+            script_agent = ScriptAgent(llm_service)
+            orchestration_agent = OrchestrationAgent(llm_service)
+            animation_agent = AnimationAgent(llm_service)
+            print("All agents initialized successfully")
+        except Exception as e:
+            print(f"Error initializing agents: {str(e)}")
             raise HTTPException(
-                status_code=400,
-                detail=f"Non-scientific prompt rejected: {validation_result.reasoning}"
+                status_code=500,
+                detail=f"Error initializing agents: {str(e)}"
             )
-        script_agent = ScriptAgent(llm_service)
-        # If scientific, generate an animation script
-        animation_script = script_agent.generate_script(request.prompt)
-        orchestration_agent = OrchestrationAgent(llm_service)
-        # Generate an orchestration plan based on the script
-        orchestration_plan = orchestration_agent.generate_orchestration_plan(animation_script)
         
-        # Return the prompt, script, and orchestration plan
+        # Step 1: Validate that the prompt is scientific
+        try:
+            print("Validating prompt is scientific...")
+            validation_result = domain_validator.is_scientific(request.prompt)
+            print(f"Validation result: {validation_result.is_true}, confidence: {validation_result.confidence}")
+            
+            # If not scientific, reject the prompt
+            if not validation_result.is_true:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Non-scientific prompt rejected: {validation_result.reasoning}"
+                )
+        except Exception as e:
+            print(f"Error in scientific validation: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error in scientific validation: {str(e)}"
+            )
+        
+        # Step 2: Generate an animation script
+        try:
+            print("Generating animation script...")
+            animation_script = script_agent.generate_script(request.prompt)
+            print(f"Script generated with {len(animation_script.content)} time points")
+        except Exception as e:
+            print(f"Error generating script: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error generating script: {str(e)}"
+            )
+        
+        # Step 3: Generate an orchestration plan based on the script
+        try:
+            print("Generating orchestration plan...")
+            orchestration_plan = orchestration_agent.generate_orchestration_plan(animation_script)
+            print(f"Orchestration plan generated with {len(orchestration_plan.objects)} objects")
+        except Exception as e:
+            print(f"Error generating orchestration plan: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error generating orchestration plan: {str(e)}"
+            )
+        
+        # For testing purposes, just return the initial objects instead of continuing
+        # This is a temporary change to help debug where the error might be occurring
+        return_early = False
+        if return_early:
+            print("Returning early with script and orchestration plan")
+            # Create a minimal result with just the first steps
+            return {
+                "html": "<html><body>Test HTML</body></html>",
+                "js": "// Test JS",
+                "minimal_js": "// Test minimal JS",
+                "title": orchestration_plan.scene_title,
+                "timecode_markers": [tp.timecode for tp in animation_script.content],
+                "total_elements": len(orchestration_plan.objects)
+            }
+        
+        # Step 4: Generate geometry for all objects in the plan
+        try:
+            print("Generating geometry for all objects...")
+            object_geometries = await orchestration_agent.generate_geometry_from_plan(orchestration_plan)
+            
+            # Check if there are any successful geometries
+            successful_count = sum(1 for obj_data in object_geometries.values() 
+                               if obj_data.get("status") == "success" and obj_data != "_summary")
+            print(f"Generated {successful_count} successful geometries")
+            
+            if successful_count == 0:
+                print("Warning: No successful geometries were generated")
+        except Exception as e:
+            print(f"Error generating geometries: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error generating geometries: {str(e)}"
+            )
+        
+        # Step 5: Generate animation code
+        try:
+            print("Generating animation code...")
+            animation_code = animation_agent.generate_animation_code(
+                script=animation_script,
+                object_geometries=object_geometries,
+                orchestration_plan=orchestration_plan
+            )
+            print(f"Animation code generated with {len(animation_code.keyframes)} keyframes")
+        except Exception as e:
+            print(f"Error generating animation code: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error generating animation code: {str(e)}"
+            )
+        
+        # Step 6: Package everything into a complete scene
+        try:
+            print("Packaging scene...")
+            scene_package = ScenePackager.create_scene_package(
+                script=animation_script,
+                orchestration_plan=orchestration_plan,
+                object_geometries=object_geometries,
+                animation_code=animation_code
+            )
+            print("Scene packaged successfully")
+        except Exception as e:
+            print(f"Error packaging scene: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error packaging scene: {str(e)}"
+            )
+        
+        # Save the JS file to the static directory
+        try:
+            print("Saving JS file to static directory...")
+            static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static")
+            os.makedirs(static_dir, exist_ok=True)
+            
+            # Write the JavaScript to a file
+            with open(os.path.join(static_dir, "scene.js"), "w") as f:
+                f.write(scene_package.js)
+            print("JS file saved successfully")
+        except Exception as e:
+            print(f"Error saving JS file: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error saving JS file: {str(e)}"
+            )
+        
+        print("Processing complete, returning results")
+        # Return the completed scene package
         return {
-            "prompt": request.prompt,
-            "working": True,
-            "script": animation_script,
-            "orchestration_plan": orchestration_plan
+            "html": scene_package.html,
+            "js": scene_package.js,
+            "minimal_js": scene_package.minimal_js,
+            "title": scene_package.title,
+            "timecode_markers": scene_package.timecode_markers,
+            "total_elements": scene_package.total_elements
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Unhandled exception in submit_prompt: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Unhandled error: {str(e)}")
 
 @router.post("/validate-scientific/", response_model=ValidationResponse)
 async def validate_scientific(
@@ -221,15 +368,16 @@ class AnimationResponse(BaseModel):
     code: str
     keyframes: List[Dict[str, Any]]
     
-class PackagedSceneRequest(BaseModel):
+class PackagedSceneRequest(BaseModelWithConfig):
     script: SceneScript
     orchestration_plan: OrchestrationPlan
     object_geometries: Dict[str, Any]
     animation_code: AnimationCode
     
-class PackagedSceneResponse(BaseModel):
+class PackagedSceneResponse(BaseModelWithConfig):
     html: str
     js: str
+    minimal_js: str
     title: str
     timecode_markers: List[str]
     total_elements: int
@@ -395,6 +543,7 @@ async def package_scene(request: PackagedSceneRequest):
         return {
             "html": scene_package.html,
             "js": scene_package.js,
+            "minimal_js": scene_package.minimal_js,
             "title": scene_package.title,
             "timecode_markers": scene_package.timecode_markers,
             "total_elements": scene_package.total_elements

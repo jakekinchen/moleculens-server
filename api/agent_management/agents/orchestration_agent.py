@@ -224,3 +224,62 @@ Create a detailed, accurate 3D representation of this object using Three.js.
 Focus on capturing the key visual characteristics and ensuring it fits with the overall scene.
 """
         return prompt
+
+    def generate_test_questions(self, script: SceneScript):
+        """
+        Generate multiple choice test questions based on the scene script content.
+        
+        Args:
+            script: The scene script to analyze
+            
+        Returns:
+            JSON object containing test questions, choices, and correct answers
+        """
+        # Format script content
+        script_content = "\n\n".join([
+            f"{point.description}\nCAPTION: {point.caption}"
+            for point in script.content
+        ])
+        
+        prompt = """
+Generate multiple choice test questions based on this educational content.
+Each question should test understanding of key concepts from the script.
+
+Return a JSON object with an array of questions, where each question has:
+1. question - The actual question text
+2. choices - Array of 4 possible answers
+3. correct_answer - The correct answer (must match one of the choices exactly)
+4. explanation - Brief explanation of why the answer is correct
+
+Example format:
+{
+  "questions": [
+    {
+      "question": "What is the primary structure being visualized in this scene?",
+      "choices": [
+        "DNA double helix",
+        "RNA strand",
+        "Protein chain",
+        "Lipid membrane"
+      ],
+      "correct_answer": "DNA double helix",
+      "explanation": "The scene focuses on visualizing the DNA double helix structure as the main component."
+    }
+  ]
+}
+"""
+        
+        request = StructuredLLMRequest(
+            user_prompt=f"SCRIPT CONTENT:\n{script_content}\n\n{prompt}",
+            system_prompt="""You are an expert in creating educational assessment questions.
+Generate clear, focused multiple choice questions that test understanding of the key concepts.
+Ensure all questions:
+- Are directly related to the content
+- Have exactly 4 choices
+- Have one unambiguously correct answer
+- Include a brief explanation
+Always return properly structured JSON matching the schema exactly.""",
+            llm_config=self.llm_service.config
+        )
+        
+        return self.llm_service.generate_structured(request)
