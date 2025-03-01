@@ -12,6 +12,8 @@ from agent_management.scene_packager import ScenePackager
 from agent_management.llm_service import LLMService, LLMModelConfig, ProviderType
 import os
 import asyncio
+import traceback
+from datetime import datetime
 
 
 router = APIRouter(
@@ -49,39 +51,373 @@ class ValidationResponse(BaseModel):
     is_scientific: bool
     confidence: float
     reasoning: str
+    
+class VisualizationData(BaseModel):
+    html: str
+    js: str
+    title: str
+    timecode_markers: List[str]
+    total_elements: int
+    
+class JobResponse(BaseModel):
+    job_id: str
+    status: str
+    message: str
+    result: Optional[str] = None
+    progress: Optional[float] = None
+    visualization: Optional[VisualizationData] = None
+    error: Optional[str] = None
+    
+    # Add configuration settings for better validation handling
+    model_config = {
+        "protected_namespaces": (),
+        "arbitrary_types_allowed": True,
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "job_id": "b96a7408-d3b0-4022-9a98-79e71a798be9",
+                    "status": "processing",
+                    "message": "Processing in progress",
+                    "progress": 0.5,
+                    "result": ""
+                }
+            ]
+        }
+    }
 
 
-# Initialize LLMService and agents
+# Initialize LLM config
 llm_config = LLMModelConfig(
     provider=ProviderType.OPENAI,
     model_name="o3-mini",
     api_key=os.getenv("OPENAI_API_KEY")
 )
 
-# Simple in-memory job store for geometry generation jobs
-# In a production app, this would use Redis or another persistent store
+# Simple in-memory job stores
+# In a production app, these would use Redis or another persistent store
 geometry_jobs = {}
+pipeline_jobs = {}
+
+# Background task function for processing prompts
+async def process_prompt_pipeline_task(job_id: str, prompt: str, llm_service: LLMService):
+    """
+    Background task to process a prompt through the entire pipeline.
+    Updates the pipeline_jobs dictionary with the result when complete.
+    """
+    try:
+        print(f"[Job {job_id}] Starting processing for prompt: {prompt[:50]}...")
+        
+        # Initialize all agents
+        try:
+            # Validation already happened in the main endpoint
+            # domain_validator = DomainValidator(llm_service)
+            script_agent = ScriptAgent(llm_service)
+            orchestration_agent = OrchestrationAgent(llm_service)
+            animation_agent = AnimationAgent(llm_service)
+            print(f"[Job {job_id}] All agents initialized successfully")
+            
+            # Update progress after initialization
+            pipeline_jobs[job_id]["progress"] = 0.1
+        except Exception as e:
+            print(f"[Job {job_id}] Error initializing agents: {str(e)}")
+            pipeline_jobs[job_id] = {
+                **pipeline_jobs[job_id],
+                "status": "error",
+                "error": f"Error initializing agents: {str(e)}"
+            }
+            return
+        
+        # Step 1: Generate an animation script (validation already done)
+        try:
+            print(f"[Job {job_id}] Generating animation script...")
+            animation_script = script_agent.generate_script(prompt)
+            print(f"[Job {job_id}] Script generated with {len(animation_script.content)} time points")
+            
+            # Update progress
+            pipeline_jobs[job_id]["progress"] = 0.3
+        except Exception as e:
+            print(f"[Job {job_id}] Error generating script: {str(e)}")
+            pipeline_jobs[job_id] = {
+                **pipeline_jobs[job_id],
+                "status": "error",
+                "error": f"Error generating script: {str(e)}"
+            }
+            return
+        
+        # Step 2: Generate an orchestration plan based on the script
+        try:
+            print(f"[Job {job_id}] Generating orchestration plan...")
+            orchestration_plan = orchestration_agent.generate_orchestration_plan(animation_script)
+            print(f"[Job {job_id}] Orchestration plan generated with {len(orchestration_plan.objects)} objects")
+            
+            # Update progress
+            pipeline_jobs[job_id]["progress"] = 0.4
+        except Exception as e:
+            print(f"[Job {job_id}] Error generating orchestration plan: {str(e)}")
+            pipeline_jobs[job_id] = {
+                **pipeline_jobs[job_id],
+                "status": "error",
+                "error": f"Error generating orchestration plan: {str(e)}"
+            }
+            return
+        
+        # Step 3: Generate geometry for all objects in the plan
+        try:
+            print(f"[Job {job_id}] Generating geometry for all objects...")
+            object_geometries = await orchestration_agent.generate_geometry_from_plan(orchestration_plan)
+            
+            # Check if there are any successful geometries
+            successful_count = sum(1 for obj_data in object_geometries.values() 
+                               if obj_data.get("status") == "success" and obj_data != "_summary")
+            print(f"[Job {job_id}] Generated {successful_count} successful geometries")
+            
+            if successful_count == 0:
+                print(f"[Job {job_id}] Warning: No successful geometries were generated")
+                
+            # Update progress
+            pipeline_jobs[job_id]["progress"] = 0.7
+        except Exception as e:
+            print(f"[Job {job_id}] Error generating geometries: {str(e)}")
+            pipeline_jobs[job_id] = {
+                **pipeline_jobs[job_id],
+                "status": "error",
+                "error": f"Error generating geometries: {str(e)}"
+            }
+            return
+        
+        # Step 4: Generate animation code
+        try:
+            print(f"[Job {job_id}] Generating animation code...")
+            animation_code = animation_agent.generate_animation_code(
+                script=animation_script,
+                object_geometries=object_geometries,
+                orchestration_plan=orchestration_plan
+            )
+            print(f"[Job {job_id}] Animation code generated with {len(animation_code.keyframes)} keyframes")
+            
+            # Update progress
+            pipeline_jobs[job_id]["progress"] = 0.8
+        except Exception as e:
+            print(f"[Job {job_id}] Error generating animation code: {str(e)}")
+            pipeline_jobs[job_id] = {
+                **pipeline_jobs[job_id],
+                "status": "error",
+                "error": f"Error generating animation code: {str(e)}"
+            }
+            return
+        
+        # Step 5: Package everything into a complete scene
+        try:
+            print(f"[Job {job_id}] Packaging scene...")
+            scene_package = ScenePackager.create_scene_package(
+                script=animation_script,
+                orchestration_plan=orchestration_plan,
+                object_geometries=object_geometries,
+                animation_code=animation_code
+            )
+            print(f"[Job {job_id}] Scene packaged successfully")
+            
+            # Update progress
+            pipeline_jobs[job_id]["progress"] = 0.9
+        except Exception as e:
+            print(f"[Job {job_id}] Error packaging scene: {str(e)}")
+            pipeline_jobs[job_id] = {
+                **pipeline_jobs[job_id],
+                "status": "error",
+                "error": f"Error packaging scene: {str(e)}"
+            }
+            return
+        
+        # Save the JS file to the static directory
+        try:
+            print(f"[Job {job_id}] Saving JS file to static directory...")
+            static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static")
+            os.makedirs(static_dir, exist_ok=True)
+            
+            # Generate a JS filename based on job ID
+            js_filename = f"scene_{job_id}.js"
+            
+            # Write the JavaScript to a file
+            with open(os.path.join(static_dir, js_filename), "w") as f:
+                f.write(scene_package.js)
+                
+            # Update the HTML to reference the correct JS file
+            html = scene_package.html.replace('/static/scene.js', f'/static/{js_filename}')
+            print(f"[Job {job_id}] JS file saved successfully as {js_filename}")
+            
+            # Update progress
+            pipeline_jobs[job_id]["progress"] = 0.95
+        except Exception as e:
+            print(f"[Job {job_id}] Error saving JS file: {str(e)}")
+            pipeline_jobs[job_id] = {
+                **pipeline_jobs[job_id],
+                "status": "error",
+                "error": f"Error saving JS file: {str(e)}"
+            }
+            return
+        
+        # Update job with the completed result
+        print(f"[Job {job_id}] Processing complete, storing results")
+        
+        result = {
+            "html": html,
+            "js": scene_package.js,
+            "minimal_js": scene_package.minimal_js,
+            "title": scene_package.title,
+            "timecode_markers": scene_package.timecode_markers,
+            "total_elements": scene_package.total_elements,
+            "js_filename": js_filename
+        }
+        
+        pipeline_jobs[job_id] = {
+            **pipeline_jobs[job_id],
+            "status": "completed",
+            "progress": 1.0,
+            "result": result
+        }
+        
+    except Exception as e:
+        print(f"[Job {job_id}] Unhandled exception in process_prompt_pipeline_task: {str(e)}")
+        traceback.print_exc()
+        pipeline_jobs[job_id] = {
+            **pipeline_jobs[job_id],
+            "status": "error",
+            "progress": pipeline_jobs[job_id].get("progress", 0),
+            "error": f"Unhandled error: {str(e)}"
+        }
 
 
 
-@router.post("/", response_model=CompletePipelineResponse)
+@router.post("/process/", response_model=dict)
+async def submit_prompt_background(
+    request: PromptRequest,
+    background_tasks: BackgroundTasks,
+    llm_service=Depends(use_llm)
+    ):
+    """
+    Starts the scientific visualization pipeline as a background task and returns immediately.
+    This endpoint begins processing the prompt through all pipeline steps but doesn't wait for completion.
+    
+    Returns a job ID that can be used to check the status of processing.
+    """
+    # Generate a unique job ID
+    import uuid
+    job_id = str(uuid.uuid4())
+    
+    # Start the background task
+    background_tasks.add_task(
+        process_prompt_pipeline_task,
+        job_id=job_id,
+        prompt=request.prompt,
+        llm_service=llm_service
+    )
+    
+    # Create job entry
+    pipeline_jobs[job_id] = {
+        "status": "processing",
+        "prompt": request.prompt,
+        "created_at": datetime.now().isoformat(),
+        "result": None
+    }
+    
+    # Return immediately with the job ID
+    return {
+        "job_id": job_id,
+        "status": "processing",
+        "message": "Processing started in the background"
+    }
+
+@router.get("/process/{job_id}")
+async def check_process_status(job_id: str):
+    """
+    Check the status of a background processing job.
+    Returns the current status and result if processing is complete.
+    
+    Response format:
+    - job_id: The unique job ID
+    - status: 'processing', 'completed', or 'failed'
+    - progress: A float between 0 and 1 indicating progress
+    - message: A human-readable status message
+    - visualization: (When completed) The full visualization data
+    - error: (When failed) The error message
+    
+    The visualization object contains:
+    - html: The complete HTML for the visualization
+    - js: The full JavaScript code
+    - title: The title of the scene
+    - timecode_markers: List of timecodes for the animation
+    - total_elements: Total number of elements in the scene
+    """
+    if job_id not in pipeline_jobs:
+        raise HTTPException(status_code=404, detail=f"Job ID {job_id} not found")
+    
+    job = pipeline_jobs[job_id]
+    
+    # If the job is completed, return the full result
+    if job["status"] == "completed":
+        # Convert the result to the VisualizationData format
+        visualization = None
+        if job["result"]:
+            visualization = {
+                "html": job["result"].get("html", ""),
+                "js": job["result"].get("js", ""),
+                "title": job["result"].get("title", "Scientific Visualization"),
+                "timecode_markers": job["result"].get("timecode_markers", []),
+                "total_elements": job["result"].get("total_elements", 0)
+            }
+        
+        return {
+            "job_id": job_id,
+            "status": "completed",
+            "progress": 1.0,
+            "message": "Visualization processing completed successfully",
+            "visualization": visualization,
+            # Legacy fields for backward compatibility - convert to string for compatibility
+            "result": str(job["result"].get("js", "")) if job["result"] else "",
+            "geometry_result": job["result"].get("js", "") if job["result"] else ""
+        }
+    # If there was an error, include the error message
+    elif job["status"] == "error":
+        return {
+            "job_id": job_id,
+            "status": "failed",
+            "progress": job.get("progress", 0.0),
+            "message": "Processing failed",
+            "error": job.get("error", "Unknown error occurred"),
+            # Add empty result field for compatibility
+            "result": ""
+        }
+    # Otherwise just return the status info
+    else:
+        return {
+            "job_id": job_id,
+            "status": "processing",
+            "progress": job.get("progress", 0.0),
+            "message": "Processing in progress",
+            # Add empty result field for compatibility
+            "result": ""
+        }
+
+@router.post("/", response_model=JobResponse)
 async def submit_prompt(
     request: PromptRequest,
-    llm_service=Depends(use_llm),
-    background_tasks: BackgroundTasks = None
+    background_tasks: BackgroundTasks,
+    llm_service=Depends(use_llm)
     ):
     """
     End-to-end endpoint to process a scientific prompt into a complete 3D visualization.
-    This is the main entry point for the entire pipeline:
+    This endpoint now launches a background task and returns immediately with a job ID.
     
+    The client should poll the /prompt/process/{job_id} endpoint to check the status
+    and get the final result.
+    
+    Pipeline steps:
     1. Validates that the prompt is scientific
     2. Generates an animation script with timecodes, descriptions, and captions
     3. Creates an orchestration plan with discrete objects needed for the animation
     4. Generates Three.js geometry for each object in the plan
     5. Creates animation code based on the script and objects
     6. Packages everything into a complete scene
-    
-    Returns the full packaged scene ready for rendering.
     """
     try:
         # Check API key early
@@ -91,162 +427,51 @@ async def submit_prompt(
                 detail="OPENAI_API_KEY environment variable is not set"
             )
         
-        print(f"Starting processing for prompt: {request.prompt[:50]}...")
+        # Initial validation can be done synchronously to reject bad prompts immediately
+        domain_validator = DomainValidator(llm_service)
+        validation_result = domain_validator.is_scientific(request.prompt)
         
-        # Initialize all agents
-        try:
-            domain_validator = DomainValidator(llm_service)
-            script_agent = ScriptAgent(llm_service)
-            orchestration_agent = OrchestrationAgent(llm_service)
-            animation_agent = AnimationAgent(llm_service)
-            print("All agents initialized successfully")
-        except Exception as e:
-            print(f"Error initializing agents: {str(e)}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Error initializing agents: {str(e)}"
-            )
-        
-        # Step 1: Validate that the prompt is scientific
-        try:
-            print("Validating prompt is scientific...")
-            validation_result = domain_validator.is_scientific(request.prompt)
-            print(f"Validation result: {validation_result.is_true}, confidence: {validation_result.confidence}")
-            
-            # If not scientific, reject the prompt
-            if not validation_result.is_true:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Non-scientific prompt rejected: {validation_result.reasoning}"
-                )
-        except Exception as e:
-            print(f"Error in scientific validation: {str(e)}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Error in scientific validation: {str(e)}"
-            )
-        
-        # Step 2: Generate an animation script
-        try:
-            print("Generating animation script...")
-            animation_script = script_agent.generate_script(request.prompt)
-            print(f"Script generated with {len(animation_script.content)} time points")
-        except Exception as e:
-            print(f"Error generating script: {str(e)}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Error generating script: {str(e)}"
-            )
-        
-        # Step 3: Generate an orchestration plan based on the script
-        try:
-            print("Generating orchestration plan...")
-            orchestration_plan = orchestration_agent.generate_orchestration_plan(animation_script)
-            print(f"Orchestration plan generated with {len(orchestration_plan.objects)} objects")
-        except Exception as e:
-            print(f"Error generating orchestration plan: {str(e)}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Error generating orchestration plan: {str(e)}"
-            )
-        
-        # For testing purposes, just return the initial objects instead of continuing
-        # This is a temporary change to help debug where the error might be occurring
-        return_early = False
-        if return_early:
-            print("Returning early with script and orchestration plan")
-            # Create a minimal result with just the first steps
+        # If not scientific, reject the prompt immediately
+        if not validation_result.is_true:
             return {
-                "html": "<html><body>Test HTML</body></html>",
-                "js": "// Test JS",
-                "minimal_js": "// Test minimal JS",
-                "title": orchestration_plan.scene_title,
-                "timecode_markers": [tp.timecode for tp in animation_script.content],
-                "total_elements": len(orchestration_plan.objects)
+                "job_id": "rejected",
+                "status": "failed",
+                "message": "Non-scientific prompt rejected",
+                "error": validation_result.reasoning
             }
         
-        # Step 4: Generate geometry for all objects in the plan
-        try:
-            print("Generating geometry for all objects...")
-            object_geometries = await orchestration_agent.generate_geometry_from_plan(orchestration_plan)
-            
-            # Check if there are any successful geometries
-            successful_count = sum(1 for obj_data in object_geometries.values() 
-                               if obj_data.get("status") == "success" and obj_data != "_summary")
-            print(f"Generated {successful_count} successful geometries")
-            
-            if successful_count == 0:
-                print("Warning: No successful geometries were generated")
-        except Exception as e:
-            print(f"Error generating geometries: {str(e)}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Error generating geometries: {str(e)}"
-            )
+        # Generate a unique job ID
+        import uuid
+        job_id = str(uuid.uuid4())
         
-        # Step 5: Generate animation code
-        try:
-            print("Generating animation code...")
-            animation_code = animation_agent.generate_animation_code(
-                script=animation_script,
-                object_geometries=object_geometries,
-                orchestration_plan=orchestration_plan
-            )
-            print(f"Animation code generated with {len(animation_code.keyframes)} keyframes")
-        except Exception as e:
-            print(f"Error generating animation code: {str(e)}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Error generating animation code: {str(e)}"
-            )
+        # Start the background task
+        background_tasks.add_task(
+            process_prompt_pipeline_task,
+            job_id=job_id,
+            prompt=request.prompt,
+            llm_service=llm_service
+        )
         
-        # Step 6: Package everything into a complete scene
-        try:
-            print("Packaging scene...")
-            scene_package = ScenePackager.create_scene_package(
-                script=animation_script,
-                orchestration_plan=orchestration_plan,
-                object_geometries=object_geometries,
-                animation_code=animation_code
-            )
-            print("Scene packaged successfully")
-        except Exception as e:
-            print(f"Error packaging scene: {str(e)}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Error packaging scene: {str(e)}"
-            )
+        # Create job entry
+        pipeline_jobs[job_id] = {
+            "status": "processing",
+            "prompt": request.prompt,
+            "created_at": datetime.now().isoformat(),
+            "result": None,
+            "progress": 0.0  # Initial progress
+        }
         
-        # Save the JS file to the static directory
-        try:
-            print("Saving JS file to static directory...")
-            static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static")
-            os.makedirs(static_dir, exist_ok=True)
-            
-            # Write the JavaScript to a file
-            with open(os.path.join(static_dir, "scene.js"), "w") as f:
-                f.write(scene_package.js)
-            print("JS file saved successfully")
-        except Exception as e:
-            print(f"Error saving JS file: {str(e)}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Error saving JS file: {str(e)}"
-            )
+        print(f"Started background processing job {job_id} for prompt: {request.prompt[:50]}...")
         
-        print("Processing complete, returning results")
-        # Return the completed scene package
+        # Return immediately with the job ID and status
         return {
-            "html": scene_package.html,
-            "js": scene_package.js,
-            "minimal_js": scene_package.minimal_js,
-            "title": scene_package.title,
-            "timecode_markers": scene_package.timecode_markers,
-            "total_elements": scene_package.total_elements
+            "job_id": job_id,
+            "status": "processing",
+            "message": "Processing started in the background. Poll /prompt/process/{job_id} for updates.",
+            "progress": 0.0
         }
     except Exception as e:
         print(f"Unhandled exception in submit_prompt: {str(e)}")
-        import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Unhandled error: {str(e)}")
 
@@ -284,6 +509,9 @@ async def generate_geometry(
     """
     Endpoint to generate Three.js geometry based on user prompt.
     Only generates geometry for scientific content.
+    
+    This endpoint processes the request immediately and returns the result.
+    For longer processing, use the /prompt/process/ endpoint.
     """
     try:
         if not os.getenv("OPENAI_API_KEY"):
@@ -291,22 +519,25 @@ async def generate_geometry(
                 status_code=500,
                 detail="OPENAI_API_KEY environment variable is not set"
             )
+        
+        # Validate the prompt is scientific
         domain_validator = DomainValidator(llm_service)
-
-        # First validate that the prompt is scientific
         validation_result = domain_validator.is_scientific(request.prompt)
         
-        # If not scientific, reject the prompt
         if not validation_result.is_true:
             raise HTTPException(
                 status_code=400,
                 detail=f"Non-scientific prompt rejected: {validation_result.reasoning}"
             )
+            
+        # Generate the geometry directly for immediate response
+        # This is what the client expects
         geometry_agent = GeometryAgent(llm_service)
-        # If scientific, generate the geometry
         generated_code = geometry_agent.get_geometry_snippet(request.prompt)
+        
         return {"result": generated_code}
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/generate-script/", response_model=SceneScript)

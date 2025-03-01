@@ -1,4 +1,4 @@
-# AI Agent backend- fastapi, redis, celery, and postgresql
+# AI Agent backend- fastapi, redis, and celery
 
 ## Overview
 This repository demonstrates a Dockerized AI agent backend. 
@@ -15,10 +15,6 @@ Create a `.env` file in the root directory (same level as `docker-compose.yml`) 
 REDIS_HOST=redis
 REDIS_PORT=6379
 OPENAI_API_KEY=your-api-key
-POSTGRES_USER=development
-POSTGRES_PASSWORD=devpass
-POSTGRES_DB=dev_db
-POSTGRES_PORT=5432
 ```
 
 ### 2. Build and Start the Containers
@@ -40,7 +36,7 @@ docker-compose down
 ```
 
 ### 5. Rebuilding Without Cache
-If you need to rebuild without using Docker’s cache, use:
+If you need to rebuild without using Docker's cache, use:
 
 ```bash
 docker-compose build --no-cache
