@@ -27,3 +27,4 @@ app.add_middleware(
 
 # user management related endpoints
 app.include_router(routers.prompt.router)
+app.include_router(routers.geometry.router)
