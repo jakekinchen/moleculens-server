@@ -45,11 +45,40 @@ class AnimationAgent:
         geometry_count = sum(1 for obj_data in object_geometries.values() 
                            if obj_data.get("status") == "success")
         
-        # Format the object availability info
+        # Extract update function names and object references from geometry code
+        geometry_functions = []
+        object_references = []
+        
+        for obj_name, obj_data in object_geometries.items():
+            if obj_data.get("status") == "success" and obj_name != "_summary":
+                code = obj_data.get("code", "")
+                
+                # Extract function assignments to window
+                function_matches = re.findall(r'window\.(\w+)\s*=\s*function', code)
+                for func_name in function_matches:
+                    geometry_functions.append(func_name)
+                
+                # Extract object assignments to window
+                obj_matches = re.findall(r'window\.(\w+)\s*=', code)
+                for ref_name in obj_matches:
+                    if ref_name not in geometry_functions:  # Avoid duplicates with functions
+                        object_references.append(ref_name)
+        
+        # Format the object availability info, including extracted functions and references
         objects_with_geometries = "\n".join([
             f"- {obj_name} (available and ready to animate)"
             for obj_name, obj_data in object_geometries.items()
             if obj_data.get("status") == "success" and obj_name != "_summary"
+        ])
+        
+        geometry_functions_str = "\n".join([
+            f"- {func_name} (animation function provided by geometry)"
+            for func_name in geometry_functions
+        ])
+        
+        object_references_str = "\n".join([
+            f"- {ref_name} (object reference provided by geometry)"
+            for ref_name in object_references
         ])
         
         # Prepare the basic prompt components
@@ -57,29 +86,39 @@ class AnimationAgent:
         timeline_section = f"## SCRIPT TIMELINE\n{script_timeline}"
         objects_section = f"## AVAILABLE OBJECTS ({geometry_count} objects with generated geometries)\n{objects_with_geometries}"
         complete_objects_section = f"## COMPLETE OBJECT LIST\n{object_list}"
+        geometry_functions_section = f"## GEOMETRY FUNCTIONS (use these if provided)\n{geometry_functions_str}" if geometry_functions else ""
+        object_references_section = f"## OBJECT REFERENCES (use these with scene.getObjectByName())\n{object_references_str}" if object_references else ""
         
         # Use raw string for the example code to avoid f-string issues
         example_section = r"""
-IMPORTANT: Here's ONE high-quality example of self-contained animation code that follows a script:
+IMPORTANT: Here's ONE high-quality example of self-contained animation code that also shows how to work with any custom functions or update methods provided by the geometry:
 
 ```javascript
 // Get elapsed time and delta time
 const elapsedTime = clock.getElapsedTime();
 const deltaTime = clock.getDelta();
 
+// Find main objects in the scene - always use this pattern
+const molecule = scene.getObjectByName("molecule");
+const energyDiagram = scene.getObjectByName("energy_diagram");
+
 // ────────────────────────────────────────────────────────────
-// At 00:00 - Introduction to Protein Folding
+// At 00:00 - Introduction to Molecule
 if (elapsedTime < 15) {
-  // Find the protein in the scene
-  const protein = scene.getObjectByName("protein_model");
-  if (protein) {
-    // Slow rotation to introduce the protein
-    protein.rotation.y += 0.2 * deltaTime;
+  if (molecule) {
+    // IMPORTANT: If the geometry provides an update function, use it
+    // This ensures compatibility with how the geometry was designed to animate
+    if (typeof window.updateMolecule === 'function') {
+      // Call the provided function with appropriate parameters
+      window.updateMolecule(elapsedTime);
+    } else {
+      // Fallback to direct manipulation if no update function exists
+      molecule.rotation.y += 0.2 * deltaTime;
+    }
     
-    // Fade in the protein if it has an opacity property
-    protein.traverse(child => {
+    // Fade in the molecule if it has an opacity property
+    molecule.traverse(child => {
       if (child.isMesh && child.material && child.material.opacity !== undefined) {
-        // Gradually increase opacity over 5 seconds
         child.material.opacity = Math.min(1, elapsedTime / 5);
         child.material.transparent = child.material.opacity < 1;
       }
@@ -88,7 +127,6 @@ if (elapsedTime < 15) {
   
   // Position camera for introduction
   if (camera) {
-    // Start with a wider view
     const targetPosition = new THREE.Vector3(0, 0, 10);
     camera.position.lerp(targetPosition, 0.05);
     camera.lookAt(0, 0, 0);
@@ -96,112 +134,67 @@ if (elapsedTime < 15) {
 }
 
 // ────────────────────────────────────────────────────────────
-// At 00:15 - Primary Structure Highlight
+// At 00:15 - Show Atomic Structure
 else if (elapsedTime >= 15 && elapsedTime < 30) {
-  // Calculate progress within this section
-  const sectionProgress = (elapsedTime - 15) / 15;
-  
-  // Find relevant objects
-  const protein = scene.getObjectByName("protein_model");
-  const aminoAcids = scene.getObjectByName("amino_acids");
-  
-  if (protein && aminoAcids) {
-    // Highlight the amino acid sequence
-    aminoAcids.traverse(child => {
-      if (child.isMesh && child.material) {
-        // Pulse the emissive property
-        const pulse = Math.sin(elapsedTime * 2) * 0.5 + 0.5;
-        child.material.emissive = new THREE.Color(0x003366);
-        child.material.emissiveIntensity = pulse;
-      }
-    });
-    
-    // Move camera to focus on the amino acid chain
-    if (camera) {
-      const targetPosition = new THREE.Vector3(-2, 0, 5);
-      camera.position.lerp(targetPosition, 0.05);
-      camera.lookAt(-2, 0, 0);
+  if (molecule) {
+    // Continue using any update function provided by geometry
+    if (typeof window.updateMolecule === 'function') {
+      // Pass parameters to control specific behaviors
+      const showAtoms = true;
+      window.updateMolecule(elapsedTime, showAtoms);
+    } else {
+      // Direct manipulation fallback
+      molecule.rotation.y += 0.1 * deltaTime;
+      
+      // Highlight atoms
+      molecule.traverse(child => {
+        if (child.isMesh && child.name.includes("atom")) {
+          const pulse = Math.sin(elapsedTime * 2) * 0.5 + 0.5;
+          if (child.material) {
+            child.material.emissive = new THREE.Color(0x003366);
+            child.material.emissiveIntensity = pulse;
+          }
+        }
+      });
     }
   }
 }
 
 // ────────────────────────────────────────────────────────────
-// At 00:30 - Secondary Structure Formation
+// At 00:30 - Energy Diagram
 else if (elapsedTime >= 30 && elapsedTime < 60) {
   // Calculate section progress
   const sectionProgress = (elapsedTime - 30) / 30;
   
-  // Find the secondary structures
-  const alphaHelix = scene.getObjectByName("alpha_helix");
-  const betaSheet = scene.getObjectByName("beta_sheet");
-  
-  if (alphaHelix && betaSheet) {
-    // Alpha helix forms first (0-15s of this section)
-    if (sectionProgress < 0.5) {
-      const helixProgress = sectionProgress * 2; // 0-1 during first half
-      
-      // Gradually reveal the alpha helix
-      alphaHelix.traverse(child => {
-        if (child.isMesh && child.material) {
-          child.material.opacity = helixProgress;
-          child.material.transparent = child.material.opacity < 1;
-        }
-      });
-      
-      // Rotate to give 3D perspective of the helix
-      alphaHelix.rotation.y += 0.3 * deltaTime;
-    } 
-    // Beta sheet forms second (15-30s of this section)
-    else {
-      // Keep alpha helix visible
-      alphaHelix.traverse(child => {
-        if (child.isMesh && child.material) {
-          child.material.opacity = 1;
-          child.material.transparent = false;
-        }
-      });
-      
-      // Gradually form the beta sheet
-      const sheetProgress = (sectionProgress - 0.5) * 2; // 0-1 during second half
-      betaSheet.traverse(child => {
-        if (child.isMesh && child.material) {
-          child.material.opacity = sheetProgress;
-          child.material.transparent = child.material.opacity < 1;
-          
-          // Expand the sheet to its full size
-          child.scale.set(
-            1,
-            Math.min(1, sheetProgress * 1.5), // Slightly exaggerated for effect
-            1
-          );
-        }
-      });
-    }
-    
-    // Camera movement to showcase the structures
-    if (camera) {
-      // Pan around to view different angles
-      const angle = sectionProgress * Math.PI * 2; // Full 360° rotation
-      const radius = 7 - sectionProgress * 2; // Move closer over time
-      const cameraX = Math.cos(angle) * radius;
-      const cameraZ = Math.sin(angle) * radius;
-      
-      camera.position.lerp(new THREE.Vector3(cameraX, 1, cameraZ), 0.02);
-      camera.lookAt(0, 0, 0);
+  if (molecule) {
+    // Keep using update function if available
+    if (typeof window.updateMolecule === 'function') {
+      window.updateMolecule(elapsedTime);
+    } else {
+      molecule.rotation.y += 0.05 * deltaTime;
     }
   }
+  
+  if (energyDiagram) {
+    // For the energy diagram, fade it in
+    energyDiagram.traverse(child => {
+      if (child.isMesh && child.material) {
+        child.material.opacity = Math.min(1, sectionProgress * 2);
+        child.material.transparent = child.material.opacity < 1;
+      }
+    });
+    
+    // Position it properly
+    energyDiagram.position.lerp(new THREE.Vector3(5, 0, 0), 0.05);
+  }
 }
-
-// Continue with remaining script sections...
 ```
 
 Note how this example:
-1. Divides animation into clear time-based sections matching script timecodes
-2. Finds objects using scene.getObjectByName() instead of window references
-3. Checks if objects exist before using them
-4. Creates smooth transitions between states
-5. Handles camera movements to highlight important elements
-6. Uses clear section dividers and comments
+1. Checks for objects using scene.getObjectByName()
+2. Properly handles update functions provided by the geometry
+3. Provides fallbacks for direct manipulation when no update functions exist
+4. Creates smooth time-based animations with clear section dividers
 """
         
         # Combine everything into the final prompt
@@ -215,6 +208,10 @@ Note how this example:
 
 {complete_objects_section}
 
+{geometry_functions_section}
+
+{object_references_section}
+
 IMPORTANT STRUCTURE INFORMATION:
 The script contains 5-8 key points, each with:
 - timecode: Time marker in MM:SS format (starting at 00:00, ending around 02:00)
@@ -225,13 +222,17 @@ Your task is to write the animation code that would go INSIDE the animate() func
 DO NOT include the function declaration itself - only provide the code that would go inside the function.
 
 CRITICAL REQUIREMENTS:
-1. DO NOT use window.* references to access objects
-2. ALWAYS use scene.getObjectByName() to find objects by name
+1. If the geometry provides update functions (listed above), USE THEM INSTEAD of directly manipulating objects
+2. Use scene.getObjectByName() to find objects by name
 3. ALWAYS check if objects exist before operating on them
 4. Use clear time ranges (if elapsedTime >= start && elapsedTime < end) for each script section
-5. Rely only on scene, camera, clock, and objects passed directly to the animate function
-6. Each timecode section should be clearly separated with comments
-7. Include section dividers for readability (like ────────────────────────────────────)
+5. Each timecode section should be clearly separated with comments
+6. Include section dividers for readability (like ────────────────────────────────────)
+
+VERY IMPORTANT:
+- The geometry code might have its own animation/update functions for complex behaviors
+- If window.updateSomething functions are listed above, call them instead of trying to manipulate objects directly
+- It's ok to use window.functionName() to call these functions, but DON'T use window.objectName to access objects
 
 The animation should:
 1. Respect the timecodes in the script
@@ -249,13 +250,12 @@ REMEMBER:
 - Don't include the animate function declaration 
 - Always check if objects exist before using them
 - Use deltaTime for smooth animations (multiply by deltaTime)
-- DO NOT use any HTML references or window properties
 """
 
         # Create the request
         request = LLMRequest(
             user_prompt=prompt,
-            system_prompt="You are an expert Three.js animator specializing in scientific visualizations. Create detailed, timeline-based animation code following the script exactly. Your code should be simple, self-contained, and foolproof, without relying on HTML references or window properties.",
+            system_prompt="You are an expert Three.js animator specializing in scientific visualizations. Create detailed, timeline-based animation code following the script exactly. Your code should be simple, self-contained, and foolproof, with proper handling of geometry-provided update functions.",
             llm_config=self.llm_service.config
         )
         
@@ -305,7 +305,6 @@ REMEMBER:
         prompt_for_llm = f"You are an expert Three.js animator specializing in scientific visualizations, particularly molecular structures and chemical reactions. The user wants to animate a scene with the following prompt: '{user_prompt}'\n\n" + r"""
 Requirements:
 - Generate JavaScript animation code for objects created by the GeometryAgent.
-- DO NOT use global window references.
 - Your code will be injected into an existing Three.js scene with a standard animation loop.
 - Create scientifically accurate yet visually appealing animations that represent the prompt.
 - Implement clear, self-contained animation logic.
@@ -317,11 +316,11 @@ Requirements:
 When creating animations in Three.js:
 1. Use scene.getObjectByName() to access objects rather than global window references
 2. Always check if objects exist before manipulating them
-3. Keep animation logic simple and focused on the scene graph
-4. Avoid HTML DOM interactions or window properties
+3. If the geometry has provided update functions (like window.updateMolecule), USE THEM
+4. Avoid HTML DOM interactions
 5. Use clock.getElapsedTime() and clock.getDelta() for timing
 
-## Example: Self-Contained Molecular Animation
+## Example: Self-Contained Molecular Animation with Update Function
 
 ```javascript
 // Get elapsed time and delta time
@@ -332,13 +331,22 @@ const deltaTime = clock.getDelta();
 const molecule = scene.getObjectByName("molecule");
 if (!molecule) return; // Exit early if molecule not found
 
+// Check if there's a dedicated update function provided by the geometry
+const hasUpdateFunction = typeof window.updateMolecule === 'function';
+
 // Define animation phases based on elapsed time
 if (elapsedTime < 5) {
   // Phase 1: Introduction (0-5 seconds)
-  // Slowly rotate and scale up the molecule
-  const introProgress = elapsedTime / 5;
-  molecule.rotation.y += 0.5 * deltaTime;
-  molecule.scale.setScalar(0.2 + introProgress * 0.8); // Scale from 0.2 to 1.0
+  if (hasUpdateFunction) {
+    // Use the provided update function with parameters that make sense for this phase
+    window.updateMolecule(elapsedTime, { phase: "intro" });
+  } else {
+    // Fallback: manually animate if no update function exists
+    // Slowly rotate and scale up the molecule
+    const introProgress = elapsedTime / 5;
+    molecule.rotation.y += 0.5 * deltaTime;
+    molecule.scale.setScalar(0.2 + introProgress * 0.8); // Scale from 0.2 to 1.0
+  }
   
   // Position camera for a good view
   if (camera) {
@@ -348,108 +356,42 @@ if (elapsedTime < 5) {
 } 
 else if (elapsedTime < 15) {
   // Phase 2: Highlight atoms (5-15 seconds)
-  molecule.rotation.y += 0.2 * deltaTime;
+  if (hasUpdateFunction) {
+    // Pass the appropriate parameters to the update function
+    window.updateMolecule(elapsedTime, { phase: "highlight", highlight: "atoms" });
+  } else {
+    // Manual fallback animation
+    molecule.rotation.y += 0.2 * deltaTime;
+    
+    // Highlight atoms
+    molecule.traverse(child => {
+      if (!child.isMesh) return;
+      
+      // Highlight logic...
+      // (simplified for brevity)
+    });
+  }
   
-  // Find atoms based on their names
-  molecule.traverse(child => {
-    if (!child.isMesh) return;
-    
-    // Determine atom type by name
-    const isCarbon = child.name.includes('carbon');
-    const isOxygen = child.name.includes('oxygen');
-    const isHydrogen = child.name.includes('hydrogen');
-    
-    // Skip bonds
-    if (!isCarbon && !isOxygen && !isHydrogen) return;
-    
-    // Calculate pulse effect
-    const pulseTime = elapsedTime - 5; // Adjusted time
-    const pulseSpeed = isHydrogen ? 3 : (isOxygen ? 2 : 1); // Different speeds
-    const pulseAmount = 0.1 * Math.sin(pulseTime * pulseSpeed);
-    
-    // Store original scale if not already saved
-    if (!child.userData.originalScale) {
-      child.userData.originalScale = child.scale.x;
-    }
-    
-    // Apply pulsing effect
-    const baseScale = child.userData.originalScale;
-    child.scale.setScalar(baseScale + pulseAmount);
-    
-    // Highlight specific atom types at different times
-    if ((isHydrogen && pulseTime < 3) || 
-        (isOxygen && pulseTime >= 3 && pulseTime < 7) ||
-        (isCarbon && pulseTime >= 7)) {
-      // Highlight active atoms with emissive color
-      if (child.material) {
-        child.material.emissive = new THREE.Color(
-          isHydrogen ? 0x00ffff : (isOxygen ? 0xff0000 : 0x00ff00)
-        );
-        child.material.emissiveIntensity = 0.3 + 0.7 * Math.sin(pulseTime * 2);
-      }
-    } else if (child.material) {
-      // Reset non-active atoms
-      child.material.emissiveIntensity = 0;
-    }
-  });
-  
-  // Move camera for a closer look at specific parts
+  // Move camera
   if (camera) {
-    const targetPos = new THREE.Vector3(
-      Math.sin(elapsedTime * 0.2) * 5,
-      2 + Math.cos(elapsedTime * 0.3),
-      8 - (elapsedTime - 5) * 0.3 // Gradually move closer
-    );
-    camera.position.lerp(targetPos, 0.02);
-    camera.lookAt(molecule.position);
+    // Camera movement...
   }
 }
 else {
   // Phase 3: Show molecular motion (after 15 seconds)
-  molecule.rotation.y += 0.3 * deltaTime;
+  if (hasUpdateFunction) {
+    window.updateMolecule(elapsedTime, { phase: "motion" });
+  } else {
+    // Manual fallback animation
+    molecule.rotation.y += 0.3 * deltaTime;
+    
+    // Vibration logic...
+    // (simplified for brevity)
+  }
   
-  // Simulate molecular vibration
-  molecule.traverse(child => {
-    if (!child.isMesh) return;
-    
-    // Skip large parent objects
-    if (child.children.length > 0) return;
-    
-    // Store original position if not already saved
-    if (!child.userData.originalPosition) {
-      child.userData.originalPosition = child.position.clone();
-    }
-    
-    const originalPos = child.userData.originalPosition;
-    const vibrationAmount = 0.03;
-    const vibrationSpeed = 3;
-    
-    // Create unique oscillation pattern for each atom
-    const offset = child.id % 10; // Use object ID for offset
-    
-    // Apply vibration around original position
-    child.position.x = originalPos.x + Math.sin(elapsedTime * vibrationSpeed + offset) * vibrationAmount;
-    child.position.y = originalPos.y + Math.cos(elapsedTime * vibrationSpeed + offset * 2) * vibrationAmount;
-    child.position.z = originalPos.z + Math.sin(elapsedTime * vibrationSpeed * 1.3 + offset) * vibrationAmount;
-    
-    // Reset any highlights
-    if (child.material && child.material.emissiveIntensity) {
-      child.material.emissiveIntensity = 0;
-    }
-  });
-  
-  // Move camera to show the whole molecule in motion
+  // Move camera
   if (camera) {
-    const orbitRadius = 12;
-    const orbitSpeed = 0.1;
-    const orbitY = 5;
-    const targetPos = new THREE.Vector3(
-      Math.cos(elapsedTime * orbitSpeed) * orbitRadius,
-      orbitY,
-      Math.sin(elapsedTime * orbitSpeed) * orbitRadius
-    );
-    camera.position.lerp(targetPos, 0.01);
-    camera.lookAt(molecule.position);
+    // Camera movement...
   }
 }
 ```
