@@ -47,3 +47,27 @@ docker-compose build --no-cache
 ```
 
 Now you're ready to build an AI agent
+
+
+# To add the latest changes to the live server on meshmo.com do the following: 
+
+## 1. ssh into the server 
+```bash
+    ssh root@meshmo.com
+```
+
+## 2. go to the project directory 
+```bash 
+    /opt/hackathon-server/sci-vis-ai-server/api
+```
+
+## 3. pull the latest changes 
+```bash 
+    git pull origin main
+```
+
+## 4. restart docker 
+```bash
+    docker-compose restart
+```
+
