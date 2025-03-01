@@ -30,7 +30,7 @@ class GeometryRequest(BaseModel):
 # Initialize LLMService and GeometryAgent
 llm_config = LLMModelConfig(
     provider=ProviderType.OPENAI,
-    model_name="gpt-3.5-turbo",
+    model_name="o3-mini",
     api_key=os.getenv("OPENAI_API_KEY")
 )
 llm_service = LLMService(llm_config)
