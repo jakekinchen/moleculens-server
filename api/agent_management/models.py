@@ -2,7 +2,7 @@
 Pydantic models for Three.js structured output generation.
 """
 
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from pydantic import BaseModel, Field
 
 class Vector3(BaseModel):
@@ -54,3 +54,28 @@ class BooleanResponse(BaseModel):
     is_true: bool = Field(description="Whether the statement is true")
     confidence: float = Field(description="Confidence level from 0.0 to 1.0", ge=0.0, le=1.0)
     reasoning: Optional[str] = Field(description="Reasoning behind the decision")
+
+class ScriptTimePoint(BaseModel):
+    """Model for a single time point in an animation script"""
+    timecode: str = Field(description="Timecode in MM:SS format (e.g., '00:15')")
+    description: str = Field(description="Detailed description of what is occurring in the scene at this time")
+    caption: str = Field(description="Brief caption text to be displayed at this time")
+
+class SceneScript(BaseModel):
+    """Model for a complete scene script (not to be confused with animation)"""
+    title: str = Field(description="Title of the scene")
+    content: List[ScriptTimePoint] = Field(description="Sequence of time points in the scene")
+
+class SceneObject(BaseModel):
+    """Model for a discrete 3D object needed in the scene"""
+    name: str = Field(description="Unique identifier for the object")
+    description: str = Field(description="Detailed description of what this object represents")
+    properties: Dict[str, Any] = Field(description="Key properties of the object (size, color, etc.)")
+    appears_at: str = Field(description="Timecode when this object first appears")
+    relationships: List[str] = Field(default_factory=list, description="Relationships to other objects")
+
+class OrchestrationPlan(BaseModel):
+    """Model for the complete orchestration plan of objects needed for the scene"""
+    scene_title: str = Field(description="Title of the scene")
+    objects: List[SceneObject] = Field(description="List of discrete objects needed for the scene")
+    scene_overview: str = Field(description="High-level overview of the overall scene")

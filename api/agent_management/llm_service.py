@@ -40,7 +40,10 @@ class LLMModelConfig(BaseModel):
     model_name: str
     api_key: Optional[str] = None
     
-    model_config = {"use_enum_values": True}
+    model_config = {
+        "use_enum_values": True,
+        "protected_namespaces": ()  # Remove protection for the 'model_' namespace
+    }
 
 class LLMRequest(BaseModel):
     """Standard request structure for all LLM providers"""
