@@ -4,9 +4,7 @@ Test cases for the prompt router endpoints
 import pytest
 from fastapi.testclient import TestClient
 from api.main import app
-from unittest.mock import patch, MagicMock
-from agent_management.agents.geometry_agent import GeometryAgent
-from agent_management.llm_service import LLMService
+import os
 
 client = TestClient(app)
 
@@ -22,12 +20,8 @@ def test_submit_prompt():
         "working": True
     }
 
-@patch('agent_management.agents.geometry_agent.GeometryAgent.get_geometry_snippet')
-def test_generate_geometry_success(mock_get_geometry):
+def test_generate_geometry_success():
     """Test successful geometry generation"""
-    # Mock the geometry agent response
-    mock_get_geometry.return_value = "// Test geometry code"
-    
     response = client.post(
         "/prompt/generate-geometry/",
         json={"prompt": "create a simple sphere"}
@@ -36,22 +30,17 @@ def test_generate_geometry_success(mock_get_geometry):
     assert response.status_code == 200
     assert "result" in response.json()
     assert isinstance(response.json()["result"], str)
-    assert response.json()["result"] == "// Test geometry code"
-    
-    # Verify the mock was called correctly
-    mock_get_geometry.assert_called_once_with("create a simple sphere")
+    assert "THREE" in response.json()["result"]  # Should contain Three.js code
 
-@patch('agent_management.agents.geometry_agent.GeometryAgent.get_geometry_snippet')
-def test_generate_geometry_empty_prompt(mock_get_geometry):
+def test_generate_geometry_empty_prompt():
     """Test geometry generation with empty prompt"""
-    mock_get_geometry.return_value = "// Empty geometry code"
-    
     response = client.post(
         "/prompt/generate-geometry/",
         json={"prompt": ""}
     )
     assert response.status_code == 200
-    assert response.json()["result"] == "// Empty geometry code"
+    assert "result" in response.json()
+    assert isinstance(response.json()["result"], str)
 
 def test_generate_geometry_invalid_request():
     """Test geometry generation with invalid request format"""
@@ -61,17 +50,22 @@ def test_generate_geometry_invalid_request():
     )
     assert response.status_code == 422  # Validation error
 
-@patch('agent_management.agents.geometry_agent.GeometryAgent.get_geometry_snippet')
-def test_generate_geometry_error_handling(mock_get_geometry):
-    """Test error handling in geometry generation"""
-    # Mock the geometry agent to raise an exception
-    mock_get_geometry.side_effect = Exception("Test error")
+def test_generate_geometry_no_api_key():
+    """Test error handling when API key is not set"""
+    # Temporarily unset the API key
+    api_key = os.environ.get("OPENAI_API_KEY")
+    if api_key:
+        del os.environ["OPENAI_API_KEY"]
     
-    response = client.post(
-        "/prompt/generate-geometry/",
-        json={"prompt": "create a sphere"}
-    )
-    
-    assert response.status_code == 500
-    assert "detail" in response.json()
-    assert response.json()["detail"] == "Test error" 
+    try:
+        response = client.post(
+            "/prompt/generate-geometry/",
+            json={"prompt": "create a sphere"}
+        )
+        
+        assert response.status_code == 500
+        assert "OPENAI_API_KEY environment variable is not set" in response.json()["detail"]
+    finally:
+        # Restore the API key
+        if api_key:
+            os.environ["OPENAI_API_KEY"] = api_key 

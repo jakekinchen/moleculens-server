@@ -3,7 +3,7 @@ Geometry Agent - Provides static geometry code snippets for the visualization.
 """
 
 import json
-from agent_management.llm_service import LLMService
+from agent_management.llm_service import LLMService, LLMRequest
 
 class GeometryAgent:
     def __init__(self, llm_service: LLMService):
@@ -118,8 +118,17 @@ scene.add(molecule);
 Return your code as a single JavaScript snippet, with no JSON wrapper.
 """
 
-        llm_response = self.llm_service.generate(prompt_for_llm)
-        geometry_code = llm_response.strip()
+        # Create a proper LLMRequest
+        request = LLMRequest(
+            user_prompt=prompt_for_llm,
+            llm_config=self.llm_service.config
+        )
+        
+        # Get the response from the LLM service
+        llm_response = self.llm_service.generate(request)
+        
+        # Extract the content from the LLMResponse
+        geometry_code = llm_response.content.strip()
         
         return f"""
 // GeometryAgent LLM-generated code
