@@ -8,6 +8,10 @@ from openai.types.chat import ChatCompletion, ChatCompletionMessage, ChatComplet
 from openai.types.chat.chat_completion import Choice
 from openai.types import Completion
 from ..llm_service import LLMProvider, LLMRequest, LLMResponse, StructuredLLMRequest, T, MessageRole
+from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
+from openai.types.chat.chat_completion_message import ChatCompletionMessage
+from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
+from dotenv import load_dotenv
 
 class OpenAIProvider(LLMProvider):
     """OpenAI-specific implementation"""
@@ -15,7 +19,7 @@ class OpenAIProvider(LLMProvider):
     def __init__(self, api_key: str):
         import openai
         self.client = openai.OpenAI(
-            api_key=api_key
+            api_key=load_dotenv("OPENAI_API_KEY")
         )
 
     def _convert_messages(self, request: LLMRequest) -> List[ChatCompletionMessageParam]:
