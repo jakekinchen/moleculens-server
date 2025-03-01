@@ -1,7 +1,7 @@
-# AI Agent with Redis - Docker Setup
+# AI Agent backend- fastapi, redis, celery, and postgresql
 
 ## Overview
-This repository demonstrates a Dockerized AI agent that uses Redis for communication and LangChain for AI tasks. The AI agent is designed to run as a container and send its results via Redis.
+This repository demonstrates a Dockerized AI agent backend. 
 
 ## Prerequisites
 - Docker and Docker Compose installed on your system.
@@ -14,10 +14,12 @@ Create a `.env` file in the root directory (same level as `docker-compose.yml`) 
 ```env
 REDIS_HOST=redis
 REDIS_PORT=6379
-OPENAI_API_KEY=your_openai_api_key
+OPENAI_API_KEY=your-api-key
+POSTGRES_USER=development
+POSTGRES_PASSWORD=devpass
+POSTGRES_DB=dev_db
+POSTGRES_PORT=5432
 ```
-Replace `your_openai_api_key` with your actual OpenAI API key.
-
 
 ### 2. Build and Start the Containers
 To build and start the containers, run:
@@ -44,13 +46,4 @@ If you need to rebuild without using Docker’s cache, use:
 docker-compose build --no-cache
 ```
 
-## Environment Variables Reference
-- **REDIS_HOST**: The hostname of the Redis server (default: `redis`).
-- **REDIS_PORT**: The port of the Redis server (default: `6379`).
-- **OPENAI_API_KEY**: Your OpenAI API key.
-
-## Troubleshooting
-- Ensure that Docker is running on your system.
-- If you encounter permission errors, try using `sudo` before the Docker commands.
-
-Now you're ready to build an AI agent using langchain, pydanticai, Redis, and Docker
+Now you're ready to build an AI agent
