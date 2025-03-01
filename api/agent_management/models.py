@@ -48,3 +48,9 @@ class ThreeGroup(BaseModel):
     rotation: Vector3 = Field(default_factory=Vector3)
     scale: Vector3 = Field(default_factory=lambda: Vector3(x=1.0, y=1.0, z=1.0))
     children: List[Mesh] = Field(default_factory=list, description="List of meshes in the group") 
+
+class BooleanResponse(BaseModel):
+    """Model for boolean validation responses"""
+    is_true: bool = Field(description="Whether the statement is true")
+    confidence: float = Field(description="Confidence level from 0.0 to 1.0", ge=0.0, le=1.0)
+    reasoning: Optional[str] = Field(description="Reasoning behind the decision")
