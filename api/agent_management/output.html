@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Multi-Agent Three.js Demo</title>
+    <style>
+        body, html {
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden;
+            background: #000;
+        }
+        #sceneCanvas {
+            display: block; 
+        }
+        #caption {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 1.3em;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            pointer-events: none;
+            z-index: 1000;
+            padding: 10px;
+        }
+    </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="caption"></div>
+    <canvas id="sceneCanvas"></canvas>
+    <script type="module">
+        import * as THREE from 'three';
+
+        // Basic Scene Setup
+        const canvas = document.getElementById('sceneCanvas');
+        const renderer = new THREE.WebGLRenderer({
+            canvas,
+            antialias: true
+        });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x000000);
+
+        const camera = new THREE.PerspectiveCamera(
+            75, window.innerWidth / window.innerHeight, 0.1, 1000
+        );
+        camera.position.z = 5;
+
+        // Basic lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+        scene.add(ambientLight);
+        const pointLight = new THREE.PointLight(0xffffff, 1);
+        pointLight.position.set(5, 5, 5);
+        scene.add(pointLight);
+
+        // Responsive resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Main animate loop
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        
+// GeometryAgent LLM-generated code
+// Create a group for the magical reaction animation
+const magicalReaction = new THREE.Group();
+window.magicalReaction = magicalReaction;
+
+// Transition 1: Core glow sphere
+const coreMaterial = new THREE.MeshPhongMaterial({ 
+    color: 0x66ccff, 
+    emissive: 0x3366ff, 
+    transparent: true, 
+    opacity: 0.9 
+});
+const coreGeometry = new THREE.SphereGeometry(1, 32, 32);
+const coreSphere = new THREE.Mesh(coreGeometry, coreMaterial);
+coreSphere.position.set(0, 0, 0);
+magicalReaction.add(coreSphere);
+
+// Transition 2: Rotating magical ring
+const ringMaterial = new THREE.MeshPhongMaterial({ 
+    color: 0xff66cc, 
+    emissive: 0xff3399, 
+    side: THREE.DoubleSide, 
+    transparent: true, 
+    opacity: 0.7 
+});
+const ringGeometry = new THREE.TorusGeometry(2, 0.15, 16, 100);
+const magicRing = new THREE.Mesh(ringGeometry, ringMaterial);
+magicRing.rotation.x = Math.PI / 2;
+magicRing.position.set(0, 0, 0);
+magicalReaction.add(magicRing);
+
+// Transition 3: Sparkles burst
+const sparkMaterial = new THREE.MeshPhongMaterial({ 
+    color: 0xffff99, 
+    emissive: 0xffff55, 
+    transparent: true, 
+    opacity: 0.8 
+});
+const sparkGeometry = new THREE.SphereGeometry(0.1, 16, 16);
+const sparkGroup = new THREE.Group();
+
+// Create 20 sparkles randomly distributed around the core in a spherical volume
+for (let i = 0; i < 20; i++) {
+    const spark = new THREE.Mesh(sparkGeometry, sparkMaterial);
+    // Random spherical coordinates
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    const radius = 3 + Math.random() * 1; // distribute in a shell around the core
+    const x = radius * Math.sin(phi) * Math.cos(theta);
+    const y = radius * Math.sin(phi) * Math.sin(theta);
+    const z = radius * Math.cos(phi);
+    spark.position.set(x, y, z);
+    sparkGroup.add(spark);
+}
+magicalReaction.add(sparkGroup);
+
+// Optionally, create a second ring with a slight offset for added complexity
+const ringMaterial2 = new THREE.MeshPhongMaterial({ 
+    color: 0xccff66, 
+    emissive: 0x99ff33, 
+    side: THREE.DoubleSide, 
+    transparent: true, 
+    opacity: 0.6 
+});
+const ringGeometry2 = new THREE.TorusGeometry(2.5, 0.1, 16, 100);
+const magicRing2 = new THREE.Mesh(ringGeometry2, ringMaterial2);
+magicRing2.rotation.x = Math.PI / 2;
+magicRing2.rotation.z = Math.PI / 8;
+magicRing2.position.set(0, 0, 0);
+magicalReaction.add(magicRing2);
+
+// Add the whole magical reaction group to the scene
+scene.add(magicalReaction);
+
+        
+// AnimationAgent LLM-generated code
+let elapsedTime = 0;
+let initialized = false;
+const reactionStartTime = 3.0;       // Phase 1 ends at 3 seconds
+const reactionDuration = 5.0;        // Phase 2 lasts 5 seconds (reaction occurs from 3 to 8 seconds)
+const finalPhaseDuration = 3.0;      // Phase 3 lasts 3 seconds (post-reaction stabilization)
+const rotationSpeedPhase1 = 0.2;
+const rotationSpeedPhase2 = 0.5;
+const rotationSpeedPhase3 = 0.1;
+const originalPositions = new Map();
+
+function initializePositions() {
+  if (!window.molecule) return;
+  window.molecule.children.forEach(child => {
+    // Save the initial position for each child
+    originalPositions.set(child.uuid, child.position.clone());
+    // Assign a random phase offset so each atom vibrates uniquely
+    child.userData.phaseOffset = Math.random() * Math.PI * 2;
+    // Store the original color for later restoration (if the material has a color)
+    if (child.material && child.material.color) {
+      child.userData.originalColor = child.material.color.clone();
+    }
+  });
+  initialized = true;
+}
+
+function updateScene(deltaTime) {
+  elapsedTime += deltaTime;
+
+  if (window.molecule) {
+    if (!initialized) {
+      initializePositions();
+    }
+
+    // PHASE 1: Pre-reaction (Magical build-up)
+    if (elapsedTime < reactionStartTime) {
+      window.molecule.rotation.y += rotationSpeedPhase1 * deltaTime;
+      window.molecule.rotation.x = Math.sin(elapsedTime) * 0.05;
+
+      window.molecule.children.forEach(child => {
+        const orig = originalPositions.get(child.uuid);
+        const offset = child.userData.phaseOffset;
+        // Gentle vibration around the original position
+        child.position.x = orig.x + Math.sin(elapsedTime * 2 + offset) * 0.02;
+        child.position.y = orig.y + Math.cos(elapsedTime * 2 + offset) * 0.02;
+        child.position.z = orig.z + Math.sin(elapsedTime * 2 + offset) * 0.02;
+      });
+    }
+    // PHASE 2: Reaction (The magical transformation)
+    else if (elapsedTime < reactionStartTime + reactionDuration) {
+      let reactionProgress = (elapsedTime - reactionStartTime) / reactionDuration;
+      window.molecule.rotation.y += rotationSpeedPhase2 * deltaTime;
+      window.molecule.rotation.x = Math.sin(elapsedTime * 1.5) * 0.1;
+
+      window.molecule.children.forEach(child => {
+        const orig = originalPositions.get(child.uuid);
+        const offset = child.userData.phaseOffset;
+        // Introduce an intensified vibration and a pulsating scale effect
+        const scaleFactor = 1.0 + 0.5 * Math.sin(reactionProgress * Math.PI);
+        child.scale.set(scaleFactor, scaleFactor, scaleFactor);
+        child.position.x = orig.x + Math.sin(elapsedTime * 4 + offset) * 0.04 * (1 + reactionProgress);
+        child.position.y = orig.y + Math.cos(elapsedTime * 4 + offset) * 0.04 * (1 + reactionProgress);
+        child.position.z = orig.z + Math.sin(elapsedTime * 4 + offset) * 0.04 * (1 + reactionProgress);
+
+        // Gradually shift each atom’s color toward a magical cyan hue (0x00ffff)
+        if (child.material && child.material.color && child.userData.originalColor) {
+          let targetColor = new THREE.Color(0x00ffff);
+          // Lerp by a factor that increases with reactionProgress
+          child.material.color.lerp(targetColor, reactionProgress * 0.5);
+        }
+      });
+    }
+    // PHASE 3: Post-reaction (Stabilization and subtle separation)
+    else {
+      const postProgress = Math.min(1, (elapsedTime - reactionStartTime - reactionDuration) / finalPhaseDuration);
+      window.molecule.rotation.y += rotationSpeedPhase3 * deltaTime;
+
+      window.molecule.children.forEach(child => {
+        const orig = originalPositions.get(child.uuid);
+        const offset = child.userData.phaseOffset;
+        // Gradually settle atoms toward new positions with a slight radial separation from the original center
+        let radial = new THREE.Vector3(orig.x, orig.y, orig.z).normalize();
+        const separationDistance = 0.1 * postProgress;
+        child.position.x = orig.x + radial.x * separationDistance;
+        child.position.y = orig.y + radial.y * separationDistance;
+        child.position.z = orig.z + radial.z * separationDistance;
+
+        // Smoothly return scale back to 1 (final state)
+        child.scale.lerp(new THREE.Vector3(1, 1, 1), deltaTime);
+
+        // Restore the original color gradually for a balanced final look
+        if (child.material && child.material.color && child.userData.originalColor) {
+          child.material.color.lerp(child.userData.originalColor, deltaTime * 0.5);
+        }
+      });
+    }
+  }
+}
+
+// Hook into the existing Three.js animate loop
+const originalAnimateAgent = animate;
+animate = function () {
+  const now = performance.now() * 0.001;
+  const deltaTime = now - (window.lastTime || now);
+  window.lastTime = now;
+
+  updateScene(deltaTime);
+  originalAnimateAgent();
+};
+
+        
+// CaptionAgent code
+const captionElement = document.getElementById('caption');
+const captionStartTime = performance.now() / 1000;
+let lastCaption = '';
+
+const captions = [
+  {
+    "time": 0,
+    "text": "The scene is set; ancient energies begin to stir."
+  },
+  {
+    "time": 3,
+    "text": "A soft glow emerges, hinting at the magic to come."
+  },
+  {
+    "time": 6,
+    "text": "Mystical symbols flicker into life, bathing the space in light."
+  },
+  {
+    "time": 9,
+    "text": "The magical reaction takes hold, with vibrant sparks dancing."
+  },
+  {
+    "time": 12,
+    "text": "Energy swirls and shapes transform in a cascade of colors."
+  },
+  {
+    "time": 15,
+    "text": "A burst of radiant light unveils intricate magical patterns."
+  },
+  {
+    "time": 18,
+    "text": "The enchantment deepens as elements merge and shift fluidly."
+  },
+  {
+    "time": 21,
+    "text": "A shimmering climax unfolds, marking the peak of the transformation."
+  },
+  {
+    "time": 24,
+    "text": "Gentle fades signal the end, as magic settles into a final, tranquil form."
+  }
+];
+
+function updateCaptions() {
+    const elapsed = (performance.now() / 1000) - captionStartTime;
+    let current = '';
+    for (const c of captions) {
+        if (elapsed >= c.time) {
+            current = c.text;
+        }
+    }
+    if (current !== lastCaption) {
+        captionElement.textContent = current;
+        lastCaption = current;
+    }
+}
+
+// Insert caption updates into animate loop
+const originalAnimateCaptions = animate;
+animate = function() {
+    originalAnimateCaptions();
+    updateCaptions();
+};
+
+    </script>
+</body>
+</html>

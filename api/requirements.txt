@@ -17,3 +17,7 @@ python-multipart
 google-cloud-storage
 pytest
 httpx
+openai>=1.0.0
+python-dotenv>=0.19.0
+esprima>=4.0.1
+jsonschema>=3.2.0 
