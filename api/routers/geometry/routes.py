@@ -32,7 +32,7 @@ def get_cube_geometry():
 
 
 @router.get("/html-test-page", response_model=ReturnHTMLPage)
-def get_cube_geometry():
+def get_test_html_page():
     cube_jsx = """
       <!DOCTYPE html>
       <html lang="en">
