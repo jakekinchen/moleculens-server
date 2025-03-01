@@ -84,7 +84,6 @@ Where:
             model_name="o3-mini"  # Using a model that supports temperature parameter
         ),
         response_model=BooleanResponse,
-        temperature=0.1  # Low temperature for more deterministic output
     )
     
     try:
