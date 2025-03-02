@@ -29,27 +29,12 @@ class ModelInfo(BaseModel):
 def register_models():
     """Register all supported LLM models with the registry"""
     
-    # OpenAI models
-    ModelRegistry.register(
-        "o3-mini",
-        ModelInfo,
-        lambda *args, **kwargs: ModelInfo(
-            name=kwargs.get("name", "o3-mini"),
-            display_name=kwargs.get("display_name", "GPT-3.5 Mini"),
-            provider=kwargs.get("provider", ProviderType.OPENAI),
-            categories=kwargs.get("categories", [ModelCategory.GENERAL]),
-            context_length=kwargs.get("context_length", 16000),
-            is_default=kwargs.get("is_default", True),
-            api_params=kwargs.get("api_params", {})
-        )
-    )
-    
     ModelRegistry.register(
         "o1",
         ModelInfo,
         lambda *args, **kwargs: ModelInfo(
             name=kwargs.get("name", "o1"),
-            display_name=kwargs.get("display_name", "GPT-4 o1"),
+            display_name=kwargs.get("display_name", "o1"),
             provider=kwargs.get("provider", ProviderType.OPENAI),
             categories=kwargs.get("categories", [ModelCategory.GENERAL, ModelCategory.REASONING]),
             context_length=kwargs.get("context_length", 128000),
@@ -57,7 +42,21 @@ def register_models():
             api_params=kwargs.get("api_params", {})
         )
     )
-    
+
+    ModelRegistry.register(
+        "o3-mini",
+        ModelInfo,
+        lambda *args, **kwargs: ModelInfo(
+            name=kwargs.get("name", "o3-mini"),
+            display_name=kwargs.get("display_name", "o3-mini"),
+            provider=kwargs.get("provider", ProviderType.OPENAI),
+            categories=kwargs.get("categories", [ModelCategory.GENERAL, ModelCategory.REASONING]),
+            context_length=kwargs.get("context_length", 128000),
+            is_default=kwargs.get("is_default", False),
+            api_params=kwargs.get("api_params", {})
+        )
+    )
+
     ModelRegistry.register(
         "gpt-4.5-preview",
         ModelInfo,

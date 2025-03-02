@@ -54,9 +54,7 @@ class GeometryResponse(BaseModel):
 class GeometryRequest(BaseModel):
     """Request model for geometry generation, optionally with preferred model type"""
     prompt: str
-    model: Optional[str] = None  # Global model override for all agents
-    geometry_model: Optional[str] = None  # Specific model for geometry agent
-    animation_model: Optional[str] = None  # Specific model for animation agent
+    model: Optional[str] = None  # Model override for geometry agent
     preferred_model_category: Optional[ModelCategory] = None
 
 class ValidationResponse(BaseModel):
@@ -536,8 +534,6 @@ async def generate_geometry(
     
     Query parameters:
     - model: Optional global model override for all agents
-    - geometry_model: Optional specific model for the geometry agent
-    - animation_model: Optional specific model for the animation agent
     - preferred_model_category: Optional model category preference
     """
     try:
@@ -549,7 +545,6 @@ async def generate_geometry(
         
         # Get override models from request if specified
         global_override_model = request.model
-        geometry_override_model = request.geometry_model or global_override_model
         
         # Create domain validator agent using the factory with potential override
         domain_validator = AgentFactory.create_domain_validator(global_override_model)
@@ -564,7 +559,7 @@ async def generate_geometry(
             )
             
         # Create geometry agent with appropriate model - use specific override if provided
-        geometry_agent = AgentFactory.create_geometry_agent(geometry_override_model)
+        geometry_agent = AgentFactory.create_geometry_agent(global_override_model)
         
         # Generate the geometry directly for immediate response
         generated_code = geometry_agent.get_geometry_snippet(request.prompt)

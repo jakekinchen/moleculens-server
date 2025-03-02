@@ -10,19 +10,6 @@ Generated: 2025-03-02 09:19:22
 
 ## Results by Model
 
-### GPT-3.5 Mini (o3-mini)
-
-- Provider: openai
-- Is DeepSeek model: No
-- Success rate: 0.0%
-- Valid SMILES rate: 0.0%
-
-| Prompt | Success | Response | Valid SMILES | Time (s) |
-|--------|---------|----------|--------------|----------|
-| Draw a molecule of water | ❌ | OpenAI structured output error: Error code: 400 -  | ❌ | 0.00 |
-| Show the structure of aspirin | ❌ | OpenAI structured output error: Error code: 400 -  | ❌ | 0.00 |
-| Create a methane molecule | ❌ | OpenAI structured output error: Error code: 400 -  | ❌ | 0.00 |
-
 ### GPT-4 o1 (o1)
 
 - Provider: openai
