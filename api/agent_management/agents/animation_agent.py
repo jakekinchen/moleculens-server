@@ -94,13 +94,43 @@ class AnimationAgent:
 IMPORTANT: Here's ONE high-quality example of self-contained animation code that also shows how to work with any custom functions or update methods provided by the geometry:
 
 ```javascript
-// Get elapsed time and delta time
-const elapsedTime = clock.getElapsedTime();
+// Use window.animationTime for elapsed time (includes user time offset from controls)
+// This ensures the animation works with the fast-forward and rewind buttons
+const elapsedTime = window.animationTime || clock.getElapsedTime();
 const deltaTime = clock.getDelta();
 
 // Find main objects in the scene - always use this pattern
 const molecule = scene.getObjectByName("molecule");
 const energyDiagram = scene.getObjectByName("energy_diagram");
+
+// Helper function for fading objects in and out
+function fadeObject(object, fadeIn, duration = 1.0) {
+  if (!object) return;
+  
+  // Set all materials to transparent
+  object.traverse(child => {
+    if (child.isMesh && child.material) {
+      child.material.transparent = true;
+      
+      // Set target opacity based on fade direction
+      if (fadeIn) {
+        // Fade in: 0 to 1 over duration
+        const progress = Math.min(1, elapsedTime / duration);
+        child.material.opacity = progress;
+        // Make object visible as soon as we start fading in
+        child.visible = true;
+      } else {
+        // Fade out: 1 to 0 over duration
+        const timeRemaining = Math.max(0, 1 - elapsedTime / duration);
+        child.material.opacity = timeRemaining;
+        // Hide object completely when fully transparent
+        if (timeRemaining <= 0) {
+          child.visible = false;
+        }
+      }
+    }
+  });
+}
 
 // ────────────────────────────────────────────────────────────
 // At 00:00 - Introduction to Molecule
@@ -116,13 +146,13 @@ if (elapsedTime < 15) {
       molecule.rotation.y += 0.2 * deltaTime;
     }
     
-    // Fade in the molecule if it has an opacity property
-    molecule.traverse(child => {
-      if (child.isMesh && child.material && child.material.opacity !== undefined) {
-        child.material.opacity = Math.min(1, elapsedTime / 5);
-        child.material.transparent = child.material.opacity < 1;
-      }
-    });
+    // Fade in the molecule using our helper function
+    fadeObject(molecule, true, 2.0); // true = fade in, 2.0 = duration in seconds
+  }
+  
+  // Ensure energy diagram is hidden during this phase
+  if (energyDiagram) {
+    energyDiagram.visible = false;
   }
   
   // Position camera for introduction
@@ -145,18 +175,38 @@ else if (elapsedTime >= 15 && elapsedTime < 30) {
     } else {
       // Direct manipulation fallback
       molecule.rotation.y += 0.1 * deltaTime;
-      
-      // Highlight atoms
-      molecule.traverse(child => {
-        if (child.isMesh && child.name.includes("atom")) {
-          const pulse = Math.sin(elapsedTime * 2) * 0.5 + 0.5;
-          if (child.material) {
-            child.material.emissive = new THREE.Color(0x003366);
-            child.material.emissiveIntensity = pulse;
-          }
-        }
-      });
     }
+  }
+  
+  // Introduce the energy diagram with a fade-in effect
+  if (energyDiagram) {
+    // Calculate time relative to this section
+    const sectionTime = elapsedTime - 15;
+    
+    // Only start showing diagram after 2 seconds into this section
+    if (sectionTime >= 2) {
+      // Fade in energy diagram
+      fadeObject(energyDiagram, true, 1.5);
+    }
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// At 00:30 - Focus on Energy Diagram, Fade Out Molecule
+else if (elapsedTime >= 30 && elapsedTime < 45) {
+  // Fade out the molecule
+  if (molecule) {
+    // The false parameter means "fade out"
+    fadeObject(molecule, false, 2.0);
+  }
+  
+  // Keep energy diagram fully visible
+  if (energyDiagram) {
+    // Move energy diagram to center focus
+    energyDiagram.position.lerp(new THREE.Vector3(0, 0, 0), 0.05);
+    energyDiagram.scale.lerp(new THREE.Vector3(1.5, 1.5, 1.5), 0.05);
+  }
+}
   }
 }
 
@@ -250,6 +300,10 @@ REMEMBER:
 - Don't include the animate function declaration 
 - Always check if objects exist before using them
 - Use deltaTime for smooth animations (multiply by deltaTime)
+- IMPORTANT: Objects that aren't actively used in a scene should not be visible until needed
+- IMPORTANT: Set visible=false for objects that aren't currently relevant (except main objects)
+- IMPORTANT: Fade objects in (opacity 0→1) when introducing them and fade out (opacity 1→0) when no longer needed
+- Use opacity transitions of 1-2 seconds for smooth appearance/disappearance
 """
 
         # Create the request
@@ -310,6 +364,10 @@ Requirements:
 - Implement clear, self-contained animation logic.
 - Use deltaTime parameter for smooth, frame-rate independent animations.
 - For chemical/molecular visualizations, consider appropriate molecular behaviors.
+- IMPORTANT: Objects that aren't actively used should not be visible until needed.
+- Set visible=false for objects that aren't currently relevant.
+- Fade objects in (opacity 0→1) when introducing them and fade out (opacity 1→0) when no longer needed.
+- Use opacity transitions of 1-2 seconds for smooth appearance/disappearance.
 
 # Guide to Creating Self-Contained Animations
 
@@ -323,8 +381,9 @@ When creating animations in Three.js:
 ## Example: Self-Contained Molecular Animation with Update Function
 
 ```javascript
-// Get elapsed time and delta time
-const elapsedTime = clock.getElapsedTime();
+// Use window.animationTime for elapsed time (includes user time offset from controls)
+// This ensures the animation works with the fast-forward and rewind buttons
+const elapsedTime = window.animationTime || clock.getElapsedTime();
 const deltaTime = clock.getDelta();
 
 // Find the molecule in the scene
@@ -346,6 +405,16 @@ if (elapsedTime < 5) {
     const introProgress = elapsedTime / 5;
     molecule.rotation.y += 0.5 * deltaTime;
     molecule.scale.setScalar(0.2 + introProgress * 0.8); // Scale from 0.2 to 1.0
+    
+    // Fade in the molecule
+    molecule.traverse(child => {
+      if (child.isMesh && child.material) {
+        // Set material to transparent for fade effect
+        child.material.transparent = true;
+        // Gradually increase opacity from 0 to 1 over 2 seconds
+        child.material.opacity = Math.min(1, elapsedTime / 2);
+      }
+    });
   }
   
   // Position camera for a good view

@@ -2,7 +2,7 @@
 Pydantic models for Three.js structured output generation.
 """
 
-from typing import List, Dict, Optional, Any, Union
+from typing import List, Dict, Optional, Any, Union, Type, TypeVar, Callable
 from pydantic import BaseModel, Field
 
 # Global Pydantic model config to avoid the "model_name" warning
@@ -11,6 +11,82 @@ class BaseModelWithConfig(BaseModel):
     model_config = {
         "protected_namespaces": ()  # Remove protection for the 'model_' namespace
     }
+
+# Define a type variable for models
+T = TypeVar('T')
+
+class ModelRegistry:
+    """
+    Central registry for managing model classes and their instantiation.
+    Implements the Registry design pattern to decouple model references.
+    """
+    _registry = {}
+    
+    @classmethod
+    def register(cls, name: str, model_cls, factory: Optional[Callable] = None):
+        """
+        Register a model class with an optional factory function.
+        
+        Args:
+            name: Unique identifier for the model
+            model_cls: The model class to register
+            factory: Optional factory function to instantiate the model
+        """
+        if factory is None:
+            # Create a default factory that accepts kwargs
+            factory = lambda *args, **kwargs: model_cls(**kwargs)
+            
+        cls._registry[name] = {
+            "class": model_cls,
+            "factory": factory
+        }
+        return model_cls  # Return for decorator use
+    
+    @classmethod
+    def get_model(cls, name: str):
+        """
+        Get a model class by name.
+        
+        Args:
+            name: Name of the registered model
+            
+        Returns:
+            The model class
+            
+        Raises:
+            ValueError: If the model is not registered
+        """
+        model_data = cls._registry.get(name)
+        if model_data is None:
+            raise ValueError(f"Model '{name}' not registered.")
+        return model_data["class"]
+    
+    @classmethod
+    def create_instance(cls, model_name: str, *args, **kwargs):
+        """
+        Create an instance of a registered model.
+        
+        Args:
+            model_name: Name of the registered model
+            *args, **kwargs: Arguments to pass to the factory function
+            
+        Returns:
+            An instance of the model
+            
+        Raises:
+            ValueError: If the model is not registered
+        """
+        model_data = cls._registry.get(model_name)
+        if model_data is None:
+            raise ValueError(f"Model '{model_name}' not registered.")
+        
+        factory = model_data["factory"]
+        return factory(*args, **kwargs)
+    
+    @classmethod
+    def list_models(cls):
+        """List all registered model names"""
+        return list(cls._registry.keys())
 
 class Vector3(BaseModel):
     """Three.js Vector3 representation"""
@@ -59,8 +135,10 @@ class ThreeGroup(BaseModel):
 class BooleanResponse(BaseModel):
     """Model for boolean validation responses"""
     is_true: bool = Field(description="Whether the statement is true")
-    confidence: float = Field(description="Confidence level from 0.0 to 1.0", ge=0.0, le=1.0)
-    reasoning: Optional[str] = Field(description="Reasoning behind the decision")
+
+class MolecularStructure(BaseModel):
+    """Model for molecular validation responses"""
+    molecular_structure: str = Field(description="Molecular structure in SMILES format")
 
 class ScriptTimePoint(BaseModel):
     """Model for a single time point in an animation script"""
@@ -99,7 +177,7 @@ class AnimationCode(BaseModelWithConfig):
 
 class FinalScenePackage(BaseModelWithConfig):
     """Model for the complete packaged Three.js scene"""
-    html: str = Field(description="Complete HTML with embedded Three.js scene")
+    html: str = Field(description="Complete HTML with embedded JavaScript")
     js: str = Field(description="Complete JavaScript code for the scene (standalone)")
     minimal_js: str = Field(description="Minimal JavaScript code without boilerplate for embedding")
     title: str = Field(description="Title of the visualization")

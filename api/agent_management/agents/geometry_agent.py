@@ -4,6 +4,7 @@ Geometry Agent - Provides static geometry code snippets for the visualization.
 
 import json
 from agent_management.llm_service import LLMService, LLMRequest
+from agent_management.providers.deepseek_utils import is_deepseek_model, extract_structured_output_from_deepseek
 
 class GeometryAgent:
     def __init__(self, llm_service: LLMService):
@@ -17,8 +18,10 @@ class GeometryAgent:
 Requirements:
 - Return only JavaScript code that references 'scene' (a global variable).
 - Do NOT create or re-declare lights or cameras. Only geometry or materials.
+- Do NOT include text sprites or labels - these will be handled separately.
 - Use window.* references if you need to store global references, e.g., window.myMesh = ...
 - For molecular structures, group atoms and bonds together first and then add the group to the scene.
+- IMPORTANT: In modern versions of THREE.js, THREE.Curve is an ES6 class, so it must be instantiated with new rather than being called as a regular function. This misuse of the class constructor is what's causing the error.
 
 Here's an example of how to properly create an ethanol molecule when prompted with "make an ethanol molecule":
 
@@ -120,15 +123,20 @@ Return your code as a single JavaScript snippet, with no JSON wrapper.
 
         # Create a proper LLMRequest
         request = LLMRequest(
-            user_prompt=prompt_for_llm,
-            llm_config=self.llm_service.config
+            user_prompt=prompt_for_llm
         )
         
         # Get the response from the LLM service
         llm_response = self.llm_service.generate(request)
         
         # Extract the content from the LLMResponse
-        geometry_code = llm_response.content.strip()
+        raw_content = llm_response.content.strip()
+        
+        # Check if we're using a DeepSeek model and apply special extraction if needed
+        if is_deepseek_model(llm_response.model):
+            geometry_code = extract_structured_output_from_deepseek(raw_content, "javascript")
+        else:
+            geometry_code = raw_content
         
         return f"""
 // GeometryAgent LLM-generated code

@@ -3,7 +3,7 @@ Domain Validator Agent - Validates whether a prompt is scientific in nature.
 """
 
 import os
-from agent_management.models import BooleanResponse
+from agent_management.models import BooleanResponse, MolecularStructure
 from agent_management.llm_service import (
     LLMService,
     StructuredLLMRequest,
@@ -14,50 +14,73 @@ from agent_management.llm_service import (
 class DomainValidator:
     def __init__(self, llm_service: LLMService):
         self.llm_service = llm_service
-    
-    def is_scientific(self, prompt: str) -> BooleanResponse:
+
+    def molecular_structure(self, prompt: str) -> MolecularStructure:
         """
-        Determine if a prompt is scientific in nature.
+        Determine if a prompt can be built as molecular structure.
+        """
+        request = StructuredLLMRequest[MolecularStructure](
+            user_prompt=f"""Only respond with a molecular structure in SMILES format. For instance: user prompt: 'Draw a molecule of aspirin' -> response: 'CC(=O)OC1=CC=CC=C1C(=O)O'
+            The user prompt is: '{prompt}'
+            """,
+            response_model=MolecularStructure
+        )
+        return self.llm_service.generate_structured(request)
+    
+    def is_molecular(self, prompt: str) -> BooleanResponse:
+        """
+        Determine if a prompt can be built as molecular structure.
         
         Args:
             prompt: The user prompt to validate
             
         Returns:
-            BooleanResponse with is_true=True if prompt is scientific, False otherwise
+            BooleanResponse with is_true=True if prompt is molecular, False otherwise
         """
         # Create a request for scientific content validation
-        request = StructuredLLMRequest(
-            user_prompt=f"""Is the following query scientific or not? '{prompt}'
+        request = StructuredLLMRequest[BooleanResponse](
+            user_prompt=f"""Does the following prompt contain something that can be built as a molecular structure? '{prompt}'
             
 Respond with a JSON object that has this exact structure:
 {{
   "is_true": true,
-  "confidence": 0.9,
-  "reasoning": "explanation here"
 }}
 
 Where:
-- is_true: boolean - true if the prompt is scientific in nature, false otherwise
-- confidence: number between 0 and 1
-- reasoning: string explaining your reasoning""",
-            system_prompt="""You are a scientific content validation AI. Determine if user prompts are scientific in nature.
+- is_true: boolean - true if the prompt is molecular, false otherwise""",
+            system_prompt="""You are a molecular structure validation AI. Determine if user prompts are molecular in nature.
 
-Scientific prompts typically involve:
-- Natural phenomena (physics, chemistry, biology, astronomy, etc.)
-- Mathematical concepts
-- Engineering or technical scenarios
-- Scientific experiments or observations
-- Data visualization of scientific information
+Molecular prompts typically involve:
+- Chemical compounds
+- Biological molecules
+- Physical structures
+- Molecular structures
 
-Non-scientific prompts typically involve:
+Non-molecular prompts typically involve:
 - Fictional characters or scenarios
-- Creative art without scientific context
-- General everyday objects without scientific framing
-- Abstract concepts without scientific basis
+- Creative art without molecular context
+- General everyday objects without molecular framing
+- Abstract concepts without molecular basis
 - Violent, harmful, or inappropriate content
 
+Examples of molecular prompts:
+- "Draw a molecule of water"
+- "Show the structure of ATP"
+- "Display a protein structure"
+- "Draw a molecule of sugar"
+- "Draw a molecule of salt"
+- "Show the structure of a DNA molecule"
+- "Display a protein structure"
+- "Draw a molecule of cocaine"
+- "Draw an oil molecule"
+
+Examples of non-molecular prompts:
+- "Draw a car"
+- "Show a house"
+- "Display a person"
+
+
 Always respond with JSON exactly matching the requested format.""",
-            llm_config=self.llm_service.config,
             response_model=BooleanResponse,
         )
         

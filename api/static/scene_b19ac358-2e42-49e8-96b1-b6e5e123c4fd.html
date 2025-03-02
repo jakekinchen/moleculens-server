@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Exploration of Acetic Acid Geometry</title>
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+        canvas { 
+            width: 100%; 
+            height: 100%; 
+            display: block; 
+        }
+        .caption-container {
+            position: absolute;
+            bottom: 30px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 100;
+            pointer-events: none;
+        }
+        .caption {
+            display: none;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin: 0 auto;
+            max-width: 80%;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
+        .title {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 100;
+            font-size: 24px;
+            pointer-events: none;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
+        .controls {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+        }
+        .controls button {
+            background-color: rgba(0, 0, 0, 0.5);
+            border: 1px solid white;
+            color: white;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .controls button:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        .timeline {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 5px;
+            background-color: rgba(255, 255, 255, 0.3);
+            width: 100%;
+        }
+        .progress {
+            height: 100%;
+            width: 0%;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="title">3D Exploration of Acetic Acid Geometry</div>
+    <div class="caption-container">
+        <div class="caption" data-time="00:00" style="display: none;">Introducing Acetic Acid</div>
+        <div class="caption" data-time="00:20" style="display: none;">Atomic Structure & Bonds</div>
+        <div class="caption" data-time="00:40" style="display: none;">Methyl vs. Carboxyl Groups</div>
+        <div class="caption" data-time="01:00" style="display: none;">Bond Angles & Geometry</div>
+        <div class="caption" data-time="01:30" style="display: none;">Electron Density Mapping</div>
+        <div class="caption" data-time="01:50" style="display: none;">Summary: 3D Molecular Shape</div>
+    </div>
+    <div class="controls">
+        <button id="play-pause">Pause</button>
+        <button id="reset">Reset</button>
+    </div>
+    <div class="timeline">
+        <div class="progress" id="progress-bar"></div>
+    </div>
+    
+    <!-- Main Three.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- OrbitControls add-on (corrected path) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/examples/js/controls/OrbitControls.js"></script>
+    <!-- Main scene script -->
+    <script src="/static/scene_b19ac358-2e42-49e8-96b1-b6e5e123c4fd.js"></script>
+</body>
+</html>

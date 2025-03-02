@@ -1,13 +1,17 @@
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
+from agent_management.models import ModelRegistry
 from dependencies.use_llm import use_llm 
 from agent_management.agents.geometry_agent import GeometryAgent
 from agent_management.agents.domain_bool_agent import DomainValidator
 from agent_management.agents.script_agent import ScriptAgent
 from agent_management.agents.orchestration_agent import OrchestrationAgent
 from agent_management.agents.animation_agent import AnimationAgent
-from agent_management.models import SceneScript, ScriptTimePoint, OrchestrationPlan, AnimationCode, FinalScenePackage, BaseModelWithConfig
+from agent_management.models import SceneScript, ScriptTimePoint, OrchestrationPlan, AnimationCode, FinalScenePackage, BaseModelWithConfig, ModelRegistry
+from agent_management.model_config import ModelInfo, ModelCategory
+from agent_management.agent_factory import AgentFactory
+from agent_management.agent_model_config import AgentType
 from agent_management.scene_packager import ScenePackager
 from agent_management.llm_service import LLMService, LLMModelConfig, ProviderType
 import os
@@ -24,7 +28,10 @@ router = APIRouter(
 
 
 class PromptRequest(BaseModel):
+    """Request model for prompts, optionally with preferred model type"""
     prompt: str
+    model: Optional[str] = None  # Specific model to use
+    preferred_model_category: Optional[ModelCategory] = None
 
 class PromptWorking(BaseModel):
     prompt: str
@@ -45,10 +52,15 @@ class GeometryResponse(BaseModel):
     result: str
 
 class GeometryRequest(BaseModel):
+    """Request model for geometry generation, optionally with preferred model type"""
     prompt: str
+    model: Optional[str] = None  # Global model override for all agents
+    geometry_model: Optional[str] = None  # Specific model for geometry agent
+    animation_model: Optional[str] = None  # Specific model for animation agent
+    preferred_model_category: Optional[ModelCategory] = None
 
 class ValidationResponse(BaseModel):
-    is_scientific: bool
+    is_molecular: bool
     confidence: float
     reasoning: str
     
@@ -86,34 +98,36 @@ class JobResponse(BaseModel):
     }
 
 
-# Initialize LLM config
-llm_config = LLMModelConfig(
-    provider=ProviderType.OPENAI,
-    model_name="o3-mini",
-    api_key=os.getenv("OPENAI_API_KEY")
-)
+# Import ModelRegistry and related functions
+from agent_management.model_config import get_default_model, get_llm_service
 
 # Simple in-memory job stores
 # In a production app, these would use Redis or another persistent store
-geometry_jobs = {}
-pipeline_jobs = {}
+geometry_jobs: Dict[str, Dict[str, Any]] = {}
+pipeline_jobs: Dict[str, Dict[str, Any]] = {}
 
 # Background task function for processing prompts
-async def process_prompt_pipeline_task(job_id: str, prompt: str, llm_service: LLMService):
+async def process_prompt_pipeline_task(job_id: str, prompt: str, override_model: Optional[str] = None):
     """
     Background task to process a prompt through the entire pipeline.
     Updates the pipeline_jobs dictionary with the result when complete.
+    
+    Args:
+        job_id: Unique identifier for this job
+        prompt: The user's prompt to process
+        override_model: Optional model name to override all agents
     """
     try:
         print(f"[Job {job_id}] Starting processing for prompt: {prompt[:50]}...")
         
-        # Initialize all agents
+        # Initialize all agents with appropriate models
         try:
+            # Create agents using the factory with optimal model selection
             # Validation already happened in the main endpoint
-            # domain_validator = DomainValidator(llm_service)
-            script_agent = ScriptAgent(llm_service)
-            orchestration_agent = OrchestrationAgent(llm_service)
-            animation_agent = AnimationAgent(llm_service)
+            script_agent = AgentFactory.create_script_agent(override_model)
+            orchestration_agent = AgentFactory.create_orchestration_agent(override_model)
+            animation_agent = AgentFactory.create_animation_agent(override_model)
+            
             print(f"[Job {job_id}] All agents initialized successfully")
             
             # Update progress after initialization
@@ -228,31 +242,34 @@ async def process_prompt_pipeline_task(job_id: str, prompt: str, llm_service: LL
             }
             return
         
-        # Save the JS file to the static directory
+        # Save the JS and HTML files to the static directory
         try:
-            print(f"[Job {job_id}] Saving JS file to static directory...")
+            print(f"[Job {job_id}] Saving JS and HTML files to static directory...")
             static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static")
             os.makedirs(static_dir, exist_ok=True)
             
-            # Generate a JS filename based on job ID
+            # Generate filenames based on job ID
             js_filename = f"scene_{job_id}.js"
+            html_filename = f"scene_{job_id}.html"
             
-            # Write the JavaScript to a file
+            # Write the JavaScript to a file (useful for debugging/development)
             with open(os.path.join(static_dir, js_filename), "w") as f:
                 f.write(scene_package.js)
+            
+            # Write the HTML file with embedded JavaScript
+            with open(os.path.join(static_dir, html_filename), "w") as f:
+                f.write(scene_package.html)
                 
-            # Update the HTML to reference the correct JS file
-            html = scene_package.html.replace('/static/scene.js', f'/static/{js_filename}')
-            print(f"[Job {job_id}] JS file saved successfully as {js_filename}")
+            print(f"[Job {job_id}] Files saved successfully: JS ({js_filename}), HTML with embedded JS ({html_filename})")
             
             # Update progress
             pipeline_jobs[job_id]["progress"] = 0.95
         except Exception as e:
-            print(f"[Job {job_id}] Error saving JS file: {str(e)}")
+            print(f"[Job {job_id}] Error saving JS/HTML files: {str(e)}")
             pipeline_jobs[job_id] = {
                 **pipeline_jobs[job_id],
                 "status": "error",
-                "error": f"Error saving JS file: {str(e)}"
+                "error": f"Error saving JS/HTML files: {str(e)}"
             }
             return
         
@@ -260,7 +277,7 @@ async def process_prompt_pipeline_task(job_id: str, prompt: str, llm_service: LL
         print(f"[Job {job_id}] Processing complete, storing results")
         
         result = {
-            "html": html,
+            "html": scene_package.html,
             "js": scene_package.js,
             "minimal_js": scene_package.minimal_js,
             "title": scene_package.title,
@@ -291,25 +308,28 @@ async def process_prompt_pipeline_task(job_id: str, prompt: str, llm_service: LL
 @router.post("/process/", response_model=dict)
 async def submit_prompt_background(
     request: PromptRequest,
-    background_tasks: BackgroundTasks,
-    llm_service=Depends(use_llm)
+    background_tasks: BackgroundTasks
     ):
     """
     Starts the scientific visualization pipeline as a background task and returns immediately.
     This endpoint begins processing the prompt through all pipeline steps but doesn't wait for completion.
     
     Returns a job ID that can be used to check the status of processing.
+    
+    Query parameters:
+    - model: Optional specific model to use for all agents
+    - preferred_model_category: Optional model category preference
     """
     # Generate a unique job ID
     import uuid
     job_id = str(uuid.uuid4())
     
-    # Start the background task
+    # Start the background task with the selected model (if specified)
     background_tasks.add_task(
         process_prompt_pipeline_task,
         job_id=job_id,
         prompt=request.prompt,
-        llm_service=llm_service
+        override_model=request.model
     )
     
     # Create job entry
@@ -317,14 +337,16 @@ async def submit_prompt_background(
         "status": "processing",
         "prompt": request.prompt,
         "created_at": datetime.now().isoformat(),
-        "result": None
+        "result": None,
+        "progress": 0.0  # Initial progress
     }
     
     # Return immediately with the job ID
     return {
         "job_id": job_id,
         "status": "processing",
-        "message": "Processing started in the background"
+        "message": "Processing started in the background",
+        "progress": 0.0
     }
 
 @router.get("/process/{job_id}")
@@ -342,7 +364,7 @@ async def check_process_status(job_id: str):
     - error: (When failed) The error message
     
     The visualization object contains:
-    - html: The complete HTML for the visualization
+    - html: The complete HTML for the visualization with embedded JavaScript
     - js: The full JavaScript code
     - title: The title of the scene
     - timecode_markers: List of timecodes for the animation
@@ -401,8 +423,7 @@ async def check_process_status(job_id: str):
 @router.post("/", response_model=JobResponse)
 async def submit_prompt(
     request: PromptRequest,
-    background_tasks: BackgroundTasks,
-    llm_service=Depends(use_llm)
+    background_tasks: BackgroundTasks
     ):
     """
     End-to-end endpoint to process a scientific prompt into a complete 3D visualization.
@@ -427,9 +448,11 @@ async def submit_prompt(
                 detail="OPENAI_API_KEY environment variable is not set"
             )
         
+        # Create domain validator agent using the factory
+        domain_validator = AgentFactory.create_domain_validator(request.model)
+        
         # Initial validation can be done synchronously to reject bad prompts immediately
-        domain_validator = DomainValidator(llm_service)
-        validation_result = domain_validator.is_scientific(request.prompt)
+        validation_result = domain_validator.is_molecular(request.prompt)
         
         # If not scientific, reject the prompt immediately
         if not validation_result.is_true:
@@ -444,12 +467,12 @@ async def submit_prompt(
         import uuid
         job_id = str(uuid.uuid4())
         
-        # Start the background task
+        # Start the background task with the selected model (if specified)
         background_tasks.add_task(
             process_prompt_pipeline_task,
             job_id=job_id,
             prompt=request.prompt,
-            llm_service=llm_service
+            override_model=request.model
         )
         
         # Create job entry
@@ -477,8 +500,7 @@ async def submit_prompt(
 
 @router.post("/validate-scientific/", response_model=ValidationResponse)
 async def validate_scientific(
-    request: PromptRequest,
-    llm_service=Depends(use_llm)
+    request: PromptRequest
     ):
     """
     Endpoint to validate if a prompt is scientific in nature.
@@ -489,22 +511,21 @@ async def validate_scientific(
                 status_code=500,
                 detail="OPENAI_API_KEY environment variable is not set"
             )
-        domain_validator = DomainValidator(llm_service)
+        
+        # Create domain validator with appropriate model
+        domain_validator = AgentFactory.create_domain_validator(request.model)
 
-        validation_result = domain_validator.is_scientific(request.prompt)
+        validation_result = domain_validator.is_molecular(request.prompt)
         
         return {
-            "is_scientific": validation_result.is_true,
-            "confidence": validation_result.confidence,
-            "reasoning": validation_result.reasoning or ""
+            "is_molecular": validation_result.is_true
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/generate-geometry/", response_model=GeometryResponse)
 async def generate_geometry(
-    request: GeometryRequest,
-    llm_service=Depends(use_llm)
+    request: GeometryRequest
     ):
     """
     Endpoint to generate Three.js geometry based on user prompt.
@@ -512,6 +533,12 @@ async def generate_geometry(
     
     This endpoint processes the request immediately and returns the result.
     For longer processing, use the /prompt/process/ endpoint.
+    
+    Query parameters:
+    - model: Optional global model override for all agents
+    - geometry_model: Optional specific model for the geometry agent
+    - animation_model: Optional specific model for the animation agent
+    - preferred_model_category: Optional model category preference
     """
     try:
         if not os.getenv("OPENAI_API_KEY"):
@@ -520,9 +547,15 @@ async def generate_geometry(
                 detail="OPENAI_API_KEY environment variable is not set"
             )
         
+        # Get override models from request if specified
+        global_override_model = request.model
+        geometry_override_model = request.geometry_model or global_override_model
+        
+        # Create domain validator agent using the factory with potential override
+        domain_validator = AgentFactory.create_domain_validator(global_override_model)
+        
         # Validate the prompt is scientific
-        domain_validator = DomainValidator(llm_service)
-        validation_result = domain_validator.is_scientific(request.prompt)
+        validation_result = domain_validator.is_molecular(request.prompt)
         
         if not validation_result.is_true:
             raise HTTPException(
@@ -530,9 +563,10 @@ async def generate_geometry(
                 detail=f"Non-scientific prompt rejected: {validation_result.reasoning}"
             )
             
+        # Create geometry agent with appropriate model - use specific override if provided
+        geometry_agent = AgentFactory.create_geometry_agent(geometry_override_model)
+        
         # Generate the geometry directly for immediate response
-        # This is what the client expects
-        geometry_agent = GeometryAgent(llm_service)
         generated_code = geometry_agent.get_geometry_snippet(request.prompt)
         
         return {"result": generated_code}
@@ -540,14 +574,58 @@ async def generate_geometry(
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/models/", response_model=List[Dict[str, Any]])
+async def get_models():
+    """
+    Endpoint to get information about all available models.
+    Returns a list of registered models with their capabilities.
+    """
+    models = []
+    for model_name in ModelRegistry.list_models():
+        model_info = ModelRegistry.create_instance(model_name)
+        models.append({
+            "name": model_name,
+            "display_name": model_info.display_name,
+            "provider": model_info.provider,
+            "categories": [category for category in model_info.categories],
+            "context_length": model_info.context_length,
+            "is_default": model_info.is_default
+        })
+    return models
+
+@router.get("/agent-models/", response_model=List[Dict[str, Any]])
+async def get_agent_model_configs():
+    """
+    Endpoint to get information about all agent-model configurations.
+    Returns a list of agents with their preferred models.
+    """
+    from agent_management.agent_model_config import AGENT_MODEL_MAP, AgentType
+    
+    configs = []
+    for agent_type in AgentType:
+        if agent_type in AGENT_MODEL_MAP:
+            config = AGENT_MODEL_MAP[agent_type]
+            configs.append({
+                "agent_type": agent_type,
+                "preferred_model": config.preferred_model,
+                "fallback_models": config.fallback_models,
+                "required_categories": [category for category in config.required_categories],
+                "description": config.description
+            })
+    
+    return configs
+
 @router.post("/generate-script/", response_model=SceneScript)
 async def generate_script(
-    request: PromptRequest,
-    llm_service=Depends(use_llm)
+    request: PromptRequest
     ):
     """
     Endpoint to generate a structured scene script based on user prompt.
     Only generates scripts for scientific content.
+    
+    Query parameters:
+    - model: Optional specific model to use for all agents
+    - preferred_model_category: Optional model category preference
     """
     try:
         if not os.getenv("OPENAI_API_KEY"):
@@ -556,8 +634,14 @@ async def generate_script(
                 detail="OPENAI_API_KEY environment variable is not set"
             )
         
+        # Get override model from request if specified
+        override_model = request.model
+        
+        # Create agents with appropriate models
+        domain_validator = AgentFactory.create_domain_validator(override_model)
+        
         # First validate that the prompt is scientific
-        validation_result = domain_validator.is_scientific(request.prompt)
+        validation_result = domain_validator.is_molecular(request.prompt)
         
         # If not scientific, reject the prompt
         if not validation_result.is_true:
@@ -565,7 +649,10 @@ async def generate_script(
                 status_code=400,
                 detail=f"Non-scientific prompt rejected: {validation_result.reasoning}"
             )
-        script_agent = ScriptAgent(llm_service)
+            
+        # Create script agent with appropriate model
+        script_agent = AgentFactory.create_script_agent(override_model)
+        
         # If scientific, generate the script
         animation_script = script_agent.generate_script(request.prompt)
         return animation_script
@@ -616,11 +703,14 @@ class PackagedSceneResponse(BaseModelWithConfig):
 @router.post("/generate-orchestration/", response_model=OrchestrationPlan)
 async def generate_orchestration(
     request: ScriptRequest,
-    llm_service=Depends(use_llm)
+    model: Optional[str] = None  # Add query parameter for model override
     ):
     """
     Endpoint to generate an orchestration plan from a scene script.
     Breaks down the script into discrete objects needed for the visualization.
+    
+    Query parameters:
+    - model: Optional specific model to use for orchestration agent
     """
     try:
         if not os.getenv("OPENAI_API_KEY"):
@@ -628,7 +718,10 @@ async def generate_orchestration(
                 status_code=500,
                 detail="OPENAI_API_KEY environment variable is not set"
             )
-        orchestration_agent = OrchestrationAgent(llm_service)
+        
+        # Create orchestration agent with appropriate model (potentially overriding with query param)
+        orchestration_agent = AgentFactory.create_orchestration_agent(model)
+        
         # Generate the orchestration plan from the script
         orchestration_plan = orchestration_agent.generate_orchestration_plan(request.script)
         return orchestration_plan
@@ -636,8 +729,15 @@ async def generate_orchestration(
         raise HTTPException(status_code=500, detail=str(e))
 
 # Background task to generate geometry for all objects in the plan
-async def generate_geometry_task(job_id: str, plan: OrchestrationPlan):
-    """Background task to generate geometry for all objects in the plan"""
+async def generate_geometry_task(job_id: str, plan: OrchestrationPlan, override_model: Optional[str] = None):
+    """
+    Background task to generate geometry for all objects in the plan
+    
+    Args:
+        job_id: The unique job identifier
+        plan: The orchestration plan to process
+        override_model: Optional model name to override the default for the geometry agent
+    """
     try:
         # Initialize job status
         geometry_jobs[job_id] = {
@@ -646,6 +746,9 @@ async def generate_geometry_task(job_id: str, plan: OrchestrationPlan):
             "completed": 0,
             "results": None
         }
+        
+        # Create orchestration agent with appropriate model
+        orchestration_agent = AgentFactory.create_orchestration_agent(override_model)
         
         # Generate geometry for all objects
         results = await orchestration_agent.generate_geometry_from_plan(plan)
@@ -661,10 +764,17 @@ async def generate_geometry_task(job_id: str, plan: OrchestrationPlan):
         geometry_jobs[job_id]["error"] = str(e)
 
 @router.post("/generate-geometry-for-plan/", response_model=GeometryGenerationResponse)
-async def generate_geometry_for_plan(request: OrchestrationRequest, background_tasks: BackgroundTasks):
+async def generate_geometry_for_plan(
+    request: OrchestrationRequest, 
+    background_tasks: BackgroundTasks,
+    model: Optional[str] = None  # Add query parameter for model override
+):
     """
     Endpoint to generate Three.js geometry for all objects in an orchestration plan.
     This starts an asynchronous job that processes each object sequentially.
+    
+    Query parameters:
+    - model: Optional specific model to use for geometry generation
     """
     try:
         if not os.getenv("OPENAI_API_KEY"):
@@ -677,8 +787,8 @@ async def generate_geometry_for_plan(request: OrchestrationRequest, background_t
         import uuid
         job_id = str(uuid.uuid4())
         
-        # Start the background task to generate geometry
-        background_tasks.add_task(generate_geometry_task, job_id, request.plan)
+        # Start the background task to generate geometry with potential model override
+        background_tasks.add_task(generate_geometry_task, job_id, request.plan, model)
         
         # Return the job ID so the client can check status
         return {
@@ -711,11 +821,14 @@ async def get_geometry_job_status(job_id: str):
 @router.post("/generate-animation/", response_model=AnimationResponse)
 async def generate_animation(
     request: AnimationRequest,
-    llm_service=Depends(use_llm)
+    model: Optional[str] = None  # Add query parameter for model override
     ):
     """
     Generate animation code for a scene based on the script, orchestration plan, and generated geometries.
     This endpoint takes the outputs from previous steps in the pipeline.
+    
+    Query parameters:
+    - model: Optional specific model to use for animation code generation
     """
     try:
         if not os.getenv("OPENAI_API_KEY"):
@@ -723,7 +836,10 @@ async def generate_animation(
                 status_code=500,
                 detail="OPENAI_API_KEY environment variable is not set"
             )
-        animation_agent = AnimationAgent(llm_service)
+        
+        # Create animation agent with appropriate model (potentially overriding with query param)
+        animation_agent = AgentFactory.create_animation_agent(model)
+        
         # Generate animation code
         animation = animation_agent.generate_animation_code(
             script=request.script,
@@ -762,14 +878,28 @@ async def package_scene(request: PackagedSceneRequest):
             animation_code=request.animation_code
         )
         
-        # Save the JS file to the static directory
+        # Save the JS and HTML files to the static directory
         import os
         static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static")
         os.makedirs(static_dir, exist_ok=True)
         
+        # Generate filenames with timestamp to avoid conflicts
+        import datetime
+        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        js_filename = f"scene_{timestamp}.js"
+        html_filename = f"scene_{timestamp}.html"
+        
         # Write the JavaScript to a file
+        with open(os.path.join(static_dir, js_filename), "w") as f:
+            f.write(scene_package.js)
+            
+        # Also save as scene.js for backward compatibility
         with open(os.path.join(static_dir, "scene.js"), "w") as f:
             f.write(scene_package.js)
+        
+        # Write the HTML file with embedded JavaScript
+        with open(os.path.join(static_dir, html_filename), "w") as f:
+            f.write(scene_package.html)
         
         return {
             "html": scene_package.html,
