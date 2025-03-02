@@ -23,6 +23,7 @@ class ModelInfo(BaseModel):
     categories: List[ModelCategory] = Field(description="Model capabilities")
     context_length: int = Field(description="Maximum context length in tokens")
     is_default: bool = Field(default=False, description="Whether this is a default model")
+    default_for: List[str] = Field(default_factory=list, description="List of use cases for which this model is default (e.g. 'geometry', 'molecular')")
     api_params: Dict[str, Any] = Field(default_factory=dict, description="Provider-specific API parameters")
 
 # Register LLM models
@@ -183,6 +184,7 @@ def register_models():
             categories=kwargs.get("categories", [ModelCategory.GENERAL, ModelCategory.REASONING, ModelCategory.CODE]),
             context_length=kwargs.get("context_length", 128000),
             is_default=kwargs.get("is_default", False),
+            default_for=kwargs.get("default_for", ["geometry"]),
             api_params=kwargs.get("api_params", {})
         )
     )
@@ -255,8 +257,30 @@ def get_llm_service(model_name: str) -> LLMService:
     # Create and return the LLM service
     return LLMService(config=llm_config)
 
+def get_default_model_for_use_case(use_case: str) -> str:
+    """
+    Get the name of the default model for a specific use case.
+    
+    Args:
+        use_case: The use case to get the default model for (e.g. 'geometry', 'molecular')
+        
+    Returns:
+        The name of the default model for the use case
+        
+    Raises:
+        ValueError: If no default model is found for the use case
+    """
+    for name in ModelRegistry.list_models():
+        model_info = ModelRegistry.create_instance(name)
+        if use_case in model_info.default_for:
+            return name
+    
+    # If no default is set for this use case, return the global default or first model
+    return get_default_model()
+
 def get_default_model() -> str:
     """Get the name of the default model"""
+    # First check for global default
     for name in ModelRegistry.list_models():
         model_info = ModelRegistry.create_instance(name)
         if model_info.is_default:

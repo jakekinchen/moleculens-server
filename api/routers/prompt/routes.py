@@ -524,7 +524,8 @@ async def validate_scientific(
 
 @router.post("/generate-geometry/", response_model=GeometryResponse)
 async def generate_geometry(
-    request: GeometryRequest
+    request: GeometryRequest,
+    llm_service: LLMService = Depends(use_llm)
     ):
     """
     Endpoint to generate Three.js geometry based on user prompt.
@@ -536,6 +537,7 @@ async def generate_geometry(
     Query parameters:
     - model: Optional global model override for all agents
     - preferred_model_category: Optional model category preference
+    - use_case: Set to 'geometry' to use the geometry-specific default model
     """
     try:
         if not os.getenv("OPENAI_API_KEY"):
@@ -591,7 +593,8 @@ async def get_models():
             "provider": model_info.provider,
             "categories": [category for category in model_info.categories],
             "context_length": model_info.context_length,
-            "is_default": model_info.is_default
+            "is_default": model_info.is_default,
+            "default_for": model_info.default_for
         })
     return models
 

@@ -8,7 +8,8 @@ from typing import Optional
 
 async def use_llm(
     request: Request,
-    model_name: Optional[str] = Query(None, alias="model")
+    model_name: Optional[str] = Query(None, alias="model"),
+    use_case: Optional[str] = Query(None, description="The use case to get the default model for (e.g. 'geometry', 'molecular')")
 ):
     """
     Dependency that initializes LLMService based on the model query parameter.
@@ -17,11 +18,13 @@ async def use_llm(
     Features:
     - Can specify model directly via query parameter
     - Can specify preferred_model_category in request body
+    - Can specify use_case to get the default model for that use case
     - Falls back to default model if nothing specified
     
     Args:
         request: The FastAPI request object to access the body
         model_name: The name of the model to use, or None to use the default
+        use_case: The use case to get the default model for (e.g. 'geometry', 'molecular')
         
     Returns:
         An initialized LLMService instance
@@ -70,6 +73,15 @@ async def use_llm(
         # If any error happens parsing the body, just fall through to default
         pass
     
-    # Third priority: Use the default model
+    # Third priority: Use the use case-specific default model if provided
+    if use_case:
+        try:
+            default_model = get_default_model_for_use_case(use_case)
+            return get_llm_service(default_model)
+        except Exception:
+            # If any error happens getting the use case default, fall through to global default
+            pass
+    
+    # Fourth priority: Use the global default model
     default_model = get_default_model()
     return get_llm_service(default_model)

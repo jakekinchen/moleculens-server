@@ -18,6 +18,22 @@ class AnthropicProvider(LLMProvider):
             api_key=api_key,
             http_client=client
         )
+        
+    def _get_token_usage_from_stream(self, stream):
+        """Extract token usage from stream if available"""
+        if hasattr(stream, "usage"):
+            return {
+                "prompt_tokens": stream.usage.input_tokens,
+                "completion_tokens": stream.usage.output_tokens,
+                "total_tokens": stream.usage.input_tokens + stream.usage.output_tokens
+            }
+        else:
+            # Default usage when not available
+            return {
+                "prompt_tokens": 0,
+                "completion_tokens": 0,
+                "total_tokens": 0
+            }
 
     def _convert_messages(self, request: LLMRequest) -> List[Dict[str, str]]:
         """Convert our message format to Anthropic's format"""
@@ -38,7 +54,7 @@ class AnthropicProvider(LLMProvider):
             params: Dict[str, Any] = {
                 "model": request.llm_config.model_name,
                 "messages": messages,
-                "max_tokens": request.max_tokens or 1024
+                "max_tokens": request.max_tokens or 4096  # Use a smaller default max_tokens
             }
             
             # Add system prompt as a top-level parameter if provided
@@ -51,26 +67,38 @@ class AnthropicProvider(LLMProvider):
             if request.top_p is not None:
                 params["top_p"] = request.top_p
             
-            response = self.client.messages.create(**params)
-            
-            if not response.content or len(response.content) == 0:
-                raise ValueError("No response content received from Anthropic")
-            
-            # Get the text content from the first content block
-            content = response.content[0].text
-            
-            # Get token usage from response
-            usage = {
-                "prompt_tokens": response.usage.input_tokens,
-                "completion_tokens": response.usage.output_tokens,
-                "total_tokens": response.usage.input_tokens + response.usage.output_tokens
-            }
-            
-            return LLMResponse(
-                content=content,
-                model=request.llm_config.model_name,
-                usage=usage
-            )
+            # Use streaming for large token requests
+            if params["max_tokens"] > 4096:
+                content_parts = []
+                with self.client.messages.stream(**params) as stream:
+                    for message in stream:
+                        if message.type == "content_block":
+                            content_parts.append(message.content[0].text)
+                        elif message.type == "content_block_delta":
+                            if hasattr(message.delta, "text"):
+                                content_parts.append(message.delta.text)
+                
+                if not content_parts:
+                    raise ValueError("No response content received from Anthropic")
+                
+                content = "".join(content_parts)
+                return LLMResponse(
+                    content=content,
+                    model=request.llm_config.model_name,
+                    usage=self._get_token_usage_from_stream(stream)
+                )
+            else:
+                # Use non-streaming for shorter responses
+                response = self.client.messages.create(**params)
+                
+                if not response.content or not response.content[0].text:
+                    raise ValueError("No response content received from Anthropic")
+                
+                return LLMResponse(
+                    content=response.content[0].text,
+                    model=request.llm_config.model_name,
+                    usage=self._get_token_usage_from_stream(response)
+                )
         except Exception as e:
             raise Exception(f"Anthropic API error: {str(e)}")
 
@@ -94,7 +122,7 @@ class AnthropicProvider(LLMProvider):
                 "model": request.llm_config.model_name,
                 "messages": messages,
                 "system": system_prompt,  # Pass system prompt as top-level parameter
-                "max_tokens": request.max_tokens or 20480
+                "max_tokens": request.max_tokens or 20000  # Use a smaller default max_tokens
             }
             
             # Add optional parameters
@@ -102,16 +130,34 @@ class AnthropicProvider(LLMProvider):
                 params["temperature"] = request.temperature
             if request.top_p is not None:
                 params["top_p"] = request.top_p
+            
+            # Use streaming for large token requests
+            if params["max_tokens"] > 20000:
+                content_parts = []
+                with self.client.messages.stream(**params) as stream:
+                    for message in stream:
+                        if message.type == "content_block":
+                            content_parts.append(message.content[0].text)
+                        elif message.type == "content_block_delta":
+                            if hasattr(message.delta, "text"):
+                                content_parts.append(message.delta.text)
                 
-            response = self.client.messages.create(**params)
+                if not content_parts:
+                    raise ValueError("No response content received from Anthropic")
+                
+                content = "".join(content_parts)
+            else:
+                # Use non-streaming for shorter responses
+                response = self.client.messages.create(**params)
+                
+                if not response.content or not response.content[0].text:
+                    raise ValueError("No response content received from Anthropic")
+                
+                content = response.content[0].text
             
-            if not response.content or len(response.content) == 0:
-                raise ValueError("No response content received from Anthropic")
-            
-            content = response.content[0].text
             if not content:
                 raise ValueError("Empty response content from Anthropic")
-                
+            
             # Clean up the response to extract JSON
             content = content.strip()
             
