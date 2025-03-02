@@ -4,7 +4,7 @@ Geometry Agent - Provides static geometry code snippets for the visualization.
 
 import json
 from agent_management.llm_service import LLMService, LLMRequest
-from agent_management.providers.deepseek_utils import is_deepseek_model, extract_structured_output_from_deepseek
+from agent_management.utils.code_extraction import extract_code_block
 
 class GeometryAgent:
     def __init__(self, llm_service: LLMService):
@@ -129,14 +129,8 @@ Return your code as a single JavaScript snippet, with no JSON wrapper.
         # Get the response from the LLM service
         llm_response = self.llm_service.generate(request)
         
-        # Extract the content from the LLMResponse
-        raw_content = llm_response.content.strip()
-        
-        # Check if we're using a DeepSeek model and apply special extraction if needed
-        if is_deepseek_model(llm_response.model):
-            geometry_code = extract_structured_output_from_deepseek(raw_content, "javascript")
-        else:
-            geometry_code = raw_content
+        # Extract the content from the LLMResponse and clean it
+        geometry_code = extract_code_block(llm_response.content, "javascript")
         
         return f"""
 // GeometryAgent LLM-generated code

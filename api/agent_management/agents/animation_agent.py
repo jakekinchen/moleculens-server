@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Any
 import re
 from agent_management.models import SceneScript, OrchestrationPlan, AnimationCode, AnimationKeyframe
 from agent_management.llm_service import LLMService, LLMRequest, StructuredLLMRequest
+from agent_management.utils.code_extraction import extract_code_block
 
 class AnimationAgent:
     def __init__(self, llm_service: LLMService):
@@ -352,9 +353,7 @@ REMEMBER:
         
     def get_animation_snippet(self, user_prompt: str) -> str:
         """
-        Legacy method for generating Three.js animation code using LLM based on user prompt.
-        This code will animate the objects created by the GeometryAgent,
-        with special focus on scientific visualizations like molecular structures.
+        Generate Three.js animation code using LLM.
         """
         prompt_for_llm = f"You are an expert Three.js animator specializing in scientific visualizations, particularly molecular structures and chemical reactions. The user wants to animate a scene with the following prompt: '{user_prompt}'\n\n" + r"""
 Requirements:
@@ -469,7 +468,7 @@ Return your code as a single JavaScript snippet tailored to the user's prompt, w
 """
 
         llm_response = self.llm_service.generate(prompt_for_llm)
-        animation_code = llm_response.content.strip()
+        animation_code = extract_code_block(llm_response.content, "javascript")
         
         return f"""
 // AnimationAgent LLM-generated code
