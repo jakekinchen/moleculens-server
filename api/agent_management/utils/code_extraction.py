@@ -15,8 +15,6 @@ def extract_code_block(content: str, language: Optional[str] = None) -> str:
     Returns:
         The extracted code with markers removed
     """
-    # Remove thinking sections
-    content = re.sub(r'<think(?:ing)?>(.*?)</think(?:ing)?>', '', content, flags=re.DOTALL)
     
     # Try language-specific code block
     if language:
@@ -25,10 +23,6 @@ def extract_code_block(content: str, language: Optional[str] = None) -> str:
         if match:
             return match.group(1).strip()
     
-    # Try generic code block
-    match = re.search(r"```\s*(.*?)\s*```", content, re.DOTALL)
-    if match:
-        return match.group(1).strip()
     
     # If no code block found, return cleaned content
     return content.strip() 

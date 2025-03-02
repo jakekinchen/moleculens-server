@@ -59,7 +59,7 @@ DEFAULT_AGENT_MODELS = [
     
     AgentModelConfig(
         agent_type=AgentType.GEOMETRY,
-        preferred_model="claude-3-7-sonnet-latest",  # Code generation quality
+        preferred_model="claude-3-5-sonnet-latest",  # Code generation quality
         fallback_models=["gpt-4.5-preview", "qwen-2.5-coder-32b"],
         required_categories=[ModelCategory.CODE],
         description="Generates Three.js geometry code for objects"

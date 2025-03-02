@@ -14,114 +14,113 @@ class GeometryAgent:
         """
         Generate Three.js geometry code using LLM.
         """
-        prompt_for_llm = f"You are a helpful assistant generating Three.js geometry code. The user wants geometry for a scene with the following prompt: '{user_prompt}'\n\n" + r"""
-Requirements:
-- Return only JavaScript code that references 'scene' (a global variable).
-- Do NOT create or re-declare lights or cameras. Only geometry or materials.
-- Do NOT include text sprites or labels - these will be handled separately.
-- Use window.* references if you need to store global references, e.g., window.myMesh = ...
-- For molecular structures, group atoms and bonds together first and then add the group to the scene.
-- IMPORTANT: In modern versions of THREE.js, THREE.Curve is an ES6 class, so it must be instantiated with new rather than being called as a regular function. This misuse of the class constructor is what's causing the error.
+        prompt_for_llm = f"""You are a helpful assistant generating Three.js geometry code. The user wants geometry for a scene with the following prompt: '{user_prompt}'
 
-Here's an example of how to properly create an ethanol molecule when prompted with "make an ethanol molecule":
+Requirements:
+1. Code Style and Syntax:
+   - Use proper semicolons after ALL complete statements, including:
+     * Variable declarations and assignments
+     * Method calls
+     * Multi-line method chains (after the last method)
+     * Function expressions
+   - Use consistent 4-space indentation
+   - Add descriptive comments for each major section
+   - Use proper variable declarations (const/let)
+
+2. Three.js Specifics:
+   - Return only JavaScript code that references 'scene' (a global variable)
+   - Do NOT create or re-declare lights or cameras
+   - Do NOT include text sprites or labels
+   - Use window.* references for global objects (e.g., window.myMesh = ...)
+   - For molecular structures, group atoms and bonds together first
+   - Use THREE.Curve as an ES6 class with 'new' keyword
+
+3. Code Organization:
+   - Create materials first
+   - Then create geometries
+   - Group related objects together
+   - Add cleanup/disposal functions when needed
+   - Add error handling for undefined scene object
+
+Here's an example of proper code style and semicolon usage, particularly for molecular structures:
 
 ```javascript
-// Create atom materials
-const carbonMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
-const oxygenMaterial = new THREE.MeshPhongMaterial({ color: 0xff0000 });
-const hydrogenMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff });
-const bondMaterial = new THREE.MeshPhongMaterial({ color: 0x999999 });
+// Verify scene exists
+if (typeof scene === 'undefined') {{
+    throw new Error('Scene object is undefined.');
+}}
 
-// Create atom geometry
+// Create materials with proper semicolons
+const carbonMaterial = new THREE.MeshPhongMaterial({{ color: 0x333333 }});
+const hydrogenMaterial = new THREE.MeshPhongMaterial({{ color: 0xffffff }});
+
+// Create geometries
 const atomGeometry = new THREE.SphereGeometry(1, 32, 32);
 
-// Create a group for the molecule first
+// Create a group for the molecule
 const molecule = new THREE.Group();
-window.molecule = molecule;
+window.molecule = molecule;  // Store global reference
 
-// Carbon atoms
-const c1 = new THREE.Mesh(atomGeometry, carbonMaterial);
-c1.position.set(0, 0, 0);
-c1.scale.set(0.5, 0.5, 0.5);
+// Create atoms with proper multi-line statements
+const carbon = new THREE.Mesh(atomGeometry, carbonMaterial);
+carbon.position.copy(
+    new THREE.Vector3(0, 0, 0)
+).normalize();  // Note the semicolon after multi-line method chain
 
-const c2 = new THREE.Mesh(atomGeometry, carbonMaterial);
-c2.position.set(1.5, 0, 0);
-c2.scale.set(0.5, 0.5, 0.5);
+const hydrogen = new THREE.Mesh(atomGeometry, hydrogenMaterial);
+hydrogen.position.set(
+    Math.cos(109.5 * Math.PI / 180) * bondLength,
+    Math.sin(109.5 * Math.PI / 180) * bondLength,
+    0
+);  // Note the semicolon after multi-line method call
 
-// Oxygen atom
-const o = new THREE.Mesh(atomGeometry, oxygenMaterial);
-o.position.set(3, 0, 0);
-o.scale.set(0.55, 0.55, 0.55);
-
-// Hydrogen atoms
-const h1 = new THREE.Mesh(atomGeometry, hydrogenMaterial);
-h1.position.set(-0.8, 0.8, 0);
-h1.scale.set(0.3, 0.3, 0.3);
-
-const h2 = new THREE.Mesh(atomGeometry, hydrogenMaterial);
-h2.position.set(-0.8, -0.8, 0);
-h2.scale.set(0.3, 0.3, 0.3);
-
-const h3 = new THREE.Mesh(atomGeometry, hydrogenMaterial);
-h3.position.set(0, 0, -0.8);
-h3.scale.set(0.3, 0.3, 0.3);
-
-const h4 = new THREE.Mesh(atomGeometry, hydrogenMaterial);
-h4.position.set(1.5, 0.8, 0);
-h4.scale.set(0.3, 0.3, 0.3);
-
-const h5 = new THREE.Mesh(atomGeometry, hydrogenMaterial);
-h5.position.set(1.5, -0.8, 0);
-h5.scale.set(0.3, 0.3, 0.3);
-
-const h6 = new THREE.Mesh(atomGeometry, hydrogenMaterial);
-h6.position.set(3.8, 0, 0);
-h6.scale.set(0.3, 0.3, 0.3);
-
-// Create bonds function
-function createBond(start, end) {
+// Bond creation function with proper returns
+function createBond(start, end) {{
     const direction = new THREE.Vector3().subVectors(end, start);
     const length = direction.length();
     
     const bondGeometry = new THREE.CylinderGeometry(0.1, 0.1, length, 8);
     const bond = new THREE.Mesh(bondGeometry, bondMaterial);
     
-    // Position and rotate the bond
-    bond.position.copy(start);
-    bond.position.lerp(end, 0.5);
+    bond.position.copy(start).lerp(end, 0.5);  // Method chaining with semicolon
     
-    // Orient the cylinder
     bond.quaternion.setFromUnitVectors(
         new THREE.Vector3(0, 1, 0),
         direction.clone().normalize()
-    );
+    );  // Multi-line method with semicolon
     
     return bond;
-}
+}}
 
-// Create all bonds
-const bonds = [
-    createBond(c1.position, c2.position),
-    createBond(c2.position, o.position),
-    createBond(c1.position, h1.position),
-    createBond(c1.position, h2.position),
-    createBond(c1.position, h3.position),
-    createBond(c2.position, h4.position),
-    createBond(c2.position, h5.position),
-    createBond(o.position, h6.position)
-];
-
-// Add all atoms and bonds to the molecule group
-molecule.add(c1, c2, o, h1, h2, h3, h4, h5, h6, ...bonds);
-
-// Then add the molecule group to the scene
+// Add to scene with proper cleanup
+molecule.add(carbon, hydrogen);
 scene.add(molecule);
+
+// Add cleanup function
+if (typeof window !== 'undefined') {{
+    window.disposeMolecule = function() {{
+        if (window.molecule) {{
+            window.molecule.traverse((object) => {{
+                if (object.geometry) object.geometry.dispose();
+                if (object.material) {{
+                    if (Array.isArray(object.material)) {{
+                        object.material.forEach(m => m.dispose());
+                    }} else {{
+                        object.material.dispose();
+                    }}
+                }}
+            }});
+            scene.remove(window.molecule);
+            window.molecule = undefined;
+        }}
+    }};
+}}
 ```
 
 Return your code as a single JavaScript snippet, with no JSON wrapper.
 """
 
-        # Create a proper LLMRequest
+        # Create a proper LLMRequest with higher max_tokens
         request = LLMRequest(
             user_prompt=prompt_for_llm
         )

@@ -50,6 +50,8 @@ class CompletePipelineResponse(BaseModelWithConfig):
 
 class GeometryResponse(BaseModel):
     result: str
+    is_molecular: bool = True
+    validation_message: Optional[str] = None
 
 class GeometryRequest(BaseModel):
     """Request model for geometry generation, optionally with preferred model type"""
@@ -59,8 +61,7 @@ class GeometryRequest(BaseModel):
 
 class ValidationResponse(BaseModel):
     is_molecular: bool
-    confidence: float
-    reasoning: str
+
     
 class VisualizationData(BaseModel):
     html: str
@@ -458,7 +459,7 @@ async def submit_prompt(
                 "job_id": "rejected",
                 "status": "failed",
                 "message": "Non-scientific prompt rejected",
-                "error": validation_result.reasoning
+                "error": "The prompt does not contain molecular content"
             }
         
         # Generate a unique job ID
@@ -553,10 +554,12 @@ async def generate_geometry(
         validation_result = domain_validator.is_molecular(request.prompt)
         
         if not validation_result.is_true:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Non-scientific prompt rejected: {validation_result.reasoning}"
-            )
+            # Instead of raising an error, return a response indicating non-molecular content
+            return {
+                "result": "",
+                "is_molecular": False,
+                "validation_message": "The prompt does not contain molecular content"
+            }
             
         # Create geometry agent with appropriate model - use specific override if provided
         geometry_agent = AgentFactory.create_geometry_agent(global_override_model)
@@ -564,7 +567,11 @@ async def generate_geometry(
         # Generate the geometry directly for immediate response
         generated_code = geometry_agent.get_geometry_snippet(request.prompt)
         
-        return {"result": generated_code}
+        return {
+            "result": generated_code,
+            "is_molecular": True,
+            "validation_message": None
+        }
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
@@ -642,7 +649,7 @@ async def generate_script(
         if not validation_result.is_true:
             raise HTTPException(
                 status_code=400,
-                detail=f"Non-scientific prompt rejected: {validation_result.reasoning}"
+                detail="Non-scientific prompt rejected: The prompt does not contain molecular content"
             )
             
         # Create script agent with appropriate model

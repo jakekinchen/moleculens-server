@@ -26,7 +26,7 @@ if is_development:
         "http://localhost:3000",  # React development server
         "http://localhost:8000",  # Backend server (for serving frontend in production)
     ]
-    allow_credentials = False
+    allow_credentials = True
 else:
     # Production mode - use wildcard
     origins = ["*"]

@@ -40,10 +40,6 @@ def extract_javascript_from_deepseek_response(response: str) -> str:
     if html_match:
         return html_match.group(1).strip()
     
-    # If no JavaScript block is found, try to find any code block
-    code_match = re.search(r"```\s*([\s\S]*?)\s*```", response)
-    if code_match:
-        return code_match.group(1).strip()
     
     # If no code block is found, return the original response
     return response
@@ -59,11 +55,7 @@ def extract_structured_output_from_deepseek(response: str, output_type: str = "j
     Returns:
         The extracted structured output, or the original response if no matching block is found
     """
-    # Remove thinking section if present (handle both <thinking> and <think> tags)
-    thinking_match = re.search(r"<thinking>([\s\S]*?)</thinking>", response)
-    if thinking_match:
-        # Remove the thinking section from the response
-        response = response.replace(thinking_match.group(0), "").strip()
+
     
     # Also check for <think> tags which are used in some DeepSeek models
     think_match = re.search(r"<think>([\s\S]*?)</think>", response)
