@@ -102,7 +102,7 @@ class JobResponse(BaseModel):
 from agent_management.model_config import get_default_model, get_llm_service
 
 # Simple in-memory job stores
-# In a production app, these would use Redis or another persistent store
+# In a production app
 geometry_jobs: Dict[str, Dict[str, Any]] = {}
 pipeline_jobs: Dict[str, Dict[str, Any]] = {}
 
