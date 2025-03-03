@@ -62,7 +62,8 @@ class AgentFactory:
     @staticmethod
     def create_pubchem_agent(override_model: Optional[str] = None, 
                              use_element_labels: bool = True,
-                             convert_back_to_indices: bool = False) -> PubChemAgent:
+                             convert_back_to_indices: bool = False,
+                             script_model: Optional[str] = None) -> PubChemAgent:
         """
         Create a PubChem agent
         
@@ -70,12 +71,14 @@ class AgentFactory:
             override_model: Optional model name to override the default
             use_element_labels: Whether to use element-based labels (C1, O1) instead of indices
             convert_back_to_indices: Whether to convert element-labels back to numeric indices after script generation
+            script_model: Optional model name to override specifically for the script agent
         """
         llm_service = create_agent_llm_service(AgentType.PUBCHEM, override_model)
         return PubChemAgent(
             llm_service, 
             use_element_labels=use_element_labels,
-            convert_back_to_indices=convert_back_to_indices
+            convert_back_to_indices=convert_back_to_indices,
+            script_model=script_model
         )
     
     @staticmethod
@@ -97,6 +100,10 @@ class AgentFactory:
             AgentType.ANIMATION: AgentFactory.create_animation_agent(global_override_model),
             AgentType.CAPTION: AgentFactory.create_caption_agent(global_override_model),
             AgentType.AGGREGATOR: AgentFactory.create_aggregator_agent(global_override_model),
-            AgentType.PUBCHEM: AgentFactory.create_pubchem_agent(global_override_model)
+            AgentType.PUBCHEM: AgentFactory.create_pubchem_agent(
+                override_model=global_override_model,
+                script_model=global_override_model,
+                convert_back_to_indices=True  # Convert element-based labels back to numeric indices
+            )
         }
         return agents

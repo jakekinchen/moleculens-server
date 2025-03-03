@@ -10,8 +10,7 @@ Refactored to:
 """
 
 import re
-from rdkit import Chem
-from rdkit.Chem import AllChem
+from typing import Optional, Dict, Any
 
 class MoleculeVisualizer:
     """
@@ -79,27 +78,10 @@ class MoleculeVisualizer:
         """
         return f'<div id="molecule-label">{name}</div>'
 
-    @staticmethod
-    def _sdf_to_pdb_block(sdf_data: str) -> str:
-        """
-        Convert SDF data (string) to a single PDB block using RDKit in-memory.
-
-        Returns an empty string if conversion fails.
-        """
-        mol = Chem.MolFromMolBlock(sdf_data, sanitize=True, removeHs=False)
-        if mol is None:
-            return ""
-
-        if mol.GetNumConformers() == 0:
-            AllChem.EmbedMolecule(mol, AllChem.ETKDG())
-
-        AllChem.MMFFOptimizeMolecule(mol)
-
-        pdb_data = Chem.MolToPDBBlock(mol)
-        return pdb_data if pdb_data else ""
+    
 
     @classmethod
-    def generate_js_code_from_sdf(cls, sdf_data: str, name: str = "Molecule") -> str:
+    def generate_js_code_from_pdb(cls, pdb_data: str, name: str = "Molecule") -> str:
         """
         Return minimal JavaScript snippet that:
         - Converts SDF to PDB in Python, embed it here
@@ -110,9 +92,6 @@ class MoleculeVisualizer:
         - Perfect for embedding in React or other Three.js setups
         """
 
-        pdb_data = cls._sdf_to_pdb_block(sdf_data)
-        if not pdb_data:
-            return "// GeometryAgent LLM-generated code\n// Error: Could not convert SDF to PDB"
 
         escaped_pdb = cls._escape_js_string(pdb_data)
         label_style = cls._escape_js_string(cls._get_molecule_label_style())
@@ -397,7 +376,7 @@ createMoleculeVisualization(THREE, scene);
 """
 
     @classmethod
-    def generate_html_viewer_from_sdf(cls, sdf_data: str, name: str = "Molecule") -> str:
+    def generate_html_viewer_from_pdb(cls, pdb_data: str, name: str = "Molecule") -> str:
         """
         Generate a standalone HTML file that:
         - Embeds Three.js (ESM)
@@ -409,9 +388,6 @@ createMoleculeVisualization(THREE, scene);
         - Includes toggleable atomic annotations
         """
 
-        pdb_data = cls._sdf_to_pdb_block(sdf_data)
-        if not pdb_data:
-            return f"<!DOCTYPE html><html><body><h1>Error converting SDF to PDB data for {name}</h1></body></html>"
 
         escaped_pdb = cls._escape_js_string(pdb_data)
 
@@ -740,6 +716,88 @@ function animate() {{
 </html>
 """
 
+    @classmethod
+    def generate_interactive_html(cls, 
+                                 pdb_data: str, 
+                                 title: Optional[str] = None,
+                                 script_data: Optional[Dict[str, Any]] = None,
+                                 output_path: Optional[str] = None) -> str:
+        """
+        Generate an interactive HTML visualization by injecting PDB data and optional script data
+        into the output.html template file.
+        
+        Args:
+            pdb_data (str): PDB data to inject into the template
+            title (str, optional): Title for the molecule visualization
+            script_data (dict, optional): Script data for interactive animation
+            output_path (str, optional): Path where the generated HTML file will be saved.
+                                        If not provided, returns the HTML content as a string.
+        
+        Returns:
+            str: HTML content as a string if output_path is None, otherwise the path to the generated file
+        """
+        import os
+        import re
+        import json
+        from pathlib import Path
+        
+        # Get the path to the template file (output.html in the same directory as this script)
+        template_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'output.html')
+        
+        # Read the template file
+        with open(template_path, 'r') as f:
+            template_content = f.read()
+        
+        # Create default script data if none provided
+        if script_data is None and title is not None:
+            script_data = {
+                "title": title,
+                "content": [
+                    {
+                        "timecode": "00:00",
+                        "atoms": [],
+                        "caption": f"This is {title}."
+                    }
+                ]
+            }
+        
+        # Replace script data if provided
+        if script_data:
+            # Convert script data to JSON string with proper formatting
+            script_json = json.dumps(script_data, indent=2)
+            
+            # Find the scriptData constant in the template
+            script_pattern = r'const scriptData = \{[\s\S]*?\};'
+            script_match = re.search(script_pattern, template_content)
+            
+            if script_match:
+                # Replace the scriptData constant
+                template_content = template_content[:script_match.start()] + \
+                                f'const scriptData = {script_json};' + \
+                                template_content[script_match.end():]
+        
+        # Replace PDB data if provided
+        if pdb_data:
+            # Find the pdbData constant in the template
+            pdb_pattern = r'const pdbData = `[\s\S]*?`;'
+            pdb_match = re.search(pdb_pattern, template_content)
+            
+            if pdb_match:
+                # Replace the pdbData constant
+                template_content = template_content[:pdb_match.start()] + \
+                                f'const pdbData = `{pdb_data}`;' + \
+                                template_content[pdb_match.end():]
+        
+        # Write the modified content to the output file if path provided
+        if output_path:
+            with open(output_path, 'w') as f:
+                f.write(template_content)
+            print(f"Interactive visualization generated successfully: {output_path}")
+            return output_path
+        
+        # Otherwise return the HTML content as a string
+        return template_content
+
 def main():
     """
     Simple CLI usage:
@@ -750,18 +808,18 @@ def main():
         print("Usage: python molecule_visualizer.py <input.sdf> [html|js]")
         sys.exit(1)
 
-    sdf_file = sys.argv[1]
+    pdb_file = sys.argv[1]
     mode = sys.argv[2] if len(sys.argv) > 2 else "html"
 
-    with open(sdf_file, "r") as f:
-        sdf_data = f.read()
+    with open(pdb_file, "r") as f:
+        pdb_data = f.read()
 
     name = "Molecule"
     if mode == "js":
-        code = MoleculeVisualizer.generate_js_code_from_sdf(sdf_data, name)
+        code = MoleculeVisualizer.generate_js_code_from_pdb(pdb_data, name)
         print(code)
     else:
-        html = MoleculeVisualizer.generate_html_viewer_from_sdf(sdf_data, name)
+        html = MoleculeVisualizer.generate_html_viewer_from_pdb(pdb_data, name)
         print(html)
 
 if __name__ == "__main__":

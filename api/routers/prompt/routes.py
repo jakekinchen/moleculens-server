@@ -440,8 +440,11 @@ async def generate_from_pubchem(request: PromptRequest):
                 "message": "Non-molecular prompt rejected",
                 "error": "The prompt does not contain molecular content"
             }
-        # Create geometry agent with appropriate model - use specific override if provided
-        pubchem_agent = AgentFactory.create_pubchem_agent(request.model)
+        # Create PubChem agent with script agent override - use the specified model for script generation
+        pubchem_agent = AgentFactory.create_pubchem_agent(
+            script_model=request.model,
+            convert_back_to_indices=True  # Convert element-based labels back to numeric indices for visualization
+        )
         
         # Generate the geometry directly for immediate response
         result = pubchem_agent.get_molecule_package(request.prompt)

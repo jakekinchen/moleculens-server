@@ -20,10 +20,28 @@ from agent_management.llm_service import (
     ProviderType
 )
 from rdkit import Chem
-from rdkit.Chem import Fragments, Descriptors
+from rdkit.Chem import Fragments, Descriptors, AllChem
 
 # Debug flag - set to False to disable debug logging
 DEBUG_PUBCHEM = True
+
+def _sdf_to_pdb_block(sdf_data: str) -> str:
+        """
+        Convert SDF data (string) to a single PDB block using RDKit in-memory.
+
+        Returns an empty string if conversion fails.
+        """
+        mol = Chem.MolFromMolBlock(sdf_data, sanitize=True, removeHs=False)
+        if mol is None:
+            return ""
+
+        if mol.GetNumConformers() == 0:
+            AllChem.EmbedMolecule(mol, AllChem.ETKDG())
+
+        AllChem.MMFFOptimizeMolecule(mol)
+
+        pdb_data = Chem.MolToPDBBlock(mol)
+        return pdb_data if pdb_data else ""
 
 def write_debug_file(filename: str, content: str) -> None:
     """Write debug content to a file if DEBUG_PUBCHEM is True."""
@@ -51,10 +69,11 @@ class MoleculePackage(NamedTuple):
 
 class PubChemAgent:
     def __init__(self, llm_service: LLMService, use_element_labels: bool = True, 
-                 convert_back_to_indices: bool = False):
+                 convert_back_to_indices: bool = False, script_model: Optional[str] = None):
         self.llm_service = llm_service
         self.use_element_labels = use_element_labels  # Use element-based labels (C1, O1) by default
         self.convert_back_to_indices = convert_back_to_indices  # Convert back to numeric indices after script generation
+        self.script_model = script_model  # Optional model override for script agent
 
     def interpret_user_query(self, user_input: str) -> str:
         """
@@ -212,7 +231,7 @@ class PubChemAgent:
             
             try:
                 # Generate a display title for the molecule
-                display_title = compound.iupac_name if compound.iupac_name else compound.name
+                display_title = compound.name if compound.name else compound.iupac_name if compound.iupac_name else "Molecule"
                 print(f"[DEBUG] Using display title: {display_title}")
 
                 if compound.isomeric_smiles:
@@ -273,7 +292,12 @@ class PubChemAgent:
                     
 
                 # Send the molecule info and the user query to the script agent to get a script
-                script_agent = ScriptAgent(self.llm_service)
+                # Use script_model override if provided, otherwise use the same LLM service as PubChem agent
+                if self.script_model:
+                    from agent_management.agent_factory import AgentFactory
+                    script_agent = AgentFactory.create_script_agent(self.script_model)
+                else:
+                    script_agent = ScriptAgent(self.llm_service)
                 script = script_agent.generate_script_from_molecule(compound.name, user_query, molecule_data)
                 
                 # First convert to element-based labels for LLM understanding (if enabled)
@@ -293,17 +317,48 @@ class PubChemAgent:
                     )
                 
                 print(f"[DEBUG] Generated script: {script}")
+
+                pdb_data = _sdf_to_pdb_block(compound.sdf)
                 
                 # Generate the HTML content
                 print("[DEBUG] Generating HTML content...")
-                html_content = MoleculeVisualizer.generate_html_viewer_from_sdf(compound.sdf, display_title)
+                html_content = MoleculeVisualizer.generate_html_viewer_from_pdb(pdb_data, display_title)
                 
                 if DEBUG_PUBCHEM:
                     write_debug_file('pubchem_html.html', html_content)
+
+                print(f"[DEBUG] Creating interactive visualization...")
+                # Create a script data structure for the interactive visualization
+                # The script variable appears to be an object with its own 'content' property,
+                # but the JavaScript code expects scriptData.content to be an array directly
+                if isinstance(script, dict) and 'content' in script:
+                    # If script is a dict with a 'content' property, use that directly
+                    script_data = {
+                        "title": display_title,
+                        "content": script['content']
+                    }
+                else:
+                    # Otherwise, use the script as the content
+                    script_data = {
+                        "title": display_title,
+                        "content": script
+                    }
+                
+                print(f"[DEBUG] Script data structure: {type(script_data['content'])}")
+                
+                # Generate interactive HTML with both PDB data and script data
+                interactive_html = MoleculeVisualizer.generate_interactive_html(
+                    pdb_data=pdb_data, 
+                    title=display_title,
+                    script_data=script_data
+                )
+                
+                if DEBUG_PUBCHEM:
+                    write_debug_file('pubchem_interactive.html', interactive_html)
                 
                 # Generate minimal JS for embedding
                 print("[DEBUG] Generating JS content...")
-                js_content = MoleculeVisualizer.generate_js_code_from_sdf(compound.sdf, display_title)
+                js_content = MoleculeVisualizer.generate_js_code_from_pdb(pdb_data, display_title)
                 
                 if DEBUG_PUBCHEM:
                     write_debug_file('pubchem_js.js', js_content)
@@ -311,7 +366,7 @@ class PubChemAgent:
                 # Create and log the package
                 package = MoleculePackage(
                     js=js_content,
-                    html=html_content,
+                    html=interactive_html,
                     title=display_title
                 )
                 

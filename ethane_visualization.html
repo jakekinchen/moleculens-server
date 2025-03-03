@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Molecule Viewer</title>
+    <title>Molecule Viewer - Bicyclo[2.2.1]heptane</title>
     <meta charset="utf-8">
     <meta name="viewport"
           content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
@@ -80,7 +80,7 @@
 </head>
 <body>
 <div id="container"></div>
-<div id="molecule-label"></div>
+<div id="molecule-label">/div>
 <div id="pause-icon">||</div>
 
 <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
@@ -123,29 +123,32 @@ const atomMeshes = []; // Store references to atom meshes for highlighting
 
 // Script object we want to animate through
 const scriptData = {
-  "title": "Methane: The Simplest Hydrocarbon",
+  "title": "Ethane: A Simple Hydrocarbon",
   "content": [
     {
       "timecode": "00:00",
       "atoms": [],
-      "caption": "Methane is the simplest hydrocarbon with the molecular formula CH\u2084."
+      "caption": "Ethane is a simple hydrocarbon with the molecular formula C\u2082H\u2086."
     },
     {
       "timecode": "00:05",
       "atoms": [
-        "0"
+        "0",
+        "1"
       ],
-      "caption": "Methane consists of a single carbon atom at the center."
+      "caption": "Ethane consists of two carbon atoms connected by a single bond."
     },
     {
       "timecode": "00:10",
       "atoms": [
-        "1",
         "2",
         "3",
-        "4"
+        "4",
+        "5",
+        "6",
+        "7"
       ],
-      "caption": "The carbon atom is bonded to four hydrogen atoms in a tetrahedral arrangement."
+      "caption": "Each carbon atom is bonded to three hydrogen atoms."
     },
     {
       "timecode": "00:15",
@@ -154,9 +157,12 @@ const scriptData = {
         "1",
         "2",
         "3",
-        "4"
+        "4",
+        "5",
+        "6",
+        "7"
       ],
-      "caption": "Methane is the main component of natural gas and a potent greenhouse gas."
+      "caption": "The molecule has free rotation around the carbon-carbon bond, leading to different conformations."
     }
   ]
 };
@@ -403,14 +409,18 @@ function init() {
     window.addEventListener('resize', onWindowResize);
 
     // PDB data for norbornane
-    const pdbData = `COMPND    297
+    const pdbData = `COMPND    6324
 HETATM    1  C1  UNL     1       0.000   0.000   0.000  1.00  0.00           C  
-HETATM    2  H1  UNL     1       0.635   0.635   0.635  1.00  0.00           H  
-HETATM    3  H2  UNL     1      -0.635   0.635  -0.635  1.00  0.00           H  
-HETATM    4  H3  UNL     1      -0.635  -0.635   0.635  1.00  0.00           H  
-HETATM    5  H4  UNL     1       0.635  -0.635  -0.635  1.00  0.00           H  
+HETATM    2  C2  UNL     1       1.540   0.000   0.000  1.00  0.00           C  
+HETATM    3  H1  UNL     1      -0.363  -0.527   0.890  1.00  0.00           H  
+HETATM    4  H2  UNL     1      -0.363  -0.527  -0.890  1.00  0.00           H  
+HETATM    5  H3  UNL     1      -0.363   1.027   0.000  1.00  0.00           H  
+HETATM    6  H4  UNL     1       1.903   0.527  -0.890  1.00  0.00           H  
+HETATM    7  H5  UNL     1       1.903   0.527   0.890  1.00  0.00           H  
+HETATM    8  H6  UNL     1       1.903  -1.027   0.000  1.00  0.00           H  
 CONECT    1    2    3    4    5
-END`;
+CONECT    2    1    6    7    8
+END `;
     const pdbBlob = new Blob([pdbData], { type: 'text/plain' });
     const pdbUrl = URL.createObjectURL(pdbBlob);
 

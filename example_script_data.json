@@ -1,0 +1,25 @@
+{
+  "title": "Ethane: A Simple Hydrocarbon",
+  "content": [
+    {
+      "timecode": "00:00",
+      "atoms": [],
+      "caption": "Ethane is a simple hydrocarbon with the molecular formula C₂H₆."
+    },
+    {
+      "timecode": "00:05",
+      "atoms": ["0", "1"],
+      "caption": "Ethane consists of two carbon atoms connected by a single bond."
+    },
+    {
+      "timecode": "00:10",
+      "atoms": ["2", "3", "4", "5", "6", "7"],
+      "caption": "Each carbon atom is bonded to three hydrogen atoms."
+    },
+    {
+      "timecode": "00:15",
+      "atoms": ["0", "1", "2", "3", "4", "5", "6", "7"],
+      "caption": "The molecule has free rotation around the carbon-carbon bond, leading to different conformations."
+    }
+  ]
+} 
