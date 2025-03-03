@@ -1,8 +1,25 @@
-// GeometryAgent LLM-generated code
-function createMoleculeVisualization(THREE, scene) {
+
+function createMoleculeVisualization(THREE, scene, options = {}) {
+    console.log('createMoleculeVisualization');
+    // Configuration options with defaults
+    const config = {
+        enableAnnotations: true,  // Toggle atomic annotations
+        scaleFactor: 0.6,       // Scale factor to control molecule size
+        camera: null,           // Camera instance (optional)
+        controls: null,         // Controls instance (optional)
+        ...options
+    };
+    
     // Create a group for the molecule
     const root = new THREE.Group();
     scene.add(root);
+    
+    // Store labels in a separate group for easier toggling
+    const labelsGroup = new THREE.Group();
+    root.add(labelsGroup);
+    
+    // Set a public property to allow external toggling of annotations
+    root.enableAnnotations = config.enableAnnotations;
 
     // Add molecule label styles if not already present
     if (!document.getElementById('molecule-label-style')) {
@@ -33,6 +50,13 @@ function createMoleculeVisualization(THREE, scene) {
                 overflow: hidden;
                 text-overflow: ellipsis;
             }
+            .atom-label {
+                text-shadow: -1px 1px 1px rgb(0,0,0);
+                margin-left: 5px;
+                font-size: 14px;
+                color: white;
+                pointer-events: none;
+            }
         `;
         document.head.appendChild(style);
     }
@@ -42,25 +66,65 @@ function createMoleculeVisualization(THREE, scene) {
         const container = document.querySelector('#container');
         if (container) {
             const labelContainer = document.createElement('div');
-            labelContainer.innerHTML = `<div id="molecule-label">methane</div>`;
+            labelContainer.innerHTML = `<div id="molecule-label">butane</div>`;
             container.appendChild(labelContainer.firstChild);
         }
     }
 
+    // Set up CSS2D renderer for atom labels if it doesn't exist yet
+    if (config.enableAnnotations && !window.labelRenderer && typeof THREE.CSS2DRenderer !== 'undefined') {
+        window.labelRenderer = new THREE.CSS2DRenderer();
+        const updateLabelRendererSize = () => {
+            const container = document.querySelector('#container');
+            if (container) {
+                const rect = container.getBoundingClientRect();
+                window.labelRenderer.setSize(rect.width, rect.height);
+            }
+        };
+        updateLabelRendererSize();
+        window.labelRenderer.domElement.style.position = 'absolute';
+        window.labelRenderer.domElement.style.top = '0px';
+        window.labelRenderer.domElement.style.pointerEvents = 'none';
+        const container = document.querySelector('#container');
+        if (container) {
+            container.appendChild(window.labelRenderer.domElement);
+        } else {
+            document.body.appendChild(window.labelRenderer.domElement);
+        }
+        
+        // Add resize listener for labelRenderer if not already present
+        if (!window.labelRendererResizeListener) {
+            window.labelRendererResizeListener = true;
+            window.addEventListener('resize', updateLabelRendererSize);
+        }
+    }
+
     // Convert SDF -> PDB in Python, embed it here
-    const pdbData = `COMPND    297
-HETATM    1  C1  UNL     1       2.514  -0.093   0.000  1.00  0.00           C  
-HETATM    2  H1  UNL     1       3.363   0.595   0.000  1.00  0.00           H  
-HETATM    3  H2  UNL     1       1.512  -0.496   0.000  1.00  0.00           H  
-HETATM    4  H3  UNL     1       2.086   0.913   0.000  1.00  0.00           H  
-HETATM    5  H4  UNL     1       3.209  -0.919   0.000  1.00  0.00           H  
-CONECT    1    2    3    4    5
+    const pdbData = `COMPND    7843
+HETATM    1  C1  UNL     1       2.650  -0.407   0.000  1.00  0.00           C  
+HETATM    2  C2  UNL     1       3.949   0.407   0.000  1.00  0.00           C  
+HETATM    3  C3  UNL     1       1.300   0.258   0.000  1.00  0.00           C  
+HETATM    4  C4  UNL     1       5.299  -0.258   0.000  1.00  0.00           C  
+HETATM    5  H1  UNL     1       2.111  -1.379   0.000  1.00  0.00           H  
+HETATM    6  H2  UNL     1       3.208  -1.352   0.000  1.00  0.00           H  
+HETATM    7  H3  UNL     1       4.487   1.379   0.000  1.00  0.00           H  
+HETATM    8  H4  UNL     1       3.391   1.352   0.000  1.00  0.00           H  
+HETATM    9  H5  UNL     1       1.651   1.287   0.000  1.00  0.00           H  
+HETATM   10  H6  UNL     1       0.474   0.996   0.000  1.00  0.00           H  
+HETATM   11  H7  UNL     1       0.493  -0.476   0.000  1.00  0.00           H  
+HETATM   12  H8  UNL     1       4.947  -1.287   0.000  1.00  0.00           H  
+HETATM   13  H9  UNL     1       6.124  -0.996   0.000  1.00  0.00           H  
+HETATM   14  H10 UNL     1       6.105   0.476   0.000  1.00  0.00           H  
+CONECT    1    2    3    5    6
+CONECT    2    4    7    8
+CONECT    3    9   10   11
+CONECT    4   12   13   14
 END
 `;
     
     // Create and configure the PDB loader
     let loader;
-    if (typeof THREE !== 'undefined' && THREE.PDBLoader) {
+    if (typeof THREE.PDBLoader !== 'undefined') {
         loader = new THREE.PDBLoader();
     } else if (typeof window !== 'undefined' && window.PDBLoader) {
         // If we manually attached PDBLoader to the window
@@ -97,7 +161,7 @@ END
         const position = new THREE.Vector3();
         const color = new THREE.Color();
 
-        // Add atoms
+        // Add atoms and their labels
         for (let i = 0; i < positions.count; i++) {
             position.x = positions.getX(i);
             position.y = positions.getY(i);
@@ -110,9 +174,26 @@ END
             const material = new THREE.MeshPhongMaterial({ color: color });
             const object = new THREE.Mesh(sphereGeometry, material);
             object.position.copy(position);
-            object.position.multiplyScalar(20);
-            object.scale.multiplyScalar(7.5);
+            object.position.multiplyScalar(1.5 * config.scaleFactor);
+            object.scale.multiplyScalar(0.75 * config.scaleFactor);
             root.add(object);
+            
+            // Create atom annotation using CSS2DObject if available
+            if (config.enableAnnotations && typeof THREE.CSS2DObject !== 'undefined') {
+                const atom = json.atoms[i];
+                const atomSymbol = atom ? (atom[4] || '') : '';
+                
+                if (atomSymbol) {
+                    const text = document.createElement('div');
+                    text.className = 'atom-label';
+                    text.textContent = atomSymbol;
+                    text.style.color = `rgb(${Math.round(color.r*255)},${Math.round(color.g*255)},${Math.round(color.b*255)})`;
+                    
+                    const label = new THREE.CSS2DObject(text);
+                    label.position.copy(object.position);
+                    labelsGroup.add(label);
+                }
+            }
         }
 
         // Add bonds
@@ -129,8 +210,8 @@ END
             end.y = positions.getY(i + 1);
             end.z = positions.getZ(i + 1);
 
-            start.multiplyScalar(20);
-            end.multiplyScalar(20);
+            start.multiplyScalar(1.5 * config.scaleFactor);
+            end.multiplyScalar(1.5 * config.scaleFactor);
 
             const object = new THREE.Mesh(
                 boxGeometry,
@@ -138,18 +219,99 @@ END
             );
             object.position.copy(start);
             object.position.lerp(end, 0.5);
-            object.scale.set(5, 5, start.distanceTo(end));
+            object.scale.set(0.25 * config.scaleFactor, 0.25 * config.scaleFactor, start.distanceTo(end));
             object.lookAt(end);
             root.add(object);
         }
 
         // Clean up
         URL.revokeObjectURL(pdbUrl);
-    });
+        
+        // Set initial visibility based on config
+        labelsGroup.visible = config.enableAnnotations;
 
+        // Fit camera to the molecule after loading
+        root.fitCameraToMolecule();
+    });
+    
+    // Add a method to toggle annotations visibility
+    root.toggleAnnotations = function(enable) {
+        if (typeof enable === 'boolean') {
+            root.enableAnnotations = enable;
+        } else {
+            root.enableAnnotations = !root.enableAnnotations;
+        }
+        
+        // Toggle visibility of the labels group
+        labelsGroup.visible = root.enableAnnotations;
+        
+        return root.enableAnnotations;
+    };
+
+    // Add method to fit camera to molecule
+    root.fitCameraToMolecule = function() {
+        const box = new THREE.Box3();
+        root.children.forEach(child => {
+            if (!(child instanceof THREE.Light)) {
+                box.expandByObject(child);
+            }
+        });
+        
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        
+        // Calculate distance based on diagonal
+        const diagonal = Math.sqrt(
+            size.x * size.x + 
+            size.y * size.y + 
+            size.z * size.z
+        );
+        
+        // Increase distance for larger molecules using log scale
+        const scaleFactor = Math.max(1.2, Math.log10(diagonal) * 0.8);
+        const distance = diagonal * scaleFactor;
+        
+        // Position camera using spherical coordinates
+        const theta = Math.PI / 4; // 45 degrees
+        const phi = Math.PI / 6;   // 30 degrees
+        
+        config.camera.position.set(
+            center.x + distance * Math.sin(theta) * Math.cos(phi),
+            center.y + distance * Math.sin(phi),
+            center.z + distance * Math.cos(theta) * Math.cos(phi)
+        );
+        
+        config.camera.lookAt(center);
+        config.controls.target.copy(center);
+        
+        // Adjust near/far planes
+        config.camera.near = distance * 0.01;
+        config.camera.far = distance * 10;
+        config.camera.updateProjectionMatrix();
+        
+        // Update controls min/max distance
+        config.controls.minDistance = distance * 0.1;
+        config.controls.maxDistance = distance * 5;
+        config.controls.update();
+    };
+    
     // Return the root group for external control
     return root;
 }
 
-// Execute the function to create the visualization
+// Function to make sure CSS2DRenderer is included in render loop
+function setupAnnotationRenderer(renderer, scene, camera) {
+    if (!renderer || !scene || !camera) {
+        console.error('setupAnnotationRenderer requires renderer, scene, and camera parameters');
+        return;
+    }
+    const originalRender = renderer.render.bind(renderer);
+    renderer.render = function(scene, camera) {
+        originalRender(scene, camera);
+        if (window.labelRenderer) {
+            window.labelRenderer.render(scene, camera);
+        }
+    };
+}
+
 createMoleculeVisualization(THREE, scene);

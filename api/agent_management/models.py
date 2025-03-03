@@ -190,7 +190,7 @@ class PubChemCompound(BaseModel):
     cid: int = Field(description="PubChem Compound ID")
     molecular_formula: str = Field(description="Molecular formula of the compound")
     molecular_weight: float = Field(description="Molecular weight of the compound")
-    iupac_name: str = Field(description="IUPAC name of the compound")
+    iupac_name: Optional[str] = Field(description="IUPAC name of the compound", default=None)
     sdf: Optional[str] = Field(description="SDF format structure data", default=None)
 
 class PubChemSearchResult(BaseModel):

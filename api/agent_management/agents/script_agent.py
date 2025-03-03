@@ -103,3 +103,31 @@ Always return complete, properly formatted JSON objects matching the requested s
         
         # Get the structured response
         return self.llm_service.generate_structured(request)
+    
+    def generate_script_from_molecule(self, molecule_name: str, user_query: str) -> SceneScript:
+        """
+        Generate a structured scene script for a molecule.
+        """
+        system_prompt = f"""
+        You are an expert in scientific communication and 3D visualization. Your task is to create structured scripts for educational scientific scenes.
+
+        You will be given a molecule name and a user query.
+
+        You need to create a script that explains the structure of the molecule in a way that is easy to understand.
+
+        If the molecule follows the IUPAC naming convention, use that name in the script with actual name next to it.
+        Explain why the molecule has the shape that it does based on the VSEPR theory.
+        
+        The script should be 90 seconds long and have 5-12 key points, depending on the complexity of the molecule.
+        Simple molecules like water or methane should have 5-7 key points and take up to a minute to explain.
+        Complex molecules like glucose or insulin should have 9-12 key points and take up to 2 minutes to explain.
+        
+        Return a JSON object with:
+        1. A concise, descriptive title for the presentation
+        2. A content array containing 5-12 key points in the scene, each with:
+            - timecode: Time marker in MM:SS format (starting at 00:00, ending around 02:00)
+            - highlight: A list of atoms/bonds to highlight in the scene
+            - caption: An educational text caption that would appear on screen (50-100 characters)
+        
+        
+        """

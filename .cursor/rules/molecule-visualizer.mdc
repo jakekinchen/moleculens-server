@@ -1,0 +1,7 @@
+---
+description: when editing html or javascript code that is inside a string
+globs: 
+alwaysApply: false
+---
+
+remember to use double curly brackets instead of single curly brackets

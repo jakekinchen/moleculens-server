@@ -6,6 +6,7 @@ Refactored to:
 - Convert SDF data (as a string) into PDB data in-memory
 - Generate minimal JavaScript code that can be embedded in another Three.js scene
 - Generate a fully standalone HTML that initializes a Three.js scene and loads the molecule
+- Add toggleable atomic annotations that face the camera
 """
 
 import re
@@ -18,7 +19,10 @@ class MoleculeVisualizer:
       1. Converting SDF text to PDB data in-memory
       2. Generating minimal JavaScript for embedding in an existing Three.js scene
       3. Generating a full standalone HTML viewer
+      4. Showing toggleable atomic annotations that always face the camera
     """
+
+    enableAnnotations = True
 
     @staticmethod
     def _escape_js_string(text: str) -> str:
@@ -58,6 +62,13 @@ class MoleculeVisualizer:
                 overflow: hidden;
                 text-overflow: ellipsis;
             }
+            .atom-label {
+                text-shadow: -1px 1px 1px rgb(0,0,0);
+                margin-left: 5px;
+                font-size: 14px;
+                color: white;
+                pointer-events: none;
+            }
         """
 
     @staticmethod
@@ -94,6 +105,7 @@ class MoleculeVisualizer:
         - Converts SDF to PDB in Python, embed it here
         - Loads with PDBLoader (assumes THREE.PDBLoader is available)
         - Creates atoms & bonds, adds them to the scene
+        - Adds toggleable atom annotations that face the camera
         - No custom cameras or lights; relies on the parent environment
         - Perfect for embedding in React or other Three.js setups
         """
@@ -107,11 +119,28 @@ class MoleculeVisualizer:
         label_html = cls._escape_js_string(cls._get_molecule_label_html(name))
 
         # Use double braces for JS blocks
-        return f"""// GeometryAgent LLM-generated code
-function createMoleculeVisualization(THREE, scene) {{
+        return f"""
+function createMoleculeVisualization(THREE, scene, options = {{}}) {{
+    console.log('createMoleculeVisualization');
+    // Configuration options with defaults
+    const config = {{
+        enableAnnotations: {str(cls.enableAnnotations).lower()},  // Toggle atomic annotations
+        scaleFactor: 0.6,       // Scale factor to control molecule size
+        camera: null,           // Camera instance (optional)
+        controls: null,         // Controls instance (optional)
+        ...options
+    }};
+    
     // Create a group for the molecule
     const root = new THREE.Group();
     scene.add(root);
+    
+    // Store labels in a separate group for easier toggling
+    const labelsGroup = new THREE.Group();
+    root.add(labelsGroup);
+    
+    // Set a public property to allow external toggling of annotations
+    root.enableAnnotations = config.enableAnnotations;
 
     // Add molecule label styles if not already present
     if (!document.getElementById('molecule-label-style')) {{
@@ -131,12 +160,40 @@ function createMoleculeVisualization(THREE, scene) {{
         }}
     }}
 
+    // Set up CSS2D renderer for atom labels if it doesn't exist yet
+    if (config.enableAnnotations && !window.labelRenderer && typeof THREE.CSS2DRenderer !== 'undefined') {{
+        window.labelRenderer = new THREE.CSS2DRenderer();
+        const updateLabelRendererSize = () => {{
+            const container = document.querySelector('#container');
+            if (container) {{
+                const rect = container.getBoundingClientRect();
+                window.labelRenderer.setSize(rect.width, rect.height);
+            }}
+        }};
+        updateLabelRendererSize();
+        window.labelRenderer.domElement.style.position = 'absolute';
+        window.labelRenderer.domElement.style.top = '0px';
+        window.labelRenderer.domElement.style.pointerEvents = 'none';
+        const container = document.querySelector('#container');
+        if (container) {{
+            container.appendChild(window.labelRenderer.domElement);
+        }} else {{
+            document.body.appendChild(window.labelRenderer.domElement);
+        }}
+        
+        // Add resize listener for labelRenderer if not already present
+        if (!window.labelRendererResizeListener) {{
+            window.labelRendererResizeListener = true;
+            window.addEventListener('resize', updateLabelRendererSize);
+        }}
+    }}
+
     // Convert SDF -> PDB in Python, embed it here
     const pdbData = `{escaped_pdb}`;
     
     // Create and configure the PDB loader
     let loader;
-    if (typeof THREE !== 'undefined' && THREE.PDBLoader) {{
+    if (typeof THREE.PDBLoader !== 'undefined') {{
         loader = new THREE.PDBLoader();
     }} else if (typeof window !== 'undefined' && window.PDBLoader) {{
         // If we manually attached PDBLoader to the window
@@ -173,7 +230,7 @@ function createMoleculeVisualization(THREE, scene) {{
         const position = new THREE.Vector3();
         const color = new THREE.Color();
 
-        // Add atoms
+        // Add atoms and their labels
         for (let i = 0; i < positions.count; i++) {{
             position.x = positions.getX(i);
             position.y = positions.getY(i);
@@ -186,9 +243,26 @@ function createMoleculeVisualization(THREE, scene) {{
             const material = new THREE.MeshPhongMaterial({{ color: color }});
             const object = new THREE.Mesh(sphereGeometry, material);
             object.position.copy(position);
-            object.position.multiplyScalar(20);
-            object.scale.multiplyScalar(7.5);
+            object.position.multiplyScalar(1.5 * config.scaleFactor);
+            object.scale.multiplyScalar(0.75 * config.scaleFactor);
             root.add(object);
+            
+            // Create atom annotation using CSS2DObject if available
+            if (config.enableAnnotations && typeof THREE.CSS2DObject !== 'undefined') {{
+                const atom = json.atoms[i];
+                const atomSymbol = atom ? (atom[4] || '') : '';
+                
+                if (atomSymbol) {{
+                    const text = document.createElement('div');
+                    text.className = 'atom-label';
+                    text.textContent = atomSymbol;
+                    text.style.color = `rgb(${{Math.round(color.r*255)}},${{Math.round(color.g*255)}},${{Math.round(color.b*255)}})`;
+                    
+                    const label = new THREE.CSS2DObject(text);
+                    label.position.copy(object.position);
+                    labelsGroup.add(label);
+                }}
+            }}
         }}
 
         // Add bonds
@@ -205,8 +279,8 @@ function createMoleculeVisualization(THREE, scene) {{
             end.y = positions.getY(i + 1);
             end.z = positions.getZ(i + 1);
 
-            start.multiplyScalar(20);
-            end.multiplyScalar(20);
+            start.multiplyScalar(1.5 * config.scaleFactor);
+            end.multiplyScalar(1.5 * config.scaleFactor);
 
             const object = new THREE.Mesh(
                 boxGeometry,
@@ -214,20 +288,101 @@ function createMoleculeVisualization(THREE, scene) {{
             );
             object.position.copy(start);
             object.position.lerp(end, 0.5);
-            object.scale.set(5, 5, start.distanceTo(end));
+            object.scale.set(0.25 * config.scaleFactor, 0.25 * config.scaleFactor, start.distanceTo(end));
             object.lookAt(end);
             root.add(object);
         }}
 
         // Clean up
         URL.revokeObjectURL(pdbUrl);
-    }});
+        
+        // Set initial visibility based on config
+        labelsGroup.visible = config.enableAnnotations;
 
+        // Fit camera to the molecule after loading
+        root.fitCameraToMolecule();
+    }});
+    
+    // Add a method to toggle annotations visibility
+    root.toggleAnnotations = function(enable) {{
+        if (typeof enable === 'boolean') {{
+            root.enableAnnotations = enable;
+        }} else {{
+            root.enableAnnotations = !root.enableAnnotations;
+        }}
+        
+        // Toggle visibility of the labels group
+        labelsGroup.visible = root.enableAnnotations;
+        
+        return root.enableAnnotations;
+    }};
+
+    // Add method to fit camera to molecule
+    root.fitCameraToMolecule = function() {{
+        const box = new THREE.Box3();
+        root.children.forEach(child => {{
+            if (!(child instanceof THREE.Light)) {{
+                box.expandByObject(child);
+            }}
+        }});
+        
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        
+        // Calculate distance based on diagonal
+        const diagonal = Math.sqrt(
+            size.x * size.x + 
+            size.y * size.y + 
+            size.z * size.z
+        );
+        
+        // Increase distance for larger molecules using log scale
+        const scaleFactor = Math.max(1.2, Math.log10(diagonal) * 0.8);
+        const distance = diagonal * scaleFactor;
+        
+        // Position camera using spherical coordinates
+        const theta = Math.PI / 4; // 45 degrees
+        const phi = Math.PI / 6;   // 30 degrees
+        
+        config.camera.position.set(
+            center.x + distance * Math.sin(theta) * Math.cos(phi),
+            center.y + distance * Math.sin(phi),
+            center.z + distance * Math.cos(theta) * Math.cos(phi)
+        );
+        
+        config.camera.lookAt(center);
+        config.controls.target.copy(center);
+        
+        // Adjust near/far planes
+        config.camera.near = distance * 0.01;
+        config.camera.far = distance * 10;
+        config.camera.updateProjectionMatrix();
+        
+        // Update controls min/max distance
+        config.controls.minDistance = distance * 0.1;
+        config.controls.maxDistance = distance * 5;
+        config.controls.update();
+    }};
+    
     // Return the root group for external control
     return root;
 }}
 
-// Execute the function to create the visualization
+// Function to make sure CSS2DRenderer is included in render loop
+function setupAnnotationRenderer(renderer, scene, camera) {{
+    if (!renderer || !scene || !camera) {{
+        console.error('setupAnnotationRenderer requires renderer, scene, and camera parameters');
+        return;
+    }}
+    const originalRender = renderer.render.bind(renderer);
+    renderer.render = function(scene, camera) {{
+        originalRender(scene, camera);
+        if (window.labelRenderer) {{
+            window.labelRenderer.render(scene, camera);
+        }}
+    }};
+}}
+
 createMoleculeVisualization(THREE, scene);
 """
 
@@ -241,6 +396,7 @@ createMoleculeVisualization(THREE, scene);
         - Provides a full animation loop with auto-rotation
         - Fills the browser window
         - Displays the molecule name
+        - Includes toggleable atomic annotations
         """
 
         pdb_data = cls._sdf_to_pdb_block(sdf_data)
@@ -260,11 +416,36 @@ createMoleculeVisualization(THREE, scene);
     <style>
         body {{ margin: 0; padding: 0; overflow: hidden; }}
         {cls._get_molecule_label_style()}
+        
+        #controls {{
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 100;
+        }}
+        
+        #controls button {{
+            background-color: #333;
+            color: white;
+            border: 1px solid #666;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: background-color 0.3s;
+        }}
+        
+        #controls button:hover {{
+            background-color: #555;
+        }}
     </style>
 </head>
 <body>
 <div id="container"></div>
 {cls._get_molecule_label_html(name)}
+
 <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
 <script type="importmap">
 {{
@@ -279,10 +460,16 @@ createMoleculeVisualization(THREE, scene);
 import * as THREE from 'three';
 import {{ OrbitControls }} from 'three/addons/controls/OrbitControls.js';
 import {{ PDBLoader }} from 'three/addons/loaders/PDBLoader.js';
+import {{ CSS2DRenderer, CSS2DObject }} from 'three/addons/renderers/CSS2DRenderer.js';
 
-let camera, scene, renderer, controls;
-let root;
-const rotationSpeed = 0.001; // Speed of auto-rotation (radians per frame)
+let camera, scene, renderer, labelRenderer, controls;
+let root, labelsGroup;
+const rotationSpeed = 0.0025; // Speed of auto-rotation (radians per frame)
+
+// Configuration settings
+const config = {{
+    enableAnnotations: {str(cls.enableAnnotations).lower()}  // Default setting - can be toggled
+}};
 
 init();
 animate();
@@ -296,7 +483,7 @@ function init() {{
 
     // Camera
     camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 5000);
-    camera.position.z = 1000;
+    camera.position.z = 500;
 
     // Lights
     const light1 = new THREE.DirectionalLight(0xffffff, 2.5);
@@ -307,8 +494,10 @@ function init() {{
     light2.position.set(-1, -1, 1);
     scene.add(light2);
 
-    // Root group
+    // Root group and labels group
     root = new THREE.Group();
+    labelsGroup = new THREE.Group();
+    root.add(labelsGroup);
     scene.add(root);
 
     // Renderer
@@ -316,16 +505,71 @@ function init() {{
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     container.appendChild(renderer.domElement);
+    
+    // CSS2D Renderer for atom labels
+    labelRenderer = new CSS2DRenderer();
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0px';
+    labelRenderer.domElement.style.pointerEvents = 'none';
+    container.appendChild(labelRenderer.domElement);
 
     // Controls
     controls = new OrbitControls(camera, renderer.domElement);
-    controls.minDistance = 200;
-    controls.maxDistance = 3000;
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 1.5;
 
     // Handle resize
     window.addEventListener('resize', onWindowResize);
+
+    // Add camera fitting function
+    function fitCameraToMolecule() {{
+        const box = new THREE.Box3();
+        root.children.forEach(child => {{
+            if (!(child instanceof THREE.Light)) {{
+                box.expandByObject(child);
+            }}
+        }});
+        
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        
+        // Calculate distance based on diagonal
+        const diagonal = Math.sqrt(
+            size.x * size.x + 
+            size.y * size.y + 
+            size.z * size.z
+        );
+        
+        // Increase distance for larger molecules using log scale
+        const scaleFactor = Math.max(1.2, Math.log10(diagonal) * 0.8);
+        const distance = diagonal * scaleFactor;
+        
+        // Position camera using spherical coordinates
+        const theta = Math.PI / 4; // 45 degrees
+        const phi = Math.PI / 6;   // 30 degrees
+        
+        camera.position.set(
+            center.x + distance * Math.sin(theta) * Math.cos(phi),
+            center.y + distance * Math.sin(phi),
+            center.z + distance * Math.cos(theta) * Math.cos(phi)
+        );
+        
+        camera.lookAt(center);
+        controls.target.copy(center);
+        
+        // Adjust near/far planes
+        camera.near = distance * 0.01;
+        camera.far = distance * 10;
+        camera.updateProjectionMatrix();
+        
+        // Update controls min/max distance
+        controls.minDistance = distance * 0.1;
+        controls.maxDistance = distance * 5;
+        controls.update();
+    }}
 
     // Load molecule
     const pdbData = `{escaped_pdb}`;
@@ -335,9 +579,11 @@ function init() {{
     // Make PDBLoader available globally for compatibility with both approaches
     window.PDBLoader = PDBLoader;
     const loader = new PDBLoader();
+    const scaleFactor = 0.7;
     loader.load(pdbUrl, (pdb) => {{
         const geometryAtoms = pdb.geometryAtoms;
         const geometryBonds = pdb.geometryBonds;
+        const json = pdb.json;
         const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
         const sphereGeometry = new THREE.IcosahedronGeometry(1, 3);
         const offset = new THREE.Vector3();
@@ -353,7 +599,7 @@ function init() {{
         const position = new THREE.Vector3();
         const color = new THREE.Color();
 
-        // Add atoms
+        // Add atoms and their labels
         for (let i = 0; i < positions.count; i++) {{
             position.set(
                 positions.getX(i),
@@ -368,9 +614,24 @@ function init() {{
 
             const material = new THREE.MeshPhongMaterial({{ color: color }});
             const atom = new THREE.Mesh(sphereGeometry, material);
-            atom.position.copy(position).multiplyScalar(75);
-            atom.scale.setScalar(25);
+            atom.position.copy(position).multiplyScalar(120 * scaleFactor);
+            atom.scale.setScalar(40 * scaleFactor);
             root.add(atom);
+            
+            // Add atom labels using CSS2DObject
+            if (config.enableAnnotations && json.atoms[i]) {{
+                const atomSymbol = json.atoms[i][4];
+                if (atomSymbol) {{
+                    const text = document.createElement('div');
+                    text.className = 'atom-label';
+                    text.textContent = atomSymbol;
+                    text.style.color = `rgb(${{Math.round(color.r*255)}},${{Math.round(color.g*255)}},${{Math.round(color.b*255)}})`;
+                    
+                    const label = new CSS2DObject(text);
+                    label.position.copy(atom.position);
+                    labelsGroup.add(label);
+                }}
+            }}
         }}
 
         // Add bonds
@@ -383,26 +644,32 @@ function init() {{
                 positions.getX(i),
                 positions.getY(i),
                 positions.getZ(i)
-            ).multiplyScalar(75);
+            ).multiplyScalar(120 * scaleFactor);
 
             end.set(
                 positions.getX(i+1),
                 positions.getY(i+1),
                 positions.getZ(i+1)
-            ).multiplyScalar(75);
+            ).multiplyScalar(120 * scaleFactor);
 
             const bondMesh = new THREE.Mesh(
                 boxGeometry,
                 new THREE.MeshPhongMaterial({{ color: 0xffffff }})
             );
             bondMesh.position.copy(start).lerp(end, 0.5);
-            bondMesh.scale.set(5, 5, start.distanceTo(end));
+            bondMesh.scale.set(8 * scaleFactor, 8 * scaleFactor, start.distanceTo(end));
             bondMesh.lookAt(end);
             root.add(bondMesh);
         }}
 
         // Clean up
         URL.revokeObjectURL(pdbUrl);
+        
+        // Set initial visibility based on config
+        labelsGroup.visible = config.enableAnnotations;
+
+        // Fit camera to the molecule after loading
+        fitCameraToMolecule();
     }});
 }}
 
@@ -410,6 +677,7 @@ function onWindowResize() {{
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
 }}
 
 function animate() {{
@@ -422,6 +690,7 @@ function animate() {{
     
     controls.update();
     renderer.render(scene, camera);
+    labelRenderer.render(scene, camera);
 }}
 </script>
 </body>

@@ -155,55 +155,77 @@ class PubChemAgent:
         Raises:
             ValueError: If no valid molecules were found for the query
         """
-        # Step 1: Get molecule data from PubChem based on the query
-        search_result = self.get_molecule_sdfs(user_query)
-        
-        # Step 2: Check if we have any results
-        if not search_result.results:
-            raise ValueError(f"No molecules found for query: '{user_query}' (interpreted as '{search_result.interpreted_query}')")
-        
-        # Step 3: Take the first result as our target molecule
-        compound = search_result.results[0]
-        
-        if DEBUG_PUBCHEM:
-            write_debug_file('pubchem_sdf.txt', compound.sdf or '')
-        
-        if compound.sdf is None:
-            raise ValueError(f"No SDF data available for compound {compound.name} (CID: {compound.cid})")
+        print(f"[DEBUG] Processing user query: {user_query}")
         
         try:
-            # Generate a display title for the molecule
-            display_title = compound.iupac_name if compound.iupac_name else f"{compound.name} (CID: {compound.cid})"
+            # Step 1: Get molecule data from PubChem based on the query
+            search_result = self.get_molecule_sdfs(user_query)
+            print(f"[DEBUG] Search result interpreted query: {search_result.interpreted_query}")
+            print(f"[DEBUG] Number of results: {len(search_result.results)}")
             
-            # Generate the HTML content
-            html_content = MoleculeVisualizer.generate_html_viewer_from_sdf(compound.sdf, display_title)
+            # Step 2: Check if we have any results
+            if not search_result.results:
+                raise ValueError(f"No molecules found for query: '{user_query}' (interpreted as '{search_result.interpreted_query}')")
             
-            if DEBUG_PUBCHEM:
-                write_debug_file('pubchem_html.html', html_content)
-            
-            # Generate minimal JS for embedding
-            js_content = MoleculeVisualizer.generate_js_code_from_sdf(compound.sdf, display_title)
-            
-            if DEBUG_PUBCHEM:
-                write_debug_file('pubchem_js.js', js_content)
-            
-            # Create and log the package
-            package = MoleculePackage(
-                js=js_content,
-                html=html_content,
-                title=display_title
-            )
+            # Step 3: Take the first result as our target molecule
+            compound = search_result.results[0]
+            print(f"[DEBUG] Selected compound: {compound.name} (CID: {compound.cid})")
+            print(f"[DEBUG] IUPAC name: {compound.iupac_name}")
             
             if DEBUG_PUBCHEM:
-                debug_package = {
-                    'title': package.title,
-                    'js_length': len(package.js),
-                    'html_length': len(package.html),
-                    'sdf_length': len(compound.sdf)
-                }
-                write_debug_file('pubchem_package.json', json.dumps(debug_package, indent=2))
+                write_debug_file('pubchem_sdf.txt', compound.sdf or '')
             
-            return package
+            if compound.sdf is None:
+                raise ValueError(f"No SDF data available for compound {compound.name} (CID: {compound.cid})")
+            
+            try:
+                # Generate a display title for the molecule
+                display_title = compound.iupac_name if compound.iupac_name else compound.name
+                print(f"[DEBUG] Using display title: {display_title}")
+                
+                # Generate the HTML content
+                print("[DEBUG] Generating HTML content...")
+                html_content = MoleculeVisualizer.generate_html_viewer_from_sdf(compound.sdf, display_title)
+                
+                if DEBUG_PUBCHEM:
+                    write_debug_file('pubchem_html.html', html_content)
+                
+                # Generate minimal JS for embedding
+                print("[DEBUG] Generating JS content...")
+                js_content = MoleculeVisualizer.generate_js_code_from_sdf(compound.sdf, display_title)
+                
+                if DEBUG_PUBCHEM:
+                    write_debug_file('pubchem_js.js', js_content)
+                
+                # Create and log the package
+                package = MoleculePackage(
+                    js=js_content,
+                    html=html_content,
+                    title=display_title
+                )
+                
+                if DEBUG_PUBCHEM:
+                    debug_package = {
+                        'title': package.title,
+                        'js_length': len(package.js),
+                        'html_length': len(package.html),
+                        'sdf_length': len(compound.sdf)
+                    }
+                    write_debug_file('pubchem_package.json', json.dumps(debug_package, indent=2))
+                
+                print("[DEBUG] Successfully created molecule package")
+                return package
+            
+            except Exception as e:
+                print(f"[ERROR] Failed to generate visualization: {str(e)}")
+                print(f"[ERROR] Error type: {type(e).__name__}")
+                import traceback
+                print(f"[ERROR] Traceback:\n{traceback.format_exc()}")
+                raise ValueError(f"Failed to generate visualization: {str(e)}")
         
         except Exception as e:
-            raise ValueError(f"Failed to generate visualization: {str(e)}")
+            print(f"[ERROR] Error in get_molecule_package: {str(e)}")
+            print(f"[ERROR] Error type: {type(e).__name__}")
+            import traceback
+            print(f"[ERROR] Traceback:\n{traceback.format_exc()}")
+            raise
