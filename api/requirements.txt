@@ -21,3 +21,6 @@ esprima>=4.0.1
 jsonschema>=3.2.0
 groq
 anthropic>=0.18.0
+pubchempy
+requests>=2.31.0
+rdkit

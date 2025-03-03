@@ -12,6 +12,7 @@ from agent_management.agents.geometry_agent import GeometryAgent
 from agent_management.agents.animation_agent import AnimationAgent
 from agent_management.agents.caption_agent import CaptionAgent
 from agent_management.agents.aggregator_agent import AggregatorAgent
+from agent_management.agents.pubchem_agent import PubChemAgent
 
 class AgentFactory:
     """Factory for creating agent instances with appropriate model configurations."""
@@ -59,6 +60,12 @@ class AgentFactory:
         return AggregatorAgent(llm_service)
     
     @staticmethod
+    def create_pubchem_agent(override_model: Optional[str] = None) -> PubChemAgent:
+        """Create a PubChem agent"""
+        llm_service = create_agent_llm_service(AgentType.PUBCHEM, override_model)
+        return PubChemAgent(llm_service)
+    
+    @staticmethod
     def create_all_agents(global_override_model: Optional[str] = None) -> Dict[AgentType, Any]:
         """
         Create all agents with appropriate model configurations.
@@ -76,6 +83,7 @@ class AgentFactory:
             AgentType.GEOMETRY: AgentFactory.create_geometry_agent(global_override_model),
             AgentType.ANIMATION: AgentFactory.create_animation_agent(global_override_model),
             AgentType.CAPTION: AgentFactory.create_caption_agent(global_override_model),
-            AgentType.AGGREGATOR: AgentFactory.create_aggregator_agent(global_override_model)
+            AgentType.AGGREGATOR: AgentFactory.create_aggregator_agent(global_override_model),
+            AgentType.PUBCHEM: AgentFactory.create_pubchem_agent(global_override_model)
         }
         return agents

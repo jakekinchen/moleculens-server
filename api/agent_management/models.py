@@ -183,3 +183,18 @@ class FinalScenePackage(BaseModelWithConfig):
     title: str = Field(description="Title of the visualization")
     timecode_markers: List[str] = Field(description="List of timecode markers in the animation")
     total_elements: int = Field(description="Total number of 3D elements in the scene")
+
+class PubChemCompound(BaseModel):
+    """Model representing a PubChem compound with its properties"""
+    name: str = Field(description="The name used to query the compound")
+    cid: int = Field(description="PubChem Compound ID")
+    molecular_formula: str = Field(description="Molecular formula of the compound")
+    molecular_weight: float = Field(description="Molecular weight of the compound")
+    iupac_name: str = Field(description="IUPAC name of the compound")
+    sdf: Optional[str] = Field(description="SDF format structure data", default=None)
+
+class PubChemSearchResult(BaseModel):
+    """Model representing the results of a PubChem search"""
+    query: str = Field(description="Original user query")
+    interpreted_query: str = Field(description="Query interpreted by LLM")
+    results: List[PubChemCompound] = Field(description="List of matching compounds", default_factory=list)

@@ -4,6 +4,7 @@ from typing import Optional, Dict, Any, List
 from agent_management.models import ModelRegistry
 from dependencies.use_llm import use_llm 
 from agent_management.agents.geometry_agent import GeometryAgent
+from agent_management.agents.pubchem_agent import PubChemAgent
 from agent_management.agents.domain_bool_agent import DomainValidator
 from agent_management.agents.script_agent import ScriptAgent
 from agent_management.agents.orchestration_agent import OrchestrationAgent
@@ -418,6 +419,42 @@ async def check_process_status(job_id: str):
             # Add empty result field for compatibility
             "result": ""
         }
+    
+@router.post("/generate-from-pubchem/", response_model=dict)
+async def generate_from_pubchem(request: PromptRequest):
+    """
+    Generate a 3D visualization from a query to PubChem.
+    """
+    try:
+        # Create domain validator agent using the factory
+        domain_validator = AgentFactory.create_domain_validator(request.model)
+        
+        # Initial validation can be done synchronously to reject bad prompts immediately
+        validation_result = domain_validator.is_molecular(request.prompt)
+        
+        # If not scientific, reject the prompt immediately
+        if not validation_result.is_true:
+            return {
+                "job_id": "rejected",
+                "status": "failed",
+                "message": "Non-scientific prompt rejected",
+                "error": "The prompt does not contain molecular content"
+            }
+        # Create geometry agent with appropriate model - use specific override if provided
+        pubchem_agent = AgentFactory.create_pubchem_agent(request.model)
+        
+        # Generate the geometry directly for immediate response
+        result = pubchem_agent.get_molecule_package(request.prompt)
+        
+        return {
+            "result": result.js,
+            "result_html": result.html,
+            "title": result.title
+        }
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+        
 
 @router.post("/", response_model=JobResponse)
 async def submit_prompt(
@@ -440,13 +477,6 @@ async def submit_prompt(
     6. Packages everything into a complete scene
     """
     try:
-        # Check API key early
-        if not os.getenv("OPENAI_API_KEY"):
-            raise HTTPException(
-                status_code=500,
-                detail="OPENAI_API_KEY environment variable is not set"
-            )
-        
         # Create domain validator agent using the factory
         domain_validator = AgentFactory.create_domain_validator(request.model)
         

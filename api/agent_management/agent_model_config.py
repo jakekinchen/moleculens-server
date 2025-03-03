@@ -21,6 +21,7 @@ class AgentType(str, Enum):
     ANIMATION = "animation"
     CAPTION = "caption"
     AGGREGATOR = "aggregator"
+    PUBCHEM = "pubchem"
 
 class AgentModelConfig(BaseModel):
     """Configuration for which model an agent should use"""
@@ -87,6 +88,14 @@ DEFAULT_AGENT_MODELS = [
         fallback_models=["gpt-4o", "llama3-70b-8192"],
         required_categories=[ModelCategory.GENERAL],
         description="Combines outputs from various agents"
+    ),
+    
+    AgentModelConfig(
+        agent_type=AgentType.PUBCHEM,
+        preferred_model="claude-3-7-sonnet-latest",  # Good for structured data
+        fallback_models=["gpt-4.5-preview", "gpt-4o"],
+        required_categories=[ModelCategory.REASONING],
+        description="Handles PubChem data retrieval and processing"
     )
 ]
 

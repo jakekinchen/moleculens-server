@@ -6,6 +6,7 @@ from typing import Dict, List, Any
 import re
 from agent_management.models import SceneScript, OrchestrationPlan, AnimationCode, FinalScenePackage
 
+
 class ScenePackager:
     """
     Takes the output from the geometry and animation agents and packages it into a complete Three.js scene.
@@ -66,6 +67,7 @@ class ScenePackager:
             timecode_markers=timecode_markers,
             total_elements=total_elements
         )
+
 
     @staticmethod
     def _create_html(title: str, script: SceneScript, js_code: str = None) -> str:
