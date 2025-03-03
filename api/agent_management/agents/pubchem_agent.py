@@ -50,8 +50,11 @@ class MoleculePackage(NamedTuple):
     title: str
 
 class PubChemAgent:
-    def __init__(self, llm_service: LLMService):
+    def __init__(self, llm_service: LLMService, use_element_labels: bool = True, 
+                 convert_back_to_indices: bool = False):
         self.llm_service = llm_service
+        self.use_element_labels = use_element_labels  # Use element-based labels (C1, O1) by default
+        self.convert_back_to_indices = convert_back_to_indices  # Convert back to numeric indices after script generation
 
     def interpret_user_query(self, user_input: str) -> str:
         """
@@ -271,12 +274,25 @@ class PubChemAgent:
 
                 # Send the molecule info and the user query to the script agent to get a script
                 script_agent = ScriptAgent(self.llm_service)
-                #script = script_agent.generate_script_from_molecule(compound.name, user_query, molecule_data)
+                script = script_agent.generate_script_from_molecule(compound.name, user_query, molecule_data)
                 
-                # Validate and convert script structure and atom types
-                #script = validate_and_convert_script(script)
+                # First convert to element-based labels for LLM understanding (if enabled)
+                script = validate_and_convert_script(
+                    script=script,
+                    molecule_data=molecule_data,
+                    use_element_labels=self.use_element_labels
+                )
                 
-                #print(f"[DEBUG] Generated script: {script}")
+                # Convert back to numeric indices if configured that way
+                if self.convert_back_to_indices:
+                    script = validate_and_convert_script(
+                        script=script,
+                        molecule_data=molecule_data,
+                        use_element_labels=False,
+                        convert_back_to_indices=True
+                    )
+                
+                print(f"[DEBUG] Generated script: {script}")
                 
                 # Generate the HTML content
                 print("[DEBUG] Generating HTML content...")

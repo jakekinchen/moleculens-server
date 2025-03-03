@@ -474,7 +474,7 @@ import {{ CSS2DRenderer, CSS2DObject }} from 'three/addons/renderers/CSS2DRender
 
 let camera, scene, renderer, labelRenderer, controls;
 let root, labelsGroup;
-const rotationSpeed = 0.0025; // Speed of auto-rotation (radians per frame)
+const rotationSpeed = 0.0015; // Speed of auto-rotation (radians per frame)
 
 // Configuration settings
 const config = {{
@@ -600,7 +600,7 @@ function init() {{
     // Make PDBLoader available globally for compatibility with both approaches
     window.PDBLoader = PDBLoader;
     const loader = new PDBLoader();
-    const scaleFactor = 0.7;
+    const scaleFactor = .3;
     
     // Array to track all labels
     const labels = [];

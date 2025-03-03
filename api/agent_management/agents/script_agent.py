@@ -137,6 +137,13 @@ Script Guidelines:
     - Complex molecules (e.g., glucose, insulin): 9-12 key points (~2 min)
 4. Use the atoms to highlight the specific atoms in the molecule that are relevant to current caption's focus.
 
+IMPORTANT FORMATTING REQUIREMENTS:
+1. The "atoms" field MUST contain an array of STRING values, not numbers
+2. If you want to reference atom indices, convert them to strings like "0", "1", "2" 
+3. Atom labels like "C1", "H2" should also be strings
+4. NEVER include integers directly in the atoms array, ALWAYS wrap them in quotes
+5. The introduction caption should have an empty atoms array.
+
 Output Format:
 Return a JSON object structured precisely as follows (realistic example):
 
@@ -145,7 +152,7 @@ Return a JSON object structured precisely as follows (realistic example):
     "content": [
         {{
             "timecode": "00:00",
-            "atoms": ["C1", "C2", "C3", "C4", "C5", "C6"],
+            "atoms": [],
             "caption": "Benzene's hexagonal ring is key to its aromatic stability."
         }},
         {{
@@ -210,7 +217,8 @@ Use the user query to guide the emphasis of your script content without explicit
 """
 
         request = StructuredLLMRequest(
-            user_prompt=system_prompt,
+            user_prompt="Generate a molecule visualization script that follows the provided guidelines.",
+            system_prompt=system_prompt,
             llm_config=self.llm_service.config,
             response_model=SceneScript,
         )

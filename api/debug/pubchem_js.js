@@ -66,7 +66,7 @@ function createMoleculeVisualization(THREE, scene, options = {}) {
         const container = document.querySelector('#container');
         if (container) {
             const labelContainer = document.createElement('div');
-            labelContainer.innerHTML = `<div id="molecule-label">borane</div>`;
+            labelContainer.innerHTML = `<div id="molecule-label">azane;cobalt(3+);trichloride</div>`;
             container.appendChild(labelContainer.firstChild);
         }
     }
@@ -100,17 +100,41 @@ function createMoleculeVisualization(THREE, scene, options = {}) {
     }
 
     // Convert SDF -> PDB in Python, embed it here
-    const pdbData = `COMPND    12544637
-HETATM    1  B1  UNL     1       0.537   0.620   0.000  1.00  0.00           B  
-HETATM    2  B2  UNL     1       0.537   3.550   0.000  1.00  0.00           B  
-HETATM    3  H1  UNL     1       1.074   0.930   0.000  1.00  0.00           H  
-HETATM    4  H2  UNL     1       0.000   0.930   0.000  1.00  0.00           H  
-HETATM    5  H3  UNL     1       0.537   0.000   0.000  1.00  0.00           H  
-HETATM    6  H4  UNL     1       1.074   3.860   0.000  1.00  0.00           H  
-HETATM    7  H5  UNL     1       0.000   3.860   0.000  1.00  0.00           H  
-HETATM    8  H6  UNL     1       0.537   2.930   0.000  1.00  0.00           H  
-CONECT    1    3    4    5
-CONECT    2    6    7    8
+    const pdbData = `COMPND    159295
+HETATM    1 CO1  UNL     1       3.940   1.000   0.000  1.00  0.00          CO3+
+HETATM    2 CL1  UNL     1       4.806   1.500   0.000  1.00  0.00          CL1-
+HETATM    3 CL2  UNL     1       3.074   1.500   0.000  1.00  0.00          CL1-
+HETATM    4 CL3  UNL     1       3.940   0.000   0.000  1.00  0.00          CL1-
+HETATM    5  N1  UNL     1       0.537   5.300   0.000  1.00  0.00           N  
+HETATM    6  N2  UNL     1       3.940   4.120   0.000  1.00  0.00           N  
+HETATM    7  N3  UNL     1       3.940   7.050   0.000  1.00  0.00           N  
+HETATM    8  N4  UNL     1       7.343   5.300   0.000  1.00  0.00           N  
+HETATM    9  N5  UNL     1       3.940   9.980   0.000  1.00  0.00           N  
+HETATM   10  N6  UNL     1      10.417   5.300   0.000  1.00  0.00           N  
+HETATM   11  H1  UNL     1       1.074   5.610   0.000  1.00  0.00           H  
+HETATM   12  H2  UNL     1       0.000   5.610   0.000  1.00  0.00           H  
+HETATM   13  H3  UNL     1       0.537   4.680   0.000  1.00  0.00           H  
+HETATM   14  H4  UNL     1       4.477   4.430   0.000  1.00  0.00           H  
+HETATM   15  H5  UNL     1       3.403   4.430   0.000  1.00  0.00           H  
+HETATM   16  H6  UNL     1       3.940   3.500   0.000  1.00  0.00           H  
+HETATM   17  H7  UNL     1       4.477   7.360   0.000  1.00  0.00           H  
+HETATM   18  H8  UNL     1       3.403   7.360   0.000  1.00  0.00           H  
+HETATM   19  H9  UNL     1       3.940   6.430   0.000  1.00  0.00           H  
+HETATM   20  H10 UNL     1       7.880   5.610   0.000  1.00  0.00           H  
+HETATM   21  H11 UNL     1       6.806   5.610   0.000  1.00  0.00           H  
+HETATM   22  H12 UNL     1       7.343   4.680   0.000  1.00  0.00           H  
+HETATM   23  H13 UNL     1       4.477  10.290   0.000  1.00  0.00           H  
+HETATM   24  H14 UNL     1       3.403  10.290   0.000  1.00  0.00           H  
+HETATM   25  H15 UNL     1       3.940   9.360   0.000  1.00  0.00           H  
+HETATM   26  H16 UNL     1      10.954   5.610   0.000  1.00  0.00           H  
+HETATM   27  H17 UNL     1       9.880   5.610   0.000  1.00  0.00           H  
+HETATM   28  H18 UNL     1      10.417   4.680   0.000  1.00  0.00           H  
+CONECT    5   11   12   13
+CONECT    6   14   15   16
+CONECT    7   17   18   19
+CONECT    8   20   21   22
+CONECT    9   23   24   25
+CONECT   10   26   27   28
 END
 `;
     

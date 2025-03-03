@@ -60,10 +60,23 @@ class AgentFactory:
         return AggregatorAgent(llm_service)
     
     @staticmethod
-    def create_pubchem_agent(override_model: Optional[str] = None) -> PubChemAgent:
-        """Create a PubChem agent"""
+    def create_pubchem_agent(override_model: Optional[str] = None, 
+                             use_element_labels: bool = True,
+                             convert_back_to_indices: bool = False) -> PubChemAgent:
+        """
+        Create a PubChem agent
+        
+        Args:
+            override_model: Optional model name to override the default
+            use_element_labels: Whether to use element-based labels (C1, O1) instead of indices
+            convert_back_to_indices: Whether to convert element-labels back to numeric indices after script generation
+        """
         llm_service = create_agent_llm_service(AgentType.PUBCHEM, override_model)
-        return PubChemAgent(llm_service)
+        return PubChemAgent(
+            llm_service, 
+            use_element_labels=use_element_labels,
+            convert_back_to_indices=convert_back_to_indices
+        )
     
     @staticmethod
     def create_all_agents(global_override_model: Optional[str] = None) -> Dict[AgentType, Any]:
