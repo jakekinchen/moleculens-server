@@ -17,6 +17,7 @@ from agent_management.llm_service import (
     LLMModelConfig,
     ProviderType
 )
+from rdkit import Chem
 
 # Debug flag - set to False to disable debug logging
 DEBUG_PUBCHEM = True

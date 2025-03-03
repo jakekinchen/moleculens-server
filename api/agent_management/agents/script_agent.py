@@ -104,7 +104,7 @@ Always return complete, properly formatted JSON objects matching the requested s
         # Get the structured response
         return self.llm_service.generate_structured(request)
     
-    def generate_script_from_molecule(self, molecule_name: str, user_query: str) -> SceneScript:
+    def generate_script_from_molecule(self, molecule_name: str, user_query: str, smarts_pattern: str) -> SceneScript:
         """
         Generate a structured scene script for a molecule.
         """
@@ -114,9 +114,11 @@ Always return complete, properly formatted JSON objects matching the requested s
         You will be given a molecule name and a user query.
 
         You need to create a script that explains the structure of the molecule in a way that is easy to understand.
+        You will be given a SMARTS pattern that will be used to highlight the atoms/bonds and subgroups in the molecule.
+        Flow from one point to the next naturally, and make sure to highlight the important parts of the molecule that are relevant to the user query and
+        that are highlighted by the SMARTS pattern and that are important for explaining the molecule.
 
-        If the molecule follows the IUPAC naming convention, use that name in the script with actual name next to it.
-        Explain why the molecule has the shape that it does based on the VSEPR theory.
+        If the molecule follows the IUPAC naming convention, use this as an angle to explain the molecule, why it has the shape that it does based on the VSEPR theory.
         
         The script should be 90 seconds long and have 5-12 key points, depending on the complexity of the molecule.
         Simple molecules like water or methane should have 5-7 key points and take up to a minute to explain.
@@ -131,3 +133,11 @@ Always return complete, properly formatted JSON objects matching the requested s
         
         
         """
+
+        request = StructuredLLMRequest(
+            user_prompt=system_prompt,
+            llm_config=self.llm_service.config,
+            response_model=SceneScript,
+        )
+
+        return self.llm_service.generate_structured(request)
