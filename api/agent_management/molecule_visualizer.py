@@ -125,7 +125,7 @@ function createMoleculeVisualization(THREE, scene, options = {{}}) {{
     // Configuration options with defaults
     const config = {{
         enableAnnotations: {str(cls.enableAnnotations).lower()},  // Toggle atomic annotations
-        scaleFactor: 0.6,       // Scale factor to control molecule size
+        scaleFactor: 0.25,       // Scale factor to control molecule size (reduced from 0.6)
         camera: null,           // Camera instance (optional)
         controls: null,         // Controls instance (optional)
         ...options
@@ -258,9 +258,15 @@ function createMoleculeVisualization(THREE, scene, options = {{}}) {{
                     text.textContent = atomSymbol;
                     text.style.color = `rgb(${{Math.round(color.r*255)}},${{Math.round(color.g*255)}},${{Math.round(color.b*255)}})`;
                     
+                    // Create CSS2DObject and attach it directly to the scene (not labelsGroup)
+                    // This ensures it's not affected by group transformations
                     const label = new THREE.CSS2DObject(text);
                     label.position.copy(object.position);
-                    labelsGroup.add(label);
+                    scene.add(label);
+                    
+                    // Add reference to the label in the labelsGroup array for toggling
+                    if (!labelsGroup.labels) labelsGroup.labels = [];
+                    labelsGroup.labels.push(label);
                 }}
             }}
         }}
@@ -311,8 +317,12 @@ function createMoleculeVisualization(THREE, scene, options = {{}}) {{
             root.enableAnnotations = !root.enableAnnotations;
         }}
         
-        // Toggle visibility of the labels group
-        labelsGroup.visible = root.enableAnnotations;
+        // Toggle visibility of each label in the labels array
+        if (labelsGroup.labels && Array.isArray(labelsGroup.labels)) {{
+            labelsGroup.labels.forEach(label => {{
+                label.visible = root.enableAnnotations;
+            }});
+        }}
         
         return root.enableAnnotations;
     }};
@@ -496,8 +506,6 @@ function init() {{
 
     // Root group and labels group
     root = new THREE.Group();
-    labelsGroup = new THREE.Group();
-    root.add(labelsGroup);
     scene.add(root);
 
     // Renderer
@@ -523,6 +531,19 @@ function init() {{
 
     // Handle resize
     window.addEventListener('resize', onWindowResize);
+    
+    // Add labelRenderer resize tracking
+    if (!window.labelRendererResizeListener) {{
+        window.labelRendererResizeListener = true;
+        window.addEventListener('resize', () => {{
+            if (window.labelRenderer) {{
+                const container = document.querySelector('#container');
+                if (container) {{
+                    window.labelRenderer.setSize(container.clientWidth, container.clientHeight);
+                }}
+            }}
+        }});
+    }}
 
     // Add camera fitting function
     function fitCameraToMolecule() {{
@@ -580,6 +601,29 @@ function init() {{
     window.PDBLoader = PDBLoader;
     const loader = new PDBLoader();
     const scaleFactor = 0.7;
+    
+    // Array to track all labels
+    const labels = [];
+    
+    // Add toggle function to root
+    root.toggleAnnotations = function(enable) {{
+        if (typeof enable === 'boolean') {{
+            root.enableAnnotations = enable;
+        }} else {{
+            root.enableAnnotations = !root.enableAnnotations;
+        }}
+        
+        // Toggle visibility of each label
+        labels.forEach(label => {{
+            label.visible = root.enableAnnotations;
+        }});
+        
+        return root.enableAnnotations;
+    }};
+    
+    // Set initial annotation state
+    root.enableAnnotations = config.enableAnnotations;
+
     loader.load(pdbUrl, (pdb) => {{
         const geometryAtoms = pdb.geometryAtoms;
         const geometryBonds = pdb.geometryBonds;
@@ -627,9 +671,13 @@ function init() {{
                     text.textContent = atomSymbol;
                     text.style.color = `rgb(${{Math.round(color.r*255)}},${{Math.round(color.g*255)}},${{Math.round(color.b*255)}})`;
                     
+                    // Create CSS2DObject and attach it directly to the scene
                     const label = new CSS2DObject(text);
                     label.position.copy(atom.position);
-                    labelsGroup.add(label);
+                    scene.add(label);
+                    
+                    // Add reference to the label for toggling
+                    labels.push(label);
                 }}
             }}
         }}
@@ -664,9 +712,6 @@ function init() {{
 
         // Clean up
         URL.revokeObjectURL(pdbUrl);
-        
-        // Set initial visibility based on config
-        labelsGroup.visible = config.enableAnnotations;
 
         // Fit camera to the molecule after loading
         fitCameraToMolecule();
@@ -683,12 +728,10 @@ function onWindowResize() {{
 function animate() {{
     requestAnimationFrame(animate);
     
-    // Auto-rotate the molecule
-    if (root) {{
-        root.rotation.y += rotationSpeed;
-    }}
-    
+    // Update controls
     controls.update();
+    
+    // Render both the 3D scene and labels
     renderer.render(scene, camera);
     labelRenderer.render(scene, camera);
 }}

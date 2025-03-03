@@ -10,6 +10,8 @@ import requests
 from typing import Optional, Dict, Any, NamedTuple
 from agent_management.molecule_visualizer import MoleculeVisualizer
 from agent_management.models import PubChemSearchResult, PubChemCompound
+from agent_management.agents.script_agent import ScriptAgent
+from agent_management.agents.pubchem_agent_helper import validate_and_convert_script
 from agent_management.llm_service import (
     LLMService,
     LLMRequest,
@@ -18,6 +20,7 @@ from agent_management.llm_service import (
     ProviderType
 )
 from rdkit import Chem
+from rdkit.Chem import Fragments, Descriptors
 
 # Debug flag - set to False to disable debug logging
 DEBUG_PUBCHEM = True
@@ -58,7 +61,7 @@ class PubChemAgent:
             user_prompt=f"""Given this user input is related to molecular structures or trying to learn something about the microscopic structures of molecules or some topic related, give us the molecule that would best help the user learn what they are trying to learn about, return 'N/A' if you can't determine a valid molecule.
             User input: '{user_input}'
             Only respond with the molecule name or 'N/A', no other text.""",
-            system_prompt="You are a chemistry professor that helps identify molecule names from user queries. For instance, if the user asks about wanting to learn about chiral carbon centers then you should return '2-Butanol' or 'CC(O)CC'"
+            system_prompt="You are a chemistry professor that helps identify molecule names from user queries. For instance, if the user asks about wanting to learn about chiral carbon centers then you should return '2-Butanol' or 'CC(O)CC' and if the user says 'Teach me about transition metal complexes with octahedral geometry' then you should return 'titanocene dichloride' or Hexamminecobalt(III) chloride"
         )
         response = self.llm_service.generate(request)
         return response.content.strip()
@@ -83,6 +86,7 @@ class PubChemAgent:
         """
         # Step 1: Interpret the user's input via LLM
         molecule_name = self.interpret_user_query(user_input)
+        secondary_molecule_name = self.interpret_user_query(user_input+" but not "+molecule_name + "so try to find a similar molecule that would be relevant to the user's query")
         if molecule_name == "N/A":
             # If the LLM can't parse or guess a name, return an empty structure
             return PubChemSearchResult(
@@ -94,7 +98,9 @@ class PubChemAgent:
         # Step 2: Query PubChem for the interpreted name
         compounds = pcp.get_compounds(molecule_name, 'name')
         if not compounds:
-            return PubChemSearchResult(
+            compounds = pcp.get_compounds(secondary_molecule_name, 'name')
+            if not compounds:
+                return PubChemSearchResult(
                 query=user_input,
                 interpreted_query=molecule_name,
                 results=[]
@@ -107,13 +113,25 @@ class PubChemAgent:
         results = []
         for cmpd in limited_compounds:
             sdf_str = self.fetch_sdf_for_cid(cmpd.cid)
+            
+            # Transform atoms and bonds into expected format
+            atom_numbers = [atom.number for atom in cmpd.atoms] if cmpd.atoms else None
+            bond_tuples = [(bond.aid1, bond.aid2, bond.order) for bond in cmpd.bonds] if cmpd.bonds else None
+            
             results.append(PubChemCompound(
                 name=molecule_name,
                 cid=cmpd.cid,
                 molecular_formula=cmpd.molecular_formula,
                 molecular_weight=cmpd.molecular_weight,
                 iupac_name=cmpd.iupac_name,
-                sdf=sdf_str
+                sdf=sdf_str,
+                canonical_smiles=cmpd.canonical_smiles,
+                isomeric_smiles=cmpd.isomeric_smiles,
+                elements=cmpd.elements,
+                atoms=atom_numbers,
+                bonds=bond_tuples,
+                charge=cmpd.charge,
+                synonyms=cmpd.synonyms
             ))
 
         # Step 5: Return structured result
@@ -137,7 +155,17 @@ class PubChemAgent:
                 molecular_formula=compound.molecular_formula,
                 molecular_weight=compound.molecular_weight,
                 iupac_name=compound.iupac_name,
-                sdf=sdf_str
+                sdf=sdf_str,
+                canonical_smiles=compound.canonical_smiles,
+                isomeric_smiles=compound.isomeric_smiles,
+                elements=compound.elements,
+                atoms=compound.atoms,
+                bonds=compound.bonds,
+                charge=compound.charge,
+                synonyms=compound.synonyms
+
+                
+                
             )
         except Exception as e:
             print(f"Error fetching compound details for CID {cid}: {str(e)}")
@@ -183,6 +211,72 @@ class PubChemAgent:
                 # Generate a display title for the molecule
                 display_title = compound.iupac_name if compound.iupac_name else compound.name
                 print(f"[DEBUG] Using display title: {display_title}")
+
+                if compound.isomeric_smiles:
+                    mol = Chem.MolFromSmiles(compound.isomeric_smiles)
+                    if mol is None:
+                        raise ValueError(f"Failed to parse SMILES for compound {compound.name} (CID: {compound.cid})")
+                    
+                    smarts_pattern = Chem.MolToSmarts(mol)
+
+                    # NEW: Identify functional groups using RDKit fragment functions
+                    functional_groups = {}
+                    try:
+                        functional_groups['aliphatic_OH_count'] = Fragments.fr_Al_OH(mol)
+                        functional_groups['aromatic_OH_count'] = Fragments.fr_Ar_OH(mol)
+                        functional_groups['halogen_count'] = Fragments.fr_halogen(mol)
+                        functional_groups['amine_count'] = Fragments.fr_Al_N(mol)  # Changed from fr_Al_NH2 to fr_Al_N
+                        print(f"[DEBUG] Functional groups: {functional_groups}")
+                    except Exception as e:
+                        print(f"[WARNING] Error counting functional groups: {str(e)}")
+                        functional_groups = {
+                            'aliphatic_OH_count': 0,
+                            'aromatic_OH_count': 0,
+                            'halogen_count': 0,
+                            'amine_count': 0
+                        }
+
+                    # Create a list of functional groups to highlight
+                    highlight_groups = []
+                    if functional_groups['aliphatic_OH_count'] > 0:
+                        highlight_groups.append('aliphatic_OH')
+                    if functional_groups['aromatic_OH_count'] > 0:
+                        highlight_groups.append('aromatic_OH')
+                    if functional_groups['halogen_count'] > 0:
+                        highlight_groups.append('halogen')
+                    if functional_groups['amine_count'] > 0:
+                        highlight_groups.append('amine')
+                    print(f"[DEBUG] Highlight groups: {highlight_groups}")
+
+
+                molecule_data = {
+                    'name': compound.name,
+                    'cid': compound.cid,
+                    'smiles': compound.isomeric_smiles,
+                    'highlight_groups': highlight_groups,
+                    'smarts_pattern': smarts_pattern,
+                    'functional_groups': functional_groups,
+                    'iupac_name': compound.iupac_name,
+                    'molecular_formula': compound.molecular_formula,
+                    'molecular_weight': compound.molecular_weight,
+                    'elements': compound.elements,
+                    'atoms': compound.atoms,
+                    'bonds': compound.bonds,
+                    'charge': compound.charge,
+                    'synonyms': compound.synonyms
+                }
+
+                print(f"[DEBUG] Molecule data: {molecule_data}")
+                    
+
+                # Send the molecule info and the user query to the script agent to get a script
+                script_agent = ScriptAgent(self.llm_service)
+                #script = script_agent.generate_script_from_molecule(compound.name, user_query, molecule_data)
+                
+                # Validate and convert script structure and atom types
+                #script = validate_and_convert_script(script)
+                
+                #print(f"[DEBUG] Generated script: {script}")
                 
                 # Generate the HTML content
                 print("[DEBUG] Generating HTML content...")

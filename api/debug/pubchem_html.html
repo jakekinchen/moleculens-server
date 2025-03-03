@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Molecule Viewer - butane</title>
+    <title>Molecule Viewer - borane</title>
     <meta charset="utf-8">
     <meta name="viewport"
           content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
@@ -68,7 +68,7 @@
 </head>
 <body>
 <div id="container"></div>
-<div id="molecule-label">butane</div>
+<div id="molecule-label">borane</div>
 
 <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
 <script type="importmap">
@@ -120,8 +120,6 @@ function init() {
 
     // Root group and labels group
     root = new THREE.Group();
-    labelsGroup = new THREE.Group();
-    root.add(labelsGroup);
     scene.add(root);
 
     // Renderer
@@ -147,6 +145,19 @@ function init() {
 
     // Handle resize
     window.addEventListener('resize', onWindowResize);
+    
+    // Add labelRenderer resize tracking
+    if (!window.labelRendererResizeListener) {
+        window.labelRendererResizeListener = true;
+        window.addEventListener('resize', () => {
+            if (window.labelRenderer) {
+                const container = document.querySelector('#container');
+                if (container) {
+                    window.labelRenderer.setSize(container.clientWidth, container.clientHeight);
+                }
+            }
+        });
+    }
 
     // Add camera fitting function
     function fitCameraToMolecule() {
@@ -196,25 +207,17 @@ function init() {
     }
 
     // Load molecule
-    const pdbData = `COMPND    7843
-HETATM    1  C1  UNL     1       2.650  -0.407   0.000  1.00  0.00           C  
-HETATM    2  C2  UNL     1       3.949   0.407   0.000  1.00  0.00           C  
-HETATM    3  C3  UNL     1       1.300   0.258   0.000  1.00  0.00           C  
-HETATM    4  C4  UNL     1       5.299  -0.258   0.000  1.00  0.00           C  
-HETATM    5  H1  UNL     1       2.111  -1.379   0.000  1.00  0.00           H  
-HETATM    6  H2  UNL     1       3.208  -1.352   0.000  1.00  0.00           H  
-HETATM    7  H3  UNL     1       4.487   1.379   0.000  1.00  0.00           H  
-HETATM    8  H4  UNL     1       3.391   1.352   0.000  1.00  0.00           H  
-HETATM    9  H5  UNL     1       1.651   1.287   0.000  1.00  0.00           H  
-HETATM   10  H6  UNL     1       0.474   0.996   0.000  1.00  0.00           H  
-HETATM   11  H7  UNL     1       0.493  -0.476   0.000  1.00  0.00           H  
-HETATM   12  H8  UNL     1       4.947  -1.287   0.000  1.00  0.00           H  
-HETATM   13  H9  UNL     1       6.124  -0.996   0.000  1.00  0.00           H  
-HETATM   14  H10 UNL     1       6.105   0.476   0.000  1.00  0.00           H  
-CONECT    1    2    3    5    6
-CONECT    2    4    7    8
-CONECT    3    9   10   11
-CONECT    4   12   13   14
+    const pdbData = `COMPND    12544637
+HETATM    1  B1  UNL     1       0.537   0.620   0.000  1.00  0.00           B  
+HETATM    2  B2  UNL     1       0.537   3.550   0.000  1.00  0.00           B  
+HETATM    3  H1  UNL     1       1.074   0.930   0.000  1.00  0.00           H  
+HETATM    4  H2  UNL     1       0.000   0.930   0.000  1.00  0.00           H  
+HETATM    5  H3  UNL     1       0.537   0.000   0.000  1.00  0.00           H  
+HETATM    6  H4  UNL     1       1.074   3.860   0.000  1.00  0.00           H  
+HETATM    7  H5  UNL     1       0.000   3.860   0.000  1.00  0.00           H  
+HETATM    8  H6  UNL     1       0.537   2.930   0.000  1.00  0.00           H  
+CONECT    1    3    4    5
+CONECT    2    6    7    8
 END
 `;
     const pdbBlob = new Blob([pdbData], { type: 'text/plain' });
@@ -224,6 +227,29 @@ END
     window.PDBLoader = PDBLoader;
     const loader = new PDBLoader();
     const scaleFactor = 0.7;
+    
+    // Array to track all labels
+    const labels = [];
+    
+    // Add toggle function to root
+    root.toggleAnnotations = function(enable) {
+        if (typeof enable === 'boolean') {
+            root.enableAnnotations = enable;
+        } else {
+            root.enableAnnotations = !root.enableAnnotations;
+        }
+        
+        // Toggle visibility of each label
+        labels.forEach(label => {
+            label.visible = root.enableAnnotations;
+        });
+        
+        return root.enableAnnotations;
+    };
+    
+    // Set initial annotation state
+    root.enableAnnotations = config.enableAnnotations;
+
     loader.load(pdbUrl, (pdb) => {
         const geometryAtoms = pdb.geometryAtoms;
         const geometryBonds = pdb.geometryBonds;
@@ -271,9 +297,13 @@ END
                     text.textContent = atomSymbol;
                     text.style.color = `rgb(${Math.round(color.r*255)},${Math.round(color.g*255)},${Math.round(color.b*255)})`;
                     
+                    // Create CSS2DObject and attach it directly to the scene
                     const label = new CSS2DObject(text);
                     label.position.copy(atom.position);
-                    labelsGroup.add(label);
+                    scene.add(label);
+                    
+                    // Add reference to the label for toggling
+                    labels.push(label);
                 }
             }
         }
@@ -308,9 +338,6 @@ END
 
         // Clean up
         URL.revokeObjectURL(pdbUrl);
-        
-        // Set initial visibility based on config
-        labelsGroup.visible = config.enableAnnotations;
 
         // Fit camera to the molecule after loading
         fitCameraToMolecule();
@@ -327,12 +354,10 @@ function onWindowResize() {
 function animate() {
     requestAnimationFrame(animate);
     
-    // Auto-rotate the molecule
-    if (root) {
-        root.rotation.y += rotationSpeed;
-    }
-    
+    // Update controls
     controls.update();
+    
+    // Render both the 3D scene and labels
     renderer.render(scene, camera);
     labelRenderer.render(scene, camera);
 }

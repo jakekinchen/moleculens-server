@@ -2,7 +2,7 @@
 Pydantic models for Three.js structured output generation.
 """
 
-from typing import List, Dict, Optional, Any, Union, Type, TypeVar, Callable
+from typing import List, Dict, Optional, Any, Union, Type, TypeVar, Callable, Tuple
 from pydantic import BaseModel, Field
 
 # Global Pydantic model config to avoid the "model_name" warning
@@ -143,8 +143,21 @@ class MolecularStructure(BaseModel):
 class ScriptTimePoint(BaseModel):
     """Model for a single time point in an animation script"""
     timecode: str = Field(description="Timecode in MM:SS format (e.g., '00:15')")
-    description: str = Field(description="Detailed description of what is occurring in the scene at this time")
+    atoms: List[str] = Field(description="List of atoms to highlight in the scene")
     caption: str = Field(description="Brief caption text to be displayed at this time")
+    
+    model_config = {
+        "protected_namespaces": (),  # Remove protection for model_ namespace
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "timecode": "00:15",
+                    "atoms": ["C1", "C2", "H1"],
+                    "caption": "Carbon-carbon bonds form the backbone of organic molecules"
+                }
+            ]
+        }
+    }
 
 class SceneScript(BaseModel):
     """Model for a complete scene script (not to be confused with animation)"""
@@ -192,6 +205,15 @@ class PubChemCompound(BaseModel):
     molecular_weight: float = Field(description="Molecular weight of the compound")
     iupac_name: Optional[str] = Field(description="IUPAC name of the compound", default=None)
     sdf: Optional[str] = Field(description="SDF format structure data", default=None)
+    canonical_smiles: Optional[str] = Field(description="Canonical SMILES representation of the compound", default=None)
+    isomeric_smiles: Optional[str] = Field(description="Isomeric SMILES representation of the compound", default=None)
+    elements: Optional[List[str]] = Field(description="List of elements in the compound", default=None)
+    atoms: Optional[List[int]] = Field(description="List of atom indices in the compound", default=None)
+    bonds: Optional[List[Tuple[int, int, int]]] = Field(description="List of bonds in the compound", default=None)
+    charge: Optional[int] = Field(description="Charge of the compound", default=None)
+    synonyms: Optional[List[str]] = Field(description="List of synonyms for the compound", default=None)
+
+    
 
 class PubChemSearchResult(BaseModel):
     """Model representing the results of a PubChem search"""

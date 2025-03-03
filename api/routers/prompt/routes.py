@@ -432,12 +432,12 @@ async def generate_from_pubchem(request: PromptRequest):
         # Initial validation can be done synchronously to reject bad prompts immediately
         validation_result = domain_validator.is_molecular(request.prompt)
         
-        # If not scientific, reject the prompt immediately
+        # If not molecular, reject the prompt immediately
         if not validation_result.is_true:
             return {
                 "job_id": "rejected",
                 "status": "failed",
-                "message": "Non-scientific prompt rejected",
+                "message": "Non-molecular prompt rejected",
                 "error": "The prompt does not contain molecular content"
             }
         # Create geometry agent with appropriate model - use specific override if provided
@@ -488,7 +488,7 @@ async def submit_prompt(
             return {
                 "job_id": "rejected",
                 "status": "failed",
-                "message": "Non-scientific prompt rejected",
+                "message": "Non-molecular prompt rejected",
                 "error": "The prompt does not contain molecular content"
             }
         
@@ -650,49 +650,6 @@ async def get_agent_model_configs():
     
     return configs
 
-@router.post("/generate-script/", response_model=SceneScript)
-async def generate_script(
-    request: PromptRequest
-    ):
-    """
-    Endpoint to generate a structured scene script based on user prompt.
-    Only generates scripts for scientific content.
-    
-    Query parameters:
-    - model: Optional specific model to use for all agents
-    - preferred_model_category: Optional model category preference
-    """
-    try:
-        if not os.getenv("OPENAI_API_KEY"):
-            raise HTTPException(
-                status_code=500,
-                detail="OPENAI_API_KEY environment variable is not set"
-            )
-        
-        # Get override model from request if specified
-        override_model = request.model
-        
-        # Create agents with appropriate models
-        domain_validator = AgentFactory.create_domain_validator(override_model)
-        
-        # First validate that the prompt is scientific
-        validation_result = domain_validator.is_molecular(request.prompt)
-        
-        # If not scientific, reject the prompt
-        if not validation_result.is_true:
-            raise HTTPException(
-                status_code=400,
-                detail="Non-scientific prompt rejected: The prompt does not contain molecular content"
-            )
-            
-        # Create script agent with appropriate model
-        script_agent = AgentFactory.create_script_agent(override_model)
-        
-        # If scientific, generate the script
-        animation_script = script_agent.generate_script(request.prompt)
-        return animation_script
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 class ScriptRequest(BaseModel):
     script: SceneScript

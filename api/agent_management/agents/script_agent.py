@@ -4,6 +4,8 @@ This is separate from the animation agent that will handle actual animation gene
 """
 
 from agent_management.models import SceneScript
+from typing import Dict, Any
+import json
 from agent_management.llm_service import (
     LLMService,
     StructuredLLMRequest,
@@ -15,7 +17,7 @@ class ScriptAgent:
     def __init__(self, llm_service: LLMService):
         self.llm_service = llm_service
     
-    def generate_script(self, topic: str) -> SceneScript:
+    def generate_script(self, topic: str) -> Dict[str, Any]:
         """
         Generate a structured scene script for a scientific topic.
         
@@ -23,7 +25,7 @@ class ScriptAgent:
             topic: The scientific topic to explain in the scene
             
         Returns:
-            SceneScript: A structured script with title and timed content points
+            Dict[str, Any]: A structured script with title and timed content points
         """
         # Create a request for script generation
         request = StructuredLLMRequest(
@@ -102,37 +104,110 @@ Always return complete, properly formatted JSON objects matching the requested s
         )
         
         # Get the structured response
-        return self.llm_service.generate_structured(request)
+        script = self.llm_service.generate_structured(request)
+        # Ensure the response is converted to a dictionary
+        return script.dict() if hasattr(script, 'dict') else script
     
-    def generate_script_from_molecule(self, molecule_name: str, user_query: str, smarts_pattern: str) -> SceneScript:
+    def generate_script_from_molecule(self, molecule_name: str, user_query: str, molecule_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Generate a structured scene script for a molecule.
+        
+        Returns:
+            Dict[str, Any]: A structured script with title and timed content points
         """
-        system_prompt = f"""
-        You are an expert in scientific communication and 3D visualization. Your task is to create structured scripts for educational scientific scenes.
+        # Convert molecule_data to string representation safely
+        molecule_json = json.dumps(molecule_data, indent=2)
 
-        You will be given a molecule name and a user query.
+        
+        system_prompt = f"""You are an expert in scientific communication and 3D visualization. Your task is to create structured, engaging scripts for educational scientific scenes.
 
-        You need to create a script that explains the structure of the molecule in a way that is easy to understand.
-        You will be given a SMARTS pattern that will be used to highlight the atoms/bonds and subgroups in the molecule.
-        Flow from one point to the next naturally, and make sure to highlight the important parts of the molecule that are relevant to the user query and
-        that are highlighted by the SMARTS pattern and that are important for explaining the molecule.
+Given:
+- A molecule name: {molecule_name}
+- A user query indicating the area of interest: {user_query}
+- Supplemental data about the molecule: {molecule_json}
 
-        If the molecule follows the IUPAC naming convention, use this as an angle to explain the molecule, why it has the shape that it does based on the VSEPR theory.
-        
-        The script should be 90 seconds long and have 5-12 key points, depending on the complexity of the molecule.
-        Simple molecules like water or methane should have 5-7 key points and take up to a minute to explain.
-        Complex molecules like glucose or insulin should have 9-12 key points and take up to 2 minutes to explain.
-        
-        Return a JSON object with:
-        1. A concise, descriptive title for the presentation
-        2. A content array containing 5-12 key points in the scene, each with:
-            - timecode: Time marker in MM:SS format (starting at 00:00, ending around 02:00)
-            - highlight: A list of atoms/bonds to highlight in the scene
-            - caption: An educational text caption that would appear on screen (50-100 characters)
-        
-        
-        """
+Your Objective:
+Create a clear, informative script that explains the molecule's structure and properties, guided by the user's area of interest.
+
+Script Guidelines:
+1. Clearly introduce the molecule using its IUPAC name (if applicable) and connect its structural geometry to VSEPR theory.
+2. Explain naturally and logically, transitioning smoothly between key points.
+3. Align the script's complexity and length to the molecule's complexity:
+    - Simple molecules (e.g., water, methane): 5-7 key points (~1 min)
+    - Complex molecules (e.g., glucose, insulin): 9-12 key points (~2 min)
+4. Use the atoms to highlight the specific atoms in the molecule that are relevant to current caption's focus.
+
+Output Format:
+Return a JSON object structured precisely as follows (realistic example):
+
+{{
+    "title": "Benzene: Aromaticity and Its Chemical Significance",
+    "content": [
+        {{
+            "timecode": "00:00",
+            "atoms": ["C1", "C2", "C3", "C4", "C5", "C6"],
+            "caption": "Benzene's hexagonal ring is key to its aromatic stability."
+        }},
+        {{
+            "timecode": "00:08",
+            "atoms": ["C1", "C2", "C3", "C4", "C5", "C6"],
+            "caption": "This unique geometry affects benzene's chemical reactivity."
+        }},
+        {{
+            "timecode": "00:15",
+            "atoms": ["C1", "C2", "C3", "C4", "C5", "C6", "H1", "H2", "H3", "H4", "H5", "H6"],
+            "caption": "Symmetrical hydrogen placement reduces molecular polarity."
+        }},
+        {{
+            "timecode": "00:22",
+            "atoms": ["C1", "C2", "C3", "C4", "C5", "C6", "H1", "H2", "H3", "H4", "H5", "H6"],
+            "caption": "Low polarity explains benzene's limited solubility in water."
+        }},
+        {{
+            "timecode": "00:30",
+            "atoms": ["C1", "C2", "C3", "C4", "C5", "C6"],
+            "caption": "Electron delocalization creates stable aromatic pi bonds."
+        }},
+        {{
+            "timecode": "00:37",
+            "atoms": ["C1", "C2", "C3", "C4", "C5", "C6"],
+            "caption": "Stable pi bonds influence benzene's resistance to addition reactions."
+        }},
+        {{
+            "timecode": "00:45",
+            "atoms": ["C1", "C2", "C3", "C4", "C5", "C6"],
+            "caption": "Planar resonance structure contributes to overall molecular stability."
+        }},
+        {{
+            "timecode": "00:52",
+            "atoms": ["C1", "C2", "C3", "C4", "C5", "C6"],
+            "caption": "This stability makes benzene an important industrial chemical."
+        }},
+        {{
+            "timecode": "01:00",
+            "atoms": ["C1", "C2", "C3", "C4", "C5", "C6"],
+            "caption": "Equal bond lengths result from resonance and electron delocalization."
+        }},
+        {{
+            "timecode": "01:07",
+            "atoms": ["C1", "C2", "C3", "C4", "C5", "C6"],
+            "caption": "Uniform bonding impacts benzene's predictable chemical behavior."
+        }},
+        {{
+            "timecode": "01:15",
+            "atoms": ["C1", "C2", "C3", "C4", "C5", "C6"],
+            "caption": "Aromatic stability significantly influences benzene's reaction pathways."
+        }},
+        {{
+            "timecode": "01:22",
+            "atoms": ["C1", "C2", "C3", "C4", "C5", "C6"],
+            "caption": "Understanding benzene's aromaticity helps explain its industrial uses."
+        }}
+    ]
+}}
+
+Use the user query to guide the emphasis of your script content without explicitly referencing it. For example, if the query is "Explain the aromatic rings in benzene," focus on aromaticity, molecular geometry, and its significance, incorporating other molecular details only as contextually relevant.
+"""
 
         request = StructuredLLMRequest(
             user_prompt=system_prompt,
@@ -140,4 +215,6 @@ Always return complete, properly formatted JSON objects matching the requested s
             response_model=SceneScript,
         )
 
-        return self.llm_service.generate_structured(request)
+        script = self.llm_service.generate_structured(request)
+        # Ensure the response is converted to a dictionary
+        return script.dict() if hasattr(script, 'dict') else script

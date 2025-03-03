@@ -4,7 +4,7 @@ function createMoleculeVisualization(THREE, scene, options = {}) {
     // Configuration options with defaults
     const config = {
         enableAnnotations: true,  // Toggle atomic annotations
-        scaleFactor: 0.6,       // Scale factor to control molecule size
+        scaleFactor: 0.25,       // Scale factor to control molecule size (reduced from 0.6)
         camera: null,           // Camera instance (optional)
         controls: null,         // Controls instance (optional)
         ...options
@@ -66,7 +66,7 @@ function createMoleculeVisualization(THREE, scene, options = {}) {
         const container = document.querySelector('#container');
         if (container) {
             const labelContainer = document.createElement('div');
-            labelContainer.innerHTML = `<div id="molecule-label">butane</div>`;
+            labelContainer.innerHTML = `<div id="molecule-label">borane</div>`;
             container.appendChild(labelContainer.firstChild);
         }
     }
@@ -100,25 +100,17 @@ function createMoleculeVisualization(THREE, scene, options = {}) {
     }
 
     // Convert SDF -> PDB in Python, embed it here
-    const pdbData = `COMPND    7843
-HETATM    1  C1  UNL     1       2.650  -0.407   0.000  1.00  0.00           C  
-HETATM    2  C2  UNL     1       3.949   0.407   0.000  1.00  0.00           C  
-HETATM    3  C3  UNL     1       1.300   0.258   0.000  1.00  0.00           C  
-HETATM    4  C4  UNL     1       5.299  -0.258   0.000  1.00  0.00           C  
-HETATM    5  H1  UNL     1       2.111  -1.379   0.000  1.00  0.00           H  
-HETATM    6  H2  UNL     1       3.208  -1.352   0.000  1.00  0.00           H  
-HETATM    7  H3  UNL     1       4.487   1.379   0.000  1.00  0.00           H  
-HETATM    8  H4  UNL     1       3.391   1.352   0.000  1.00  0.00           H  
-HETATM    9  H5  UNL     1       1.651   1.287   0.000  1.00  0.00           H  
-HETATM   10  H6  UNL     1       0.474   0.996   0.000  1.00  0.00           H  
-HETATM   11  H7  UNL     1       0.493  -0.476   0.000  1.00  0.00           H  
-HETATM   12  H8  UNL     1       4.947  -1.287   0.000  1.00  0.00           H  
-HETATM   13  H9  UNL     1       6.124  -0.996   0.000  1.00  0.00           H  
-HETATM   14  H10 UNL     1       6.105   0.476   0.000  1.00  0.00           H  
-CONECT    1    2    3    5    6
-CONECT    2    4    7    8
-CONECT    3    9   10   11
-CONECT    4   12   13   14
+    const pdbData = `COMPND    12544637
+HETATM    1  B1  UNL     1       0.537   0.620   0.000  1.00  0.00           B  
+HETATM    2  B2  UNL     1       0.537   3.550   0.000  1.00  0.00           B  
+HETATM    3  H1  UNL     1       1.074   0.930   0.000  1.00  0.00           H  
+HETATM    4  H2  UNL     1       0.000   0.930   0.000  1.00  0.00           H  
+HETATM    5  H3  UNL     1       0.537   0.000   0.000  1.00  0.00           H  
+HETATM    6  H4  UNL     1       1.074   3.860   0.000  1.00  0.00           H  
+HETATM    7  H5  UNL     1       0.000   3.860   0.000  1.00  0.00           H  
+HETATM    8  H6  UNL     1       0.537   2.930   0.000  1.00  0.00           H  
+CONECT    1    3    4    5
+CONECT    2    6    7    8
 END
 `;
     
@@ -189,9 +181,15 @@ END
                     text.textContent = atomSymbol;
                     text.style.color = `rgb(${Math.round(color.r*255)},${Math.round(color.g*255)},${Math.round(color.b*255)})`;
                     
+                    // Create CSS2DObject and attach it directly to the scene (not labelsGroup)
+                    // This ensures it's not affected by group transformations
                     const label = new THREE.CSS2DObject(text);
                     label.position.copy(object.position);
-                    labelsGroup.add(label);
+                    scene.add(label);
+                    
+                    // Add reference to the label in the labelsGroup array for toggling
+                    if (!labelsGroup.labels) labelsGroup.labels = [];
+                    labelsGroup.labels.push(label);
                 }
             }
         }
@@ -242,8 +240,12 @@ END
             root.enableAnnotations = !root.enableAnnotations;
         }
         
-        // Toggle visibility of the labels group
-        labelsGroup.visible = root.enableAnnotations;
+        // Toggle visibility of each label in the labels array
+        if (labelsGroup.labels && Array.isArray(labelsGroup.labels)) {
+            labelsGroup.labels.forEach(label => {
+                label.visible = root.enableAnnotations;
+            });
+        }
         
         return root.enableAnnotations;
     };
