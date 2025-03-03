@@ -5,6 +5,12 @@
     <meta charset="utf-8">
     <meta name="viewport"
           content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <!-- Include WebXR polyfill for Safari / non-WebXR browsers -->
+    <script src="https://cdn.jsdelivr.net/npm/webxr-polyfill@latest/build/webxr-polyfill.min.js"></script>
+    <!-- Include A-Frame (which has Three.js under the hood) -->
+    <script src="https://aframe.io/releases/1.4.1/aframe.min.js"></script>
+    <!-- Include A-Frame extras (e.g., super-hands for grabbing) -->
+    <script src="https://cdn.jsdelivr.net/npm/aframe-super-hands-component@6.1.0/dist/aframe-super-hands.min.js"></script>
     <style>
         body { margin: 0; padding: 0; overflow: hidden; }
         #container {
@@ -76,12 +82,32 @@
             text-align: center;
             line-height: 30px;
         }
+        a-scene {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            display: none; /* Hidden initially until VR mode is activated */
+        }
     </style>
 </head>
 <body>
 <div id="container"></div>
 <div id="molecule-label"></div>
 <div id="pause-icon">||</div>
+
+<!-- Embedded A-Frame scene for VR -->
+<a-scene embedded vr-mode-ui="enterVRButton: false">
+    <!-- Entity to hold the molecule object -->
+    <a-entity id="molecule" inject-molecule grabbable stretchable></a-entity>
+    <!-- Camera entity; disable default look-controls to use custom controls -->
+    <a-entity camera position="0 0 5" look-controls="enabled: false" wasd-controls="enabled: false"></a-entity>
+    <!-- VR hand controllers for Quest (using generic hand-controls) with super-hands gestures -->
+    <a-entity hand-controls="hand: left" super-hands></a-entity>
+    <a-entity hand-controls="hand: right" super-hands></a-entity>
+</a-scene>
 
 <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
 <script type="importmap">
@@ -120,6 +146,11 @@ let autoRotateEnabled = false;
 let camera, scene, renderer, labelRenderer, controls;
 let root;
 const atomMeshes = []; // Store references to atom meshes for highlighting
+
+// A-Frame references
+let aframeScene;
+let inVRMode = false;
+let moleculeGroup; // Will hold the molecule object for injection into A-Frame
 
 // Script object we want to animate through
 const scriptData = {
@@ -160,6 +191,23 @@ const scriptData = {
     }
   ]
 };
+
+/**
+ * Register A-Frame component to inject the molecule into A-Frame scene
+ */
+AFRAME.registerComponent('inject-molecule', {
+  init: function () {
+    // Wait for moleculeGroup to be created before injecting it
+    if (moleculeGroup) {
+      this.el.setObject3D('mesh', moleculeGroup);
+    } else {
+      // If molecule isn't ready yet, wait for it
+      document.addEventListener('molecule-ready', () => {
+        this.el.setObject3D('mesh', moleculeGroup);
+      });
+    }
+  }
+});
 
 /**
  * Converts "MM:SS" into total seconds
@@ -208,9 +256,11 @@ function toggleAutoRotate() {
  */
 function animate() {
     requestAnimationFrame(animate);
-    controls.update();
-    renderer.render(scene, camera);
-    labelRenderer.render(scene, camera);
+    if (!inVRMode) {
+        controls.update();
+        renderer.render(scene, camera);
+        labelRenderer.render(scene, camera);
+    }
 
     // Advance script timeline if playing
     if (isPlaying) {
@@ -359,11 +409,18 @@ function fitCameraToMolecule() {
 
     controls.target.copy(center);
     controls.update();
+    
+    // Also update A-Frame camera position
+    const aframeCamera = document.querySelector('a-entity[camera]');
+    if (aframeCamera) {
+        aframeCamera.setAttribute('position', `0 0 ${cameraZ}`);
+    }
 }
 
 function init() {
     const container = document.getElementById('container');
     pauseIcon = document.getElementById('pause-icon');
+    aframeScene = document.querySelector('a-scene');
 
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x050505);
@@ -381,6 +438,8 @@ function init() {
 
     root = new THREE.Group();
     scene.add(root);
+    // Set moleculeGroup to root for A-Frame injection
+    moleculeGroup = root;
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -512,6 +571,37 @@ END`;
 
         // Initialize script steps
         initScript();
+        
+        // Notify that molecule is ready for A-Frame injection
+        document.dispatchEvent(new CustomEvent('molecule-ready'));
+    });
+    
+    // Set up A-Frame VR mode listeners
+    setupVRListeners();
+}
+
+/**
+ * Set up listeners for A-Frame VR mode changes
+ */
+function setupVRListeners() {
+    aframeScene.addEventListener('enter-vr', () => {
+        inVRMode = true;
+        document.getElementById('container').style.display = 'none'; // hide Three.js canvas
+        aframeScene.style.display = 'block'; // show A-Frame
+    });
+    
+    aframeScene.addEventListener('exit-vr', () => {
+        inVRMode = false;
+        document.getElementById('container').style.display = 'block'; // show Three.js canvas
+        aframeScene.style.display = 'none'; // hide A-Frame
+    });
+    
+    // Auto-enter VR if headset is connected
+    aframeScene.addEventListener('loaded', () => {
+        if (AFRAME.utils.device.checkHeadsetConnected()) {
+            aframeScene.style.display = 'block';
+            aframeScene.enterVR();
+        }
     });
 }
 
@@ -580,9 +670,24 @@ function unhighlightAll(duration = 500) {
     unhighlightAtoms(indices, duration);
 }
 
+// Add a button for entering VR
+function addVRButton() {
+    const controls = document.createElement('div');
+    controls.id = 'controls';
+    controls.innerHTML = '<button id="vr-button">Enter VR</button>';
+    document.body.appendChild(controls);
+    
+    const vrButton = document.getElementById('vr-button');
+    vrButton.addEventListener('click', () => {
+        aframeScene.style.display = 'block';
+        aframeScene.enterVR();
+    });
+}
+
 setupKeyboardControls();
 init();
 animate();
+addVRButton();
 </script>
 </body>
 </html>
