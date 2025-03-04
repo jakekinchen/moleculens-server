@@ -132,7 +132,7 @@ class AnthropicProvider(LLMProvider):
                 params["top_p"] = request.top_p
             
             # Use streaming for large token requests
-            if params["max_tokens"] > 20000:
+            if params["max_tokens"] > 8192:
                 content_parts = []
                 with self.client.messages.stream(**params) as stream:
                     for message in stream:

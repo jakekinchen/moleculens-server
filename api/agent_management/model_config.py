@@ -110,7 +110,7 @@ def register_models():
             display_name=kwargs.get("display_name", "Claude 3.5 Sonnet"),
             provider=kwargs.get("provider", ProviderType.ANTHROPIC),
             categories=kwargs.get("categories", [ModelCategory.GENERAL, ModelCategory.REASONING]),
-            context_length=kwargs.get("context_length", 200000),
+            context_length=kwargs.get("context_length", 8192),
             is_default=kwargs.get("is_default", False),
             api_params=kwargs.get("api_params", {})
         )
