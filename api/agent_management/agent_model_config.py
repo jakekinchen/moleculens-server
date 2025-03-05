@@ -92,8 +92,8 @@ DEFAULT_AGENT_MODELS = [
     
     AgentModelConfig(
         agent_type=AgentType.PUBCHEM,
-        preferred_model="claude-3-7-sonnet-latest",  # Good for structured data
-        fallback_models=["gpt-4.5-preview", "gpt-4o"],
+        preferred_model="o3-mini",  # Changed to OpenAI model for reliability
+        fallback_models=["gpt-4o", "claude-3-7-sonnet-latest", "gpt-4.5-preview"],
         required_categories=[ModelCategory.REASONING],
         description="Handles PubChem data retrieval and processing"
     )

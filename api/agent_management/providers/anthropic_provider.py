@@ -7,17 +7,30 @@ from typing import Dict, Any, TypeVar, Type, List, Optional, Union, cast
 import httpx
 from anthropic import Anthropic, HUMAN_PROMPT, AI_PROMPT
 from ..llm_service import LLMProvider, LLMRequest, LLMResponse, StructuredLLMRequest, T, MessageRole
+import time
+import logging
+from typing import TypeVar, Generic, Optional, Dict, Any, List, Union, Callable
+import os
 
 class AnthropicProvider(LLMProvider):
     """Anthropic-specific implementation"""
     
-    def __init__(self, api_key: str):
+    MAX_RETRIES = 3  # Maximum number of retry attempts
+    INITIAL_RETRY_DELAY = 1  # Initial delay in seconds
+    
+    def __init__(self, api_key: Optional[str] = None):
+        """Initialize the Anthropic provider with API key"""
+        self.api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
+        if not self.api_key:
+            raise ValueError("Anthropic API key is required")
+        
         transport = httpx.HTTPTransport(retries=3)
         client = httpx.Client(transport=transport)
         self.client = Anthropic(
-            api_key=api_key,
+            api_key=self.api_key,
             http_client=client
         )
+        self.logger = logging.getLogger(__name__)
         
     def _get_token_usage_from_stream(self, stream):
         """Extract token usage from stream if available"""
@@ -41,6 +54,48 @@ class AnthropicProvider(LLMProvider):
             "role": "user",
             "content": request.user_prompt
         }]
+
+    def _call_with_retry(self, func: Callable, *args, **kwargs) -> Any:
+        """
+        Call a function with retry logic and exponential backoff
+        
+        Args:
+            func: The function to call
+            *args: Arguments to pass to the function
+            **kwargs: Keyword arguments to pass to the function
+            
+        Returns:
+            The result of the function call
+            
+        Raises:
+            Exception: If all retry attempts fail
+        """
+        retry_count = 0
+        last_exception = None
+        
+        while retry_count < self.MAX_RETRIES:
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                last_exception = e
+                error_message = str(e).lower()
+                
+                # Only retry on specific errors that might be temporary
+                if "overloaded" in error_message or "rate limit" in error_message or "timeout" in error_message:
+                    retry_count += 1
+                    if retry_count < self.MAX_RETRIES:
+                        # Calculate exponential backoff delay: 1s, 2s, 4s, etc.
+                        delay = self.INITIAL_RETRY_DELAY * (2 ** (retry_count - 1))
+                        self.logger.warning(f"Anthropic API error: {str(e)}. Retrying in {delay}s (attempt {retry_count}/{self.MAX_RETRIES})")
+                        time.sleep(delay)
+                    else:
+                        self.logger.error(f"Anthropic API error: {str(e)}. Max retries ({self.MAX_RETRIES}) exceeded.")
+                else:
+                    # For other errors, don't retry
+                    break
+        
+        # If we get here, all retries failed or the error wasn't retryable
+        raise last_exception
 
     def generate(self, request: LLMRequest) -> LLMResponse:
         """Generate a response using Anthropic's API"""
@@ -89,7 +144,7 @@ class AnthropicProvider(LLMProvider):
                 )
             else:
                 # Use non-streaming for shorter responses
-                response = self.client.messages.create(**params)
+                response = self._call_with_retry(self.client.messages.create, **params)
                 
                 if not response.content or not response.content[0].text:
                     raise ValueError("No response content received from Anthropic")
@@ -100,6 +155,7 @@ class AnthropicProvider(LLMProvider):
                     usage=self._get_token_usage_from_stream(response)
                 )
         except Exception as e:
+            self.logger.error(f"Anthropic API error: {str(e)}")
             raise Exception(f"Anthropic API error: {str(e)}")
 
     def generate_structured(self, request: StructuredLLMRequest[T]) -> T:

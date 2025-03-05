@@ -21,6 +21,7 @@ from agent_management.llm_service import (
 )
 from rdkit import Chem
 from rdkit.Chem import Fragments, Descriptors, AllChem
+import logging
 
 # Debug flag - set to False to disable debug logging
 DEBUG_PUBCHEM = True
@@ -68,25 +69,59 @@ class MoleculePackage(NamedTuple):
     title: str
 
 class PubChemAgent:
+    """Agent for retrieving and processing molecular data from PubChem"""
+    
     def __init__(self, llm_service: LLMService, use_element_labels: bool = True, 
                  convert_back_to_indices: bool = False, script_model: Optional[str] = None):
+        """
+        Initialize the PubChem agent
+        
+        Args:
+            llm_service: LLM service for generating interpretations and scripts
+            use_element_labels: Whether to use element-based labels (C1, O1) instead of indices
+            convert_back_to_indices: Whether to convert element-labels back to numeric indices
+            script_model: Optional model override for script agent
+        """
         self.llm_service = llm_service
-        self.use_element_labels = use_element_labels  # Use element-based labels (C1, O1) by default
+        self.use_element_labels = use_element_labels
         self.convert_back_to_indices = convert_back_to_indices  # Convert back to numeric indices after script generation
         self.script_model = script_model  # Optional model override for script agent
+        self.logger = logging.getLogger(__name__)
 
     def interpret_user_query(self, user_input: str) -> str:
         """
         Use LLM to interpret user input into a molecule name or identifier.
+        Handles provider failures gracefully with fallback behavior.
+        
+        Args:
+            user_input: The user's query about a molecule
+            
+        Returns:
+            A molecule name or identifier, or the original input if interpretation fails
+            
+        Raises:
+            Exception: If all interpretation attempts fail and the input cannot be used directly
         """
-        request = LLMRequest(
-            user_prompt=f"""Given this user input is related to molecular structures or trying to learn something about the microscopic structures of molecules or some topic related, give us the molecule that would best help the user learn what they are trying to learn about, return 'N/A' if you can't determine a valid molecule.
-            User input: '{user_input}'
-            Only respond with the molecule name or 'N/A', no other text.""",
-            system_prompt="You are a chemistry professor that helps identify molecule names from user queries. For instance, if the user asks about wanting to learn about chiral carbon centers then you should return '2-Butanol' or 'CC(O)CC' and if the user says 'Teach me about transition metal complexes with octahedral geometry' then you should return 'titanocene dichloride' or Hexamminecobalt(III) chloride"
-        )
-        response = self.llm_service.generate(request)
-        return response.content.strip()
+        try:
+            request = LLMRequest(
+                user_prompt=f"""Given this user input is related to molecular structures or trying to learn something about the microscopic structures of molecules or some topic related, give us the molecule that would best help the user learn what they are trying to learn about, return 'N/A' if you can't determine a valid molecule.
+                User input: '{user_input}'
+                Only respond with the molecule name or 'N/A', no other text.""",
+                system_prompt="You are a chemistry professor that helps identify molecule names from user queries. For instance, if the user asks about wanting to learn about chiral carbon centers then you should return '2-Butanol' or 'CC(O)CC' and if the user says 'Teach me about transition metal complexes with octahedral geometry' then you should return 'titanocene dichloride' or Hexamminecobalt(III) chloride"
+            )
+            response = self.llm_service.generate(request)
+            return response.content.strip()
+        except Exception as e:
+            self.logger.warning(f"Failed to interpret user query with LLM: {str(e)}")
+            
+            # Fallback 1: Try to use the input directly if it looks like a molecule name
+            if len(user_input.split()) <= 3 and not any(char in user_input for char in "?!.,:;"):
+                self.logger.info(f"Using user input directly as molecule name: '{user_input}'")
+                return user_input
+                
+            # Fallback 2: Use a default molecule if the input is complex
+            self.logger.info(f"Using default molecule 'water' for complex query: '{user_input}'")
+            return "water"
 
     def fetch_sdf_for_cid(self, cid: int) -> Optional[str]:
         """
@@ -99,23 +134,27 @@ class PubChemAgent:
             return resp.text
         return None
 
-    def get_molecule_sdfs(self, user_input: str) -> PubChemSearchResult:
+    def get_molecule_sdfs(self, user_input: str, skip_llm: bool = False) -> PubChemSearchResult:
         """
         1. Uses LLM to interpret the user input into a molecule name or ID.
         2. Queries PubChem for up to 5 matches.
         3. Fetches each match's SDF.
         4. Returns a structured result with the data.
         """
-        # Step 1: Interpret the user's input via LLM
-        molecule_name = self.interpret_user_query(user_input)
-        secondary_molecule_name = self.interpret_user_query(user_input+" but not "+molecule_name + "so try to find a similar molecule that would be relevant to the user's query")
-        if molecule_name == "N/A":
-            # If the LLM can't parse or guess a name, return an empty structure
-            return PubChemSearchResult(
-                query=user_input,
-                interpreted_query=molecule_name,
-                results=[]
-            )
+        if skip_llm:
+            # If skip_llm is True, directly use the input as the molecule name
+            molecule_name = user_input
+        else:
+            # Step 1: Interpret the user's input via LLM
+            molecule_name = self.interpret_user_query(user_input)
+            secondary_molecule_name = self.interpret_user_query(user_input+" but not "+molecule_name + "so try to find a similar molecule that would be relevant to the user's query")
+            if molecule_name == "N/A":
+                # If the LLM can't parse or guess a name, return an empty structure
+                return PubChemSearchResult(
+                    query=user_input,
+                    interpreted_query=molecule_name,
+                    results=[]
+                )
 
         # Step 2: Query PubChem for the interpreted name
         compounds = pcp.get_compounds(molecule_name, 'name')
@@ -206,13 +245,20 @@ class PubChemAgent:
         Raises:
             ValueError: If no valid molecules were found for the query
         """
-        print(f"[DEBUG] Processing user query: {user_query}")
+        self.logger.info(f"Processing user query: {user_query}")
         
         try:
             # Step 1: Get molecule data from PubChem based on the query
-            search_result = self.get_molecule_sdfs(user_query)
-            print(f"[DEBUG] Search result interpreted query: {search_result.interpreted_query}")
-            print(f"[DEBUG] Number of results: {len(search_result.results)}")
+            try:
+                search_result = self.get_molecule_sdfs(user_query)
+                self.logger.info(f"Search result interpreted query: {search_result.interpreted_query}")
+                self.logger.info(f"Number of results: {len(search_result.results)}")
+            except Exception as e:
+                self.logger.error(f"Error in get_molecule_sdfs: {str(e)}")
+                # Try with a fallback molecule if the LLM interpretation fails
+                fallback_query = "water"  # Simple, reliable fallback
+                self.logger.info(f"Falling back to default molecule: {fallback_query}")
+                search_result = self.get_molecule_sdfs(fallback_query, skip_llm=True)
             
             # Step 2: Check if we have any results
             if not search_result.results:
@@ -220,8 +266,8 @@ class PubChemAgent:
             
             # Step 3: Take the first result as our target molecule
             compound = search_result.results[0]
-            print(f"[DEBUG] Selected compound: {compound.name} (CID: {compound.cid})")
-            print(f"[DEBUG] IUPAC name: {compound.iupac_name}")
+            self.logger.info(f"Selected compound: {compound.name} (CID: {compound.cid})")
+            self.logger.info(f"IUPAC name: {compound.iupac_name}")
             
             if DEBUG_PUBCHEM:
                 write_debug_file('pubchem_sdf.txt', compound.sdf or '')
@@ -232,7 +278,7 @@ class PubChemAgent:
             try:
                 # Generate a display title for the molecule
                 display_title = compound.name if compound.name else compound.iupac_name if compound.iupac_name else "Molecule"
-                print(f"[DEBUG] Using display title: {display_title}")
+                self.logger.info(f"Using display title: {display_title}")
 
                 if compound.isomeric_smiles:
                     mol = Chem.MolFromSmiles(compound.isomeric_smiles)
@@ -248,9 +294,9 @@ class PubChemAgent:
                         functional_groups['aromatic_OH_count'] = Fragments.fr_Ar_OH(mol)
                         functional_groups['halogen_count'] = Fragments.fr_halogen(mol)
                         functional_groups['amine_count'] = Fragments.fr_Al_N(mol)  # Changed from fr_Al_NH2 to fr_Al_N
-                        print(f"[DEBUG] Functional groups: {functional_groups}")
+                        self.logger.info(f"[DEBUG] Functional groups: {functional_groups}")
                     except Exception as e:
-                        print(f"[WARNING] Error counting functional groups: {str(e)}")
+                        self.logger.warning(f"[WARNING] Error counting functional groups: {str(e)}")
                         functional_groups = {
                             'aliphatic_OH_count': 0,
                             'aromatic_OH_count': 0,
@@ -268,7 +314,7 @@ class PubChemAgent:
                         highlight_groups.append('halogen')
                     if functional_groups['amine_count'] > 0:
                         highlight_groups.append('amine')
-                    print(f"[DEBUG] Highlight groups: {highlight_groups}")
+                    self.logger.info(f"[DEBUG] Highlight groups: {highlight_groups}")
 
 
                 molecule_data = {
@@ -288,7 +334,7 @@ class PubChemAgent:
                     'synonyms': compound.synonyms
                 }
 
-                print(f"[DEBUG] Molecule data: {molecule_data}")
+                self.logger.info(f"[DEBUG] Molecule data: {molecule_data}")
                     
 
                 # Send the molecule info and the user query to the script agent to get a script
@@ -316,18 +362,18 @@ class PubChemAgent:
                         convert_back_to_indices=True
                     )
                 
-                print(f"[DEBUG] Generated script: {script}")
+                self.logger.info(f"[DEBUG] Generated script: {script}")
 
                 pdb_data = _sdf_to_pdb_block(compound.sdf)
                 
                 # Generate the HTML content
-                print("[DEBUG] Generating HTML content...")
+                self.logger.info("[DEBUG] Generating HTML content...")
                 html_content = MoleculeVisualizer.generate_html_viewer_from_pdb(pdb_data, display_title)
                 
                 if DEBUG_PUBCHEM:
                     write_debug_file('pubchem_html.html', html_content)
 
-                print(f"[DEBUG] Creating interactive visualization...")
+                self.logger.info(f"[DEBUG] Creating interactive visualization...")
                 # Create a script data structure for the interactive visualization
                 # The script variable appears to be an object with its own 'content' property,
                 # but the JavaScript code expects scriptData.content to be an array directly
@@ -344,7 +390,7 @@ class PubChemAgent:
                         "content": script
                     }
                 
-                print(f"[DEBUG] Script data structure: {type(script_data['content'])}")
+                self.logger.info(f"[DEBUG] Script data structure: {type(script_data['content'])}")
                 
                 # Generate interactive HTML with both PDB data and script data
                 interactive_html = MoleculeVisualizer.generate_interactive_html(
@@ -357,7 +403,7 @@ class PubChemAgent:
                     write_debug_file('pubchem_interactive.html', interactive_html)
                 
                 # Generate minimal JS for embedding
-                print("[DEBUG] Generating JS content...")
+                self.logger.info("[DEBUG] Generating JS content...")
                 js_content = MoleculeVisualizer.generate_js_code_from_pdb(pdb_data, display_title)
                 
                 if DEBUG_PUBCHEM:
@@ -379,19 +425,19 @@ class PubChemAgent:
                     }
                     write_debug_file('pubchem_package.json', json.dumps(debug_package, indent=2))
                 
-                print("[DEBUG] Successfully created molecule package")
+                self.logger.info("[DEBUG] Successfully created molecule package")
                 return package
             
             except Exception as e:
-                print(f"[ERROR] Failed to generate visualization: {str(e)}")
-                print(f"[ERROR] Error type: {type(e).__name__}")
+                self.logger.error(f"[ERROR] Failed to generate visualization: {str(e)}")
+                self.logger.error(f"[ERROR] Error type: {type(e).__name__}")
                 import traceback
-                print(f"[ERROR] Traceback:\n{traceback.format_exc()}")
+                self.logger.error(f"[ERROR] Traceback:\n{traceback.format_exc()}")
                 raise ValueError(f"Failed to generate visualization: {str(e)}")
         
         except Exception as e:
-            print(f"[ERROR] Error in get_molecule_package: {str(e)}")
-            print(f"[ERROR] Error type: {type(e).__name__}")
+            self.logger.error(f"[ERROR] Error in get_molecule_package: {str(e)}")
+            self.logger.error(f"[ERROR] Error type: {type(e).__name__}")
             import traceback
-            print(f"[ERROR] Traceback:\n{traceback.format_exc()}")
+            self.logger.error(f"[ERROR] Traceback:\n{traceback.format_exc()}")
             raise

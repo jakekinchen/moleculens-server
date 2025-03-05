@@ -8,14 +8,20 @@ from openai.types.chat import ChatCompletion, ChatCompletionMessage, ChatComplet
 from openai.types.chat.chat_completion import Choice
 from openai.types import Completion
 from ..llm_service import LLMProvider, LLMRequest, LLMResponse, StructuredLLMRequest, T, MessageRole
+import os
 
 class OpenAIProvider(LLMProvider):
     """OpenAI-specific implementation"""
     
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: Optional[str] = None):
+        """Initialize the OpenAI provider with API key"""
         import openai
+        self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
+        if not self.api_key:
+            raise ValueError("OpenAI API key is required")
+            
         self.client = openai.OpenAI(
-            api_key=api_key
+            api_key=self.api_key
         )
 
     def _convert_messages(self, request: LLMRequest) -> List[ChatCompletionMessageParam]:

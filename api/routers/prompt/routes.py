@@ -19,6 +19,7 @@ import os
 import asyncio
 import traceback
 from datetime import datetime
+import logging
 
 
 router = APIRouter(
@@ -27,6 +28,8 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+# Set up logger
+logger = logging.getLogger(__name__)
 
 class PromptRequest(BaseModel):
     """Request model for prompts, optionally with preferred model type"""
@@ -426,6 +429,8 @@ async def generate_from_pubchem(request: PromptRequest):
     Generate a 3D visualization from a query to PubChem.
     """
     try:
+        logger.info(f"Processing PubChem request: {request.prompt}")
+        
         # Create domain validator agent using the factory
         domain_validator = AgentFactory.create_domain_validator(request.model)
         
@@ -434,12 +439,14 @@ async def generate_from_pubchem(request: PromptRequest):
         
         # If not molecular, reject the prompt immediately
         if not validation_result.is_true:
+            logger.warning(f"Non-molecular prompt rejected: {request.prompt}")
             return {
                 "job_id": "rejected",
                 "status": "failed",
                 "message": "Non-molecular prompt rejected",
                 "error": "The prompt does not contain molecular content"
             }
+        
         # Create PubChem agent with script agent override - use the specified model for script generation
         pubchem_agent = AgentFactory.create_pubchem_agent(
             script_model=request.model,
@@ -447,7 +454,9 @@ async def generate_from_pubchem(request: PromptRequest):
         )
         
         # Generate the geometry directly for immediate response
+        logger.info(f"Generating molecule package for: {request.prompt}")
         result = pubchem_agent.get_molecule_package(request.prompt)
+        logger.info(f"Successfully generated molecule package: {result.title}")
         
         return {
             "result": result.js,
@@ -455,8 +464,17 @@ async def generate_from_pubchem(request: PromptRequest):
             "title": result.title
         }
     except Exception as e:
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
+        error_message = str(e)
+        logger.error(f"Error generating from PubChem: {error_message}")
+        logger.error(traceback.format_exc())
+        
+        # Provide a more user-friendly error message
+        if "Anthropic API error: " in error_message and "overloaded" in error_message.lower():
+            error_message = "The service is currently experiencing high demand. Please try again in a few moments."
+        elif "No molecules found" in error_message:
+            error_message = f"Could not find a molecule matching your query. Please try a different molecule name or formula."
+        
+        raise HTTPException(status_code=500, detail=error_message)
         
 
 @router.post("/", response_model=JobResponse)

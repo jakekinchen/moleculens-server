@@ -97,13 +97,13 @@ class LLMService:
         """Create the appropriate provider based on configuration"""
         if config.provider == ProviderType.OPENAI:
             from .providers.openai_provider import OpenAIProvider
-            return OpenAIProvider(config.api_key)
+            return OpenAIProvider(api_key=config.api_key)
         elif config.provider == ProviderType.ANTHROPIC:
             from .providers.anthropic_provider import AnthropicProvider
-            return AnthropicProvider(config.api_key)
+            return AnthropicProvider(api_key=config.api_key)
         elif config.provider == ProviderType.GROQ:
             from .providers.groq_provider import GroqProvider
-            return GroqProvider(config.api_key)
+            return GroqProvider(api_key=config.api_key)
         else:
             raise ValueError(f"Unsupported provider type: {config.provider}")
 
