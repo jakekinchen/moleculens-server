@@ -19,3 +19,7 @@ docker-compose.override.yml
 # System Files
 .DS_Store
 Thumbs.db
+
+
+static/scene_*.html
+static/scene_*.js

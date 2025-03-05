@@ -30,10 +30,11 @@ if is_development:
 else:
     # Production mode - include specific origins instead of wildcard
     origins = [
+        "https://sci-viz-ai.vercel.app",  # Vercel deployment URL
         "https://moleculens.com",         # our vercel app
         "https://www.moleculens.com",     # our www subdomain
-        "https://meshmo.com",               # meshmo.com domain
-        "https://www.meshmo.com"            # our www.meshmo.com domain
+        "https://meshmo.com",             # meshmo.com domain (primary)
+        "https://www.meshmo.com"          # www.meshmo.com domain
     ]
     allow_credentials = True  # Enable credentials for specific origins
 

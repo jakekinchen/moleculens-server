@@ -4,6 +4,8 @@ This is separate from the animation agent that will handle actual animation gene
 """
 
 from agent_management.models import SceneScript
+from typing import Dict, Any
+import json
 from agent_management.llm_service import (
     LLMService,
     StructuredLLMRequest,
@@ -15,7 +17,7 @@ class ScriptAgent:
     def __init__(self, llm_service: LLMService):
         self.llm_service = llm_service
     
-    def generate_script(self, topic: str) -> SceneScript:
+    def generate_script(self, topic: str) -> Dict[str, Any]:
         """
         Generate a structured scene script for a scientific topic.
         
@@ -23,7 +25,7 @@ class ScriptAgent:
             topic: The scientific topic to explain in the scene
             
         Returns:
-            SceneScript: A structured script with title and timed content points
+            Dict[str, Any]: A structured script with title and timed content points
         """
         # Create a request for script generation
         request = StructuredLLMRequest(
@@ -37,7 +39,19 @@ Return a JSON object with:
 2. A content array containing 5-8 key points in the scene, each with:
    - timecode: Time marker in MM:SS format (starting at 00:00, ending around 02:00)
    - description: Detailed explanation of what should be happening in the 3D scene at this point
-   - caption: A concise text caption that would appear on screen at this time (30-50 characters)
+   - caption: An educational text caption that would appear on screen (50-100 characters)
+   
+CAPTION REQUIREMENTS:
+- Each caption must be self-contained and meaningful on its own
+- Directly relate to what is currently visible in the scene
+- Use clear, concise language that balances technical accuracy with accessibility
+- Highlight the key scientific concept being demonstrated at that moment
+- Build understanding progressively through the scene
+
+Example of good captions:
+- "Carbon forms tetrahedral bonds, creating a 3D pyramid structure"
+- "Water molecules bend at 104.5°, giving them a unique polar shape"
+- "Electron clouds overlap as covalent bonds form between atoms"
 
 Make sure each time point builds logically on the previous ones to tell a complete story about the topic.
 Ensure descriptions are specific enough to guide the creation of 3D visuals (objects, movements, transitions).
@@ -51,8 +65,37 @@ When creating scene scripts:
 - Design effective transitions between key concepts
 - Balance visual appeal with educational value
 - Use appropriate pacing (approx. 2 minutes total)
-- Ensure captions complement but don't duplicate the visuals
 - Structure time points to flow naturally from introduction to conclusion
+
+CAPTION WRITING GUIDELINES:
+1. Educational Value:
+   - Each caption should teach a specific scientific concept
+   - Use precise scientific terminology when relevant
+   - Connect visual elements to underlying principles
+
+2. Accessibility:
+   - Write at a high school science level
+   - Define complex terms within the caption when needed
+   - Use active voice and present tense
+   - Avoid jargon unless necessary for understanding
+
+3. Visual Connection:
+   - Describe what is currently visible on screen
+   - Reference specific visual elements being highlighted
+   - Use spatial terms to guide attention
+   - Connect visual changes to scientific concepts
+
+4. Progressive Learning:
+   - Build complexity gradually through the scene
+   - Reference previously introduced concepts when relevant
+   - Create clear connections between sequential points
+   - End with synthesis of key concepts
+
+Example Caption Progression:
+00:00 - "Methane molecule (CH4) with central carbon atom"
+00:15 - "Four hydrogen atoms arrange in a tetrahedral pattern"
+00:30 - "109.5° bond angles maximize electron cloud separation"
+00:45 - "This tetrahedral shape gives methane its unique properties"
 
 Always return complete, properly formatted JSON objects matching the requested schema exactly.
 """,
@@ -61,4 +104,125 @@ Always return complete, properly formatted JSON objects matching the requested s
         )
         
         # Get the structured response
-        return self.llm_service.generate_structured(request)
+        script = self.llm_service.generate_structured(request)
+        # Ensure the response is converted to a dictionary
+        return script.dict() if hasattr(script, 'dict') else script
+    
+    def generate_script_from_molecule(self, molecule_name: str, user_query: str, molecule_data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Generate a structured scene script for a molecule.
+        
+        Returns:
+            Dict[str, Any]: A structured script with title and timed content points
+        """
+        # Convert molecule_data to string representation safely
+        molecule_json = json.dumps(molecule_data, indent=2)
+
+        
+        system_prompt = f"""You are an expert in scientific communication and 3D visualization. Your task is to create structured, engaging scripts for educational scientific scenes.
+
+Given:
+- A molecule name: {molecule_name}
+- A user query indicating the area of interest: {user_query}
+- Supplemental data about the molecule: {molecule_json}
+
+Your Objective:
+Create a clear, informative script that explains the molecule's structure and properties, guided by the user's area of interest.
+
+Script Guidelines:
+1. Clearly introduce the molecule using its IUPAC name (if applicable) and connect its structural geometry to VSEPR theory.
+2. Explain naturally and logically, transitioning smoothly between key points.
+3. Align the script's complexity and length to the molecule's complexity:
+    - Simple molecules (e.g., water, methane): 5-7 key points (~1 min)
+    - Complex molecules (e.g., glucose, insulin): 9-12 key points (~2 min)
+4. Use the atoms to highlight the specific atoms in the molecule that are relevant to current caption's focus.
+
+IMPORTANT FORMATTING REQUIREMENTS:
+1. The "atoms" field MUST contain an array of STRING values, not numbers
+2. If you want to reference atom indices, convert them to strings like "0", "1", "2" 
+3. Atom labels like "C1", "H2" should also be strings
+4. NEVER include integers directly in the atoms array, ALWAYS wrap them in quotes
+5. The introduction caption should have an empty atoms array.
+
+Output Format:
+Return a JSON object structured precisely as follows (realistic example):
+
+{{
+    "title": "Benzene: Aromaticity and Its Chemical Significance",
+    "content": [
+        {{
+            "timecode": "00:00",
+            "atoms": [],
+            "caption": "Benzene's hexagonal ring is key to its aromatic stability."
+        }},
+        {{
+            "timecode": "00:08",
+            "atoms": ["C1", "C2", "C3", "C4", "C5", "C6"],
+            "caption": "This unique geometry affects benzene's chemical reactivity."
+        }},
+        {{
+            "timecode": "00:15",
+            "atoms": ["C1", "C2", "C3", "C4", "C5", "C6", "H1", "H2", "H3", "H4", "H5", "H6"],
+            "caption": "Symmetrical hydrogen placement reduces molecular polarity."
+        }},
+        {{
+            "timecode": "00:22",
+            "atoms": ["C1", "C2", "C3", "C4", "C5", "C6", "H1", "H2", "H3", "H4", "H5", "H6"],
+            "caption": "Low polarity explains benzene's limited solubility in water."
+        }},
+        {{
+            "timecode": "00:30",
+            "atoms": ["C1", "C2", "C3", "C4", "C5", "C6"],
+            "caption": "Electron delocalization creates stable aromatic pi bonds."
+        }},
+        {{
+            "timecode": "00:37",
+            "atoms": ["C1", "C2", "C3", "C4", "C5", "C6"],
+            "caption": "Stable pi bonds influence benzene's resistance to addition reactions."
+        }},
+        {{
+            "timecode": "00:45",
+            "atoms": ["C1", "C2", "C3", "C4", "C5", "C6"],
+            "caption": "Planar resonance structure contributes to overall molecular stability."
+        }},
+        {{
+            "timecode": "00:52",
+            "atoms": ["C1", "C2", "C3", "C4", "C5", "C6"],
+            "caption": "This stability makes benzene an important industrial chemical."
+        }},
+        {{
+            "timecode": "01:00",
+            "atoms": ["C1", "C2", "C3", "C4", "C5", "C6"],
+            "caption": "Equal bond lengths result from resonance and electron delocalization."
+        }},
+        {{
+            "timecode": "01:07",
+            "atoms": ["C1", "C2", "C3", "C4", "C5", "C6"],
+            "caption": "Uniform bonding impacts benzene's predictable chemical behavior."
+        }},
+        {{
+            "timecode": "01:15",
+            "atoms": ["C1", "C2", "C3", "C4", "C5", "C6"],
+            "caption": "Aromatic stability significantly influences benzene's reaction pathways."
+        }},
+        {{
+            "timecode": "01:22",
+            "atoms": ["C1", "C2", "C3", "C4", "C5", "C6"],
+            "caption": "Understanding benzene's aromaticity helps explain its industrial uses."
+        }}
+    ]
+}}
+
+Use the user query to guide the emphasis of your script content without explicitly referencing it. For example, if the query is "Explain the aromatic rings in benzene," focus on aromaticity, molecular geometry, and its significance, incorporating other molecular details only as contextually relevant.
+"""
+
+        request = StructuredLLMRequest(
+            user_prompt="Generate a molecule visualization script that follows the provided guidelines.",
+            system_prompt=system_prompt,
+            llm_config=self.llm_service.config,
+            response_model=SceneScript,
+        )
+
+        script = self.llm_service.generate_structured(request)
+        # Ensure the response is converted to a dictionary
+        return script.dict() if hasattr(script, 'dict') else script

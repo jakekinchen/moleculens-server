@@ -1,4 +1,4 @@
-# AI Agent backend- fastapi, redis, and celery
+# AI Agent backend- fastapi
 
 ## Overview
 This repository demonstrates a Dockerized AI agent backend. 
@@ -12,8 +12,6 @@ This repository demonstrates a Dockerized AI agent backend.
 Create a `.env` file in the root directory (same level as `docker-compose.yml`) and add the following variables:
 
 ```env
-REDIS_HOST=redis
-REDIS_PORT=6379
 OPENAI_API_KEY=your-api-key
 ```
 
@@ -23,7 +21,7 @@ To build and start the containers, run:
 ```bash
 docker-compose up --build
 ```
-This command will build both the Redis and AI agent containers and start them.
+This command will build the AI agent containers and start them.
 
 ### 3. Running the Agent
 The AI agent will run and display its output in the terminal. Any code changes to `main.py` will reflect immediately without needing to rebuild.

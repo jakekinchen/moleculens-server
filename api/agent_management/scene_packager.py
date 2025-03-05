@@ -6,6 +6,7 @@ from typing import Dict, List, Any
 import re
 from agent_management.models import SceneScript, OrchestrationPlan, AnimationCode, FinalScenePackage
 
+
 class ScenePackager:
     """
     Takes the output from the geometry and animation agents and packages it into a complete Three.js scene.
@@ -51,10 +52,12 @@ class ScenePackager:
         # Create scene title
         title = orchestration_plan.scene_title
         
-        # Create the packaged files
-        html = ScenePackager._create_html(title, script)
+        # Create the JavaScript code
         js = ScenePackager._create_js(title, all_geometry_code, animation_code.code)
         minimal_js = ScenePackager._create_minimal_js(all_geometry_code, animation_code.code)
+        
+        # Create the HTML with embedded JavaScript
+        html = ScenePackager._create_html(title, script, js)
         
         return FinalScenePackage(
             html=html,
@@ -64,16 +67,17 @@ class ScenePackager:
             timecode_markers=timecode_markers,
             total_elements=total_elements
         )
-    
+
+
     @staticmethod
-    def _create_html(title: str, script: SceneScript) -> str:
+    def _create_html(title: str, script: SceneScript, js_code: str = None) -> str:
         """
         Create the complete HTML file with the Three.js scene.
-        
+
         Args:
-            title: Scene title
-            script: Script with captions
-            
+            title (str): Scene title
+            script (SceneScript): Script with captions
+            js_code (str, optional): JavaScript code to embed directly in the HTML (if None, will use a script link)
         Returns:
             str: Complete HTML file
         """
@@ -85,7 +89,17 @@ class ScenePackager:
         
         caption_html = "\n".join(caption_divs)
         
-        # Create the HTML template
+        # Determine whether to use embedded JS or external script link
+        if js_code:
+            script_tag = f"""    <!-- Embedded scene script -->
+    <script>
+{js_code}
+    </script>"""
+        else:
+            script_tag = """    <!-- Main scene script -->
+    <script src="/static/scene.js"></script>"""
+        
+        # Create the HTML template with corrected script paths
         html_template = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -174,22 +188,26 @@ class ScenePackager:
 {caption_html}
     </div>
     <div class="controls">
+        <button id="rewind">⏪</button>
         <button id="play-pause">Pause</button>
+        <button id="fast-forward">⏩</button>
         <button id="reset">Reset</button>
     </div>
     <div class="timeline">
         <div class="progress" id="progress-bar"></div>
     </div>
     
+    <!-- Canvas element for the visualization -->
+    <canvas id="scene-canvas" style="width: 100%; height: 100%; display: block;"></canvas>
+    
     <!-- Main Three.js library -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <!-- OrbitControls add-on -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+    <!-- OrbitControls add-on (corrected path) -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <!-- Main scene script -->
-    <script src="/static/scene.js"></script>
-</body>
-</html>
-"""
+    {script_tag}
+    </body>
+    </html>
+    """
         return html_template
 
     @staticmethod
@@ -209,27 +227,47 @@ class ScenePackager:
         js_header = "// Scientific visualization: " + title + "\n"
         js_header += "// Auto-generated code\n\n"
         js_header += "// Global variables\n"
-        js_header += "let scene, camera, renderer, controls, clock;\n"
-        js_header += "let isPlaying = true;\n"
-        js_header += "const TOTAL_DURATION = 120; // 2 minutes in seconds\n\n"
+        js_header += "// Use existing globals if defined, otherwise create new ones\n"
+        js_header += "var scene = window.scene || null;\n"
+        js_header += "var camera = window.camera || null;\n"
+        js_header += "var renderer = window.renderer || null;\n"
+        js_header += "var controls = window.controls || null;\n"
+        js_header += "var clock = window.clock || null;\n"
+        js_header += "var isPlaying = typeof window.isPlaying !== 'undefined' ? window.isPlaying : true;\n"
+        js_header += "// Set animation duration to 2 minutes\n"
+        js_header += "var ANIMATION_DURATION = 120;\n\n"
         
         # Create the init function
         init_function = """
 // Initialize the scene
 function init() {
-    // Create scene
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x111122);
+    // Create scene if it doesn't exist
+    if (!scene) {
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x111122);
+    }
     
-    // Create camera
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 10;
+    // Create camera if it doesn't exist
+    if (!camera) {
+        camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 10;
+    }
     
-    // Create renderer
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    document.body.appendChild(renderer.domElement);
+    // Look for an existing canvas or create renderer
+    if (!renderer) {
+        const canvas = document.getElementById('scene-canvas');
+        if (canvas) {
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: canvas,
+                antialias: true 
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+        } else {
+            console.warn('No canvas element found with id "scene-canvas"');
+            return; // Exit init if canvas not found
+        }
+    }
     
     // Create lighting
     const ambientLight = new THREE.AmbientLight(0x404040);
@@ -239,13 +277,17 @@ function init() {
     directionalLight.position.set(1, 1, 1).normalize();
     scene.add(directionalLight);
     
-    // Add orbit controls
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.25;
+    // Add orbit controls if they don't exist
+    if (!controls && renderer) {
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.25;
+    }
     
-    // Initialize clock
-    clock = new THREE.Clock();
+    // Initialize clock if it doesn't exist
+    if (!clock && typeof THREE !== 'undefined') {
+        clock = new THREE.Clock();
+    }
     
     // Create geometry
     createGeometry();
@@ -280,14 +322,17 @@ function animate() {
     
     requestAnimationFrame(animate);
     
+    // Get the adjusted time with offset applied
+    const adjustedTime = updateUI();
+    
+    // We'll make this time variable available to the animation code
+    window.animationTime = adjustedTime;
+    
     // Animation created by the AnimationAgent
 """ + animation_code + """
     
     // Update controls
     controls.update();
-    
-    // Update captions and timeline
-    updateUI();
     
     // Render the scene
     renderer.render(scene, camera);
@@ -298,11 +343,15 @@ function animate() {
         ui_function = """
 // Update captions and UI based on current time
 function updateUI() {
-    const elapsedTime = clock.getElapsedTime();
+    // Add the time offset to the elapsed time
+    const elapsedTime = clock.getElapsedTime() + (window.timeOffset || 0);
+    
+    // Constrain elapsed time to be between 0 and animation duration
+    const constrainedTime = Math.max(0, Math.min(elapsedTime, ANIMATION_DURATION));
     
     // Update progress bar
     const progressBar = document.getElementById('progress-bar');
-    const progress = Math.min(elapsedTime / TOTAL_DURATION, 1);
+    const progress = constrainedTime / ANIMATION_DURATION;
     progressBar.style.width = progress * 100 + '%';
     
     // Update captions
@@ -313,12 +362,14 @@ function updateUI() {
         const timeInSeconds = min * 60 + sec;
         
         // Show caption if we're within 5 seconds of its timecode
-        if (elapsedTime >= timeInSeconds && elapsedTime < timeInSeconds + 5) {
+        if (constrainedTime >= timeInSeconds && constrainedTime < timeInSeconds + 5) {
             caption.style.display = 'block';
         } else {
             caption.style.display = 'none';
         }
     });
+    
+    return constrainedTime; // Return the constrained time for use in animations
 }
 """
         
@@ -336,24 +387,71 @@ function onWindowResize() {
         controls_function = """
 // Set up UI controls
 function setupControls() {
-    const playPauseButton = document.getElementById('play-pause');
-    const resetButton = document.getElementById('reset');
+    // Store button references
+    var playPauseButton = document.getElementById('play-pause');
+    var resetButton = document.getElementById('reset');
+    var rewindButton = document.getElementById('rewind');
+    var fastForwardButton = document.getElementById('fast-forward');
     
-    playPauseButton.addEventListener('click', () => {
-        isPlaying = !isPlaying;
-        playPauseButton.textContent = isPlaying ? 'Pause' : 'Play';
-        if (isPlaying) {
-            clock.start();
-        } else {
-            clock.stop();
-        }
-    });
+    // Only set up event listeners if elements exist
+    if (!playPauseButton || !resetButton || !rewindButton || !fastForwardButton) {
+        console.warn('Some control buttons not found in the DOM. Control setup may be incomplete.');
+    }
     
-    resetButton.addEventListener('click', () => {
-        clock = new THREE.Clock();
-        isPlaying = true;
-        playPauseButton.textContent = 'Pause';
-    });
+    let playbackSpeed = 1.0; // Normal speed
+    
+    // Initialize time offset if not already defined
+    window.timeOffset = window.timeOffset || 0;
+    
+    // Set up play/pause button if it exists
+    if (playPauseButton) {
+        playPauseButton.addEventListener('click', () => {
+            isPlaying = !isPlaying;
+            playPauseButton.textContent = isPlaying ? 'Pause' : 'Play';
+            if (isPlaying) {
+                if (clock) clock.start();
+            } else {
+                if (clock) clock.stop();
+            }
+        });
+    }
+    
+    // Set up reset button if it exists
+    if (resetButton) {
+        resetButton.addEventListener('click', () => {
+            if (typeof THREE !== 'undefined') {
+                clock = new THREE.Clock();
+            }
+            window.timeOffset = 0; // Reset the time offset
+            isPlaying = true;
+            if (playPauseButton) playPauseButton.textContent = 'Pause';
+            playbackSpeed = 1.0; // Reset speed to normal
+        });
+    }
+    
+    // Set up rewind button if it exists
+    if (rewindButton) {
+        rewindButton.addEventListener('click', () => {
+            // Decrease the time offset by 10 seconds (but don't go below negative animation duration)
+            window.timeOffset = Math.max(window.timeOffset - 10, -ANIMATION_DURATION);
+            
+            // Ensure playing state
+            isPlaying = true;
+            if (playPauseButton) playPauseButton.textContent = 'Pause';
+        });
+    }
+    
+    // Set up fast-forward button if it exists
+    if (fastForwardButton) {
+        fastForwardButton.addEventListener('click', () => {
+            // Increase the time offset by 10 seconds (but don't exceed animation duration)
+            window.timeOffset = Math.min(window.timeOffset + 10, ANIMATION_DURATION);
+            
+            // Ensure playing state
+            isPlaying = true;
+            if (playPauseButton) playPauseButton.textContent = 'Pause';
+        });
+    }
 }
 """
         
@@ -390,63 +488,141 @@ animate();
         Returns:
             str: Minimal JavaScript code for embedding
         """
-        # Create a minimal scene setup with just the essential components
-        minimal_js = """// Scene setup
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x111122);
-
-// Camera setup
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.z = 10;
-
-// Renderer setup
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
-document.body.appendChild(renderer.domElement);
-
-// Lighting setup
-const ambientLight = new THREE.AmbientLight(0x404040);
-scene.add(ambientLight);
-
-const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-directionalLight.position.set(1, 1, 1).normalize();
-scene.add(directionalLight);
-
-// Controls setup
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-controls.dampingFactor = 0.25;
-
-// Initialize clock
-const clock = new THREE.Clock();
-
-// Create geometry objects
+        # Create a minimal scene setup that can be injected into an existing canvas
+        minimal_js = """// Function to create and run a Three.js scene in a given canvas element
+function createScene(canvasElement) {
+    // Scene setup
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x111122);
+    
+    // Camera setup
+    const camera = new THREE.PerspectiveCamera(75, canvasElement.clientWidth / canvasElement.clientHeight, 0.1, 1000);
+    camera.position.z = 10;
+    
+    // Renderer setup using the provided canvas
+    const renderer = new THREE.WebGLRenderer({ 
+        canvas: canvasElement,
+        antialias: true 
+    });
+    renderer.setSize(canvasElement.clientWidth, canvasElement.clientHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    
+    // Lighting setup
+    const ambientLight = new THREE.AmbientLight(0x404040);
+    scene.add(ambientLight);
+    
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(1, 1, 1).normalize();
+    scene.add(directionalLight);
+    
+    // Controls setup
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.25;
+    
+    // Initialize clock and animation variables
+    const clock = new THREE.Clock();
+    let isPlaying = true;
+    window.timeOffset = 0;
+    
+    // Create geometry objects
 """
 
         # Add the geometry code
         minimal_js += geometry_code + "\n\n"
         
-        # Add the animation function
-        minimal_js += """// Animation function
-function animate() {
-    requestAnimationFrame(animate);
-    
-    // Animation code
+        # Add the animation function with proper closure
+        minimal_js += """    // Animation function
+    function animate() {
+        if (!isPlaying) {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+            controls.update();
+            return;
+        }
+        
+        requestAnimationFrame(animate);
+        
+        // Get the adjusted time with offset applied
+        const elapsedTime = clock.getElapsedTime() + window.timeOffset;
+        const ANIMATION_DURATION = 120; // 2 minutes in seconds
+        const constrainedTime = Math.max(0, Math.min(elapsedTime, ANIMATION_DURATION));
+        
+        // Make this time variable available to the animation code
+        window.animationTime = constrainedTime;
+        
+        // Animation code
 """
 
         # Add the animation code
         minimal_js += animation_code + "\n"
         
-        # Add the render call
+        # Add the render call and the function's closing braces
         minimal_js += """
-    // Update controls and render
-    controls.update();
-    renderer.render(scene, camera);
+        // Update controls and render
+        controls.update();
+        renderer.render(scene, camera);
+    }
+    
+    // Add window resize handler
+    function handleResize() {
+        if (!canvasElement) return;
+        
+        camera.aspect = canvasElement.clientWidth / canvasElement.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(canvasElement.clientWidth, canvasElement.clientHeight);
+    }
+    
+    // Add event listener for window resize
+    window.addEventListener('resize', handleResize);
+    
+    // Start animation
+    animate();
+    
+    // Return control functions for external use
+    return {
+        play: function() { 
+            isPlaying = true; 
+            clock.start(); 
+        },
+        pause: function() { 
+            isPlaying = false; 
+            clock.stop(); 
+        },
+        reset: function() { 
+            clock = new THREE.Clock(); 
+            window.timeOffset = 0; 
+            isPlaying = true; 
+        },
+        fastForward: function(seconds = 10) {
+            const ANIMATION_DURATION = 120; // 2 minutes in seconds
+            window.timeOffset = Math.min(window.timeOffset + seconds, ANIMATION_DURATION);
+        },
+        rewind: function(seconds = 10) {
+            const ANIMATION_DURATION = 120; // 2 minutes in seconds
+            window.timeOffset = Math.max(window.timeOffset - seconds, -ANIMATION_DURATION);
+        },
+        setTime: function(seconds) {
+            window.timeOffset = clock.getElapsedTime() - seconds;
+        },
+        dispose: function() {
+            window.removeEventListener('resize', handleResize);
+            controls.dispose();
+            renderer.dispose();
+        }
+    };
 }
 
-// Start animation
-animate();
+// Usage example:
+// const canvas = document.getElementById('scene-canvas');
+// const sceneController = createScene(canvas);
+// 
+// To control the scene:
+// sceneController.pause();
+// sceneController.play();
+// sceneController.fastForward();
+// sceneController.rewind();
+// sceneController.reset();
 """
         
         return minimal_js

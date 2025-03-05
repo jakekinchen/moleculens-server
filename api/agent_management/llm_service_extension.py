@@ -85,7 +85,7 @@ def extend_llm_service(original_module):
                     model=request.llm_config.model_name,
                     messages=messages,
                     temperature=request.temperature,
-                    max_tokens=request.max_tokens or 1024,
+                    max_tokens=request.max_tokens or 100024,
                     **request.additional_params
                 )
                 
@@ -141,7 +141,7 @@ def extend_llm_service(original_module):
                     model=request.llm_config.model_name,  # Should be gpt-4-vision or similar
                     messages=messages,
                     temperature=request.temperature,
-                    max_tokens=request.max_tokens or 1024,
+                    max_tokens=request.max_tokens or 100024,
                     **request.additional_params
                 )
                 
