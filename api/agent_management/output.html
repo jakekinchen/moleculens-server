@@ -109,7 +109,7 @@
     <a-entity hand-controls="hand: right" super-hands></a-entity>
 </a-scene>
 
-<script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+
 <script type="importmap">
 {
   "imports": {
@@ -140,7 +140,7 @@ let scriptStart = 0;                 // for timing reference
 let pauseIcon;                       // DOM element for pause icon
 
 // Global variable to control auto-rotation
-let autoRotateEnabled = false;
+let autoRotateEnabled = true;
 
 // Three.js global references
 let camera, scene, renderer, labelRenderer, controls;
