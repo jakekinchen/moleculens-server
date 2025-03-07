@@ -103,7 +103,8 @@ class AgentFactory:
             AgentType.PUBCHEM: AgentFactory.create_pubchem_agent(
                 override_model=global_override_model,
                 script_model=global_override_model,
-                convert_back_to_indices=True  # Convert element-based labels back to numeric indices
+                use_element_labels=True,       # Use element-based labels for better LLM understanding
+                convert_back_to_indices=True   # ALWAYS convert element-based labels back to numeric indices
             )
         }
         return agents

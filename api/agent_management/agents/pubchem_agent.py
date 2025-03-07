@@ -22,49 +22,30 @@ from agent_management.llm_service import (
 from rdkit import Chem
 from rdkit.Chem import Fragments, Descriptors, AllChem
 import logging
-
-# Debug flag - set to False to disable debug logging
-DEBUG_PUBCHEM = True
+from agent_management.debug_utils import DEBUG_PUBCHEM, write_debug_file
+import datetime
 
 def _sdf_to_pdb_block(sdf_data: str) -> str:
-        """
-        Convert SDF data (string) to a single PDB block using RDKit in-memory.
+    """
+    Convert SDF data (string) to a single PDB block using RDKit in-memory.
 
-        Returns an empty string if conversion fails.
-        """
-        mol = Chem.MolFromMolBlock(sdf_data, sanitize=True, removeHs=False)
-        if mol is None:
-            return ""
+    Returns an empty string if conversion fails.
+    """
+    mol = Chem.MolFromMolBlock(sdf_data, sanitize=True, removeHs=False)
+    if mol is None:
+        return ""
 
-        if mol.GetNumConformers() == 0:
-            AllChem.EmbedMolecule(mol, AllChem.ETKDG())
+    if mol.GetNumConformers() == 0:
+        AllChem.EmbedMolecule(mol, AllChem.ETKDG())
 
-        AllChem.MMFFOptimizeMolecule(mol)
+    AllChem.MMFFOptimizeMolecule(mol)
 
-        pdb_data = Chem.MolToPDBBlock(mol)
-        return pdb_data if pdb_data else ""
-
-def write_debug_file(filename: str, content: str) -> None:
-    """Write debug content to a file if DEBUG_PUBCHEM is True."""
-    if not DEBUG_PUBCHEM:
-        return
-        
-    # Create debug directory if it doesn't exist
-    debug_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "debug")
-    os.makedirs(debug_dir, exist_ok=True)
-    
-    # Write content to file (overwriting if exists)
-    filepath = os.path.join(debug_dir, filename)
-    try:
-        with open(filepath, 'w') as f:
-            f.write(content)
-        print(f"Debug file written: {filepath}")
-    except Exception as e:
-        print(f"Error writing debug file {filepath}: {e}")
+    pdb_data = Chem.MolToPDBBlock(mol)
+    return pdb_data if pdb_data else ""
 
 class MoleculePackage(NamedTuple):
     """Container for molecule visualization package data"""
-    js: str
+    pdb_data: str
     html: str
     title: str
 
@@ -234,47 +215,50 @@ class PubChemAgent:
             
     def get_molecule_package(self, user_query: str) -> MoleculePackage:
         """
-        Generate a complete molecule visualization package from a user query.
+        Get a complete molecule visualization package from a user query.
         
         Args:
-            user_query (str): The user's natural language query about a molecule
+            user_query: The user's query about a molecule
             
         Returns:
-            MoleculePackage: A tuple containing the JS code, HTML visualization, and title
+            MoleculePackage: A package containing PDB data, HTML, and title for visualization
             
         Raises:
-            ValueError: If no valid molecules were found for the query
+            ValueError: If no molecules are found or other errors occur
         """
-        self.logger.info(f"Processing user query: {user_query}")
+        # Write a debug file to confirm this method is being called
+        if DEBUG_PUBCHEM:
+            debug_info = {
+                'method': 'get_molecule_package',
+                'user_query': user_query,
+                'timestamp': datetime.datetime.now().isoformat()
+            }
+            write_debug_file('pubchem_package_start.json', json.dumps(debug_info, indent=2))
+            
+        self.logger.info(f"[DEBUG] Getting molecule package for query: {user_query}")
         
         try:
-            # Step 1: Get molecule data from PubChem based on the query
-            try:
-                search_result = self.get_molecule_sdfs(user_query)
-                self.logger.info(f"Search result interpreted query: {search_result.interpreted_query}")
-                self.logger.info(f"Number of results: {len(search_result.results)}")
-            except Exception as e:
-                self.logger.error(f"Error in get_molecule_sdfs: {str(e)}")
-                # Try with a fallback molecule if the LLM interpretation fails
-                fallback_query = "water"  # Simple, reliable fallback
-                self.logger.info(f"Falling back to default molecule: {fallback_query}")
-                search_result = self.get_molecule_sdfs(fallback_query, skip_llm=True)
+            # First, get the molecule SDFs
+            search_result = self.get_molecule_sdfs(user_query)
             
-            # Step 2: Check if we have any results
             if not search_result.results:
-                raise ValueError(f"No molecules found for query: '{user_query}' (interpreted as '{search_result.interpreted_query}')")
-            
-            # Step 3: Take the first result as our target molecule
+                raise ValueError(f"No molecules found for query: {user_query}, search result: {search_result}")
+                
+            # Use the first compound
             compound = search_result.results[0]
-            self.logger.info(f"Selected compound: {compound.name} (CID: {compound.cid})")
-            self.logger.info(f"IUPAC name: {compound.iupac_name}")
-            
-            if DEBUG_PUBCHEM:
-                write_debug_file('pubchem_sdf.txt', compound.sdf or '')
-            
+
             if compound.sdf is None:
                 raise ValueError(f"No SDF data available for compound {compound.name} (CID: {compound.cid})")
+
+            pdb_data = _sdf_to_pdb_block(compound.sdf)
             
+            # Get a display title (use name if available, otherwise ID)
+            display_title = compound.name if compound.name else f"CID {compound.cid}"
+            self.logger.info(f"[DEBUG] Using molecule: {display_title}")
+
+            if DEBUG_PUBCHEM:
+                write_debug_file('pubchem_sdf.txt', compound.sdf or '')
+
             try:
                 # Generate a display title for the molecule
                 display_title = compound.name if compound.name else compound.iupac_name if compound.iupac_name else "Molecule"
@@ -293,7 +277,6 @@ class PubChemAgent:
                         functional_groups['aliphatic_OH_count'] = Fragments.fr_Al_OH(mol)
                         functional_groups['aromatic_OH_count'] = Fragments.fr_Ar_OH(mol)
                         functional_groups['halogen_count'] = Fragments.fr_halogen(mol)
-                        functional_groups['amine_count'] = Fragments.fr_Al_N(mol)  # Changed from fr_Al_NH2 to fr_Al_N
                         self.logger.info(f"[DEBUG] Functional groups: {functional_groups}")
                     except Exception as e:
                         self.logger.warning(f"[WARNING] Error counting functional groups: {str(e)}")
@@ -344,27 +327,52 @@ class PubChemAgent:
                     script_agent = AgentFactory.create_script_agent(self.script_model)
                 else:
                     script_agent = ScriptAgent(self.llm_service)
-                script = script_agent.generate_script_from_molecule(compound.name, user_query, molecule_data)
+
+                # First convert molecule data to use elemental indices for better LLM understanding
+                from agent_management.agents.pubchem_agent_helper import generate_atom_label_mapping
+                atom_label_mapping = generate_atom_label_mapping(molecule_data)
                 
-                # First convert to element-based labels for LLM understanding (if enabled)
+                # Update molecule_data with element labels for the script agent
+                molecule_data_with_labels = molecule_data.copy()
+                molecule_data_with_labels['atom_labels'] = atom_label_mapping
+                
+                # Generate script using molecule data with elemental indices
+                script = script_agent.generate_script_from_molecule(compound.name, user_query, molecule_data_with_labels)
+                
+                self.logger.info(f"[DEBUG] Generated raw script: {script}")
+                
+                # We ALWAYS convert elemental indices (C1, H1, etc.) back to numeric indices (0, 1, 2)
+                # This is required for PDB visualization regardless of the use_element_labels setting
                 script = validate_and_convert_script(
                     script=script,
                     molecule_data=molecule_data,
-                    use_element_labels=self.use_element_labels
+                    use_element_labels=False,
+                    convert_back_to_indices=True
                 )
+                    
+                self.logger.info(f"[DEBUG] Processed script with numeric indices: {script}")
                 
-                # Convert back to numeric indices if configured that way
-                if self.convert_back_to_indices:
-                    script = validate_and_convert_script(
-                        script=script,
-                        molecule_data=molecule_data,
-                        use_element_labels=False,
-                        convert_back_to_indices=True
-                    )
+                # Explicitly verify that all atom references are numeric indices, not element labels
+                if DEBUG_PUBCHEM:
+                    try:
+                        all_numeric = True
+                        for time_point in script['content']:
+                            for atom_ref in time_point['atoms']:
+                                # Check if any atom reference contains alphabet characters (would indicate element labels)
+                                if any(c.isalpha() for c in str(atom_ref)):
+                                    self.logger.error(f"[ERROR] Found non-numeric atom reference: {atom_ref}")
+                                    all_numeric = False
+                        
+                        if all_numeric:
+                            self.logger.info("[DEBUG] Verification passed: All atom references are numeric")
+                        else:
+                            self.logger.error("[ERROR] Verification failed: Some atom references are not numeric")
+                    except Exception as e:
+                        self.logger.error(f"[ERROR] Error during atom reference verification: {str(e)}")
                 
                 self.logger.info(f"[DEBUG] Generated script: {script}")
 
-                pdb_data = _sdf_to_pdb_block(compound.sdf)
+                
                 
                 # Generate the HTML content
                 self.logger.info("[DEBUG] Generating HTML content...")
@@ -408,22 +416,30 @@ class PubChemAgent:
                 
                 if DEBUG_PUBCHEM:
                     write_debug_file('pubchem_js.js', js_content)
-                
-                # Create and log the package
+
+                # Create the package
+                self.logger.info("[DEBUG] Creating molecule package")
                 package = MoleculePackage(
-                    js=js_content,
+                    pdb_data=pdb_data,
                     html=interactive_html,
                     title=display_title
                 )
                 
                 if DEBUG_PUBCHEM:
-                    debug_package = {
-                        'title': package.title,
-                        'js_length': len(package.js),
-                        'html_length': len(package.html),
-                        'sdf_length': len(compound.sdf)
-                    }
-                    write_debug_file('pubchem_package.json', json.dumps(debug_package, indent=2))
+                    try:
+                        debug_package = {
+                            'title': package.title,
+                            'pdb_data_length': len(package.pdb_data),
+                            'html_length': len(package.html),
+                            'sdf_length': len(compound.sdf),
+                            'timestamp': datetime.datetime.now().isoformat()
+                        }
+                        write_debug_file('pubchem_package.json', json.dumps(debug_package, indent=2))
+                        self.logger.info("[DEBUG] Package debug info written to: pubchem_package.json")
+                    except Exception as e:
+                        error_msg = f"Error writing package debug file: {str(e)}"
+                        self.logger.error(f"[ERROR] {error_msg}")
+                        write_debug_file('pubchem_package_write_error.txt', error_msg)
                 
                 self.logger.info("[DEBUG] Successfully created molecule package")
                 return package

@@ -69,7 +69,7 @@ class ValidationResponse(BaseModel):
     
 class VisualizationData(BaseModel):
     html: str
-    js: str
+    pdb_data: str
     title: str
     timecode_markers: List[str]
     total_elements: int
@@ -286,7 +286,7 @@ async def process_prompt_pipeline_task(job_id: str, prompt: str, override_model:
             "title": scene_package.title,
             "timecode_markers": scene_package.timecode_markers,
             "total_elements": scene_package.total_elements,
-            "js_filename": js_filename
+            "js_filename": js_filename,
         }
         
         pipeline_jobs[job_id] = {
@@ -368,7 +368,6 @@ async def check_process_status(job_id: str):
     
     The visualization object contains:
     - html: The complete HTML for the visualization with embedded JavaScript
-    - js: The full JavaScript code
     - title: The title of the scene
     - timecode_markers: List of timecodes for the animation
     - total_elements: Total number of elements in the scene
@@ -385,7 +384,6 @@ async def check_process_status(job_id: str):
         if job["result"]:
             visualization = {
                 "html": job["result"].get("html", ""),
-                "js": job["result"].get("js", ""),
                 "title": job["result"].get("title", "Scientific Visualization"),
                 "timecode_markers": job["result"].get("timecode_markers", []),
                 "total_elements": job["result"].get("total_elements", 0)
@@ -427,6 +425,11 @@ async def check_process_status(job_id: str):
 async def generate_from_pubchem(request: PromptRequest):
     """
     Generate a 3D visualization from a query to PubChem.
+    
+    Returns:
+    - pdb_data: PDB data for the molecule
+    - result_html: HTML content
+    - title: Molecule title
     """
     try:
         logger.info(f"Processing PubChem request: {request.prompt}")
@@ -450,7 +453,8 @@ async def generate_from_pubchem(request: PromptRequest):
         # Create PubChem agent with script agent override - use the specified model for script generation
         pubchem_agent = AgentFactory.create_pubchem_agent(
             script_model=request.model,
-            convert_back_to_indices=True  # Convert element-based labels back to numeric indices for visualization
+            use_element_labels=True,  # Use element-based labels for better LLM understanding during script generation
+            convert_back_to_indices=True  # ALWAYS convert element-based labels back to numeric indices for visualization
         )
         
         # Generate the geometry directly for immediate response
@@ -459,7 +463,7 @@ async def generate_from_pubchem(request: PromptRequest):
         logger.info(f"Successfully generated molecule package: {result.title}")
         
         return {
-            "result": result.js,
+            "pdb_data": result.pdb_data,
             "result_html": result.html,
             "title": result.title
         }

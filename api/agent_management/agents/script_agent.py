@@ -115,16 +115,35 @@ Always return complete, properly formatted JSON objects matching the requested s
         Returns:
             Dict[str, Any]: A structured script with title and timed content points
         """
-        # Convert molecule_data to string representation safely
-        molecule_json = json.dumps(molecule_data, indent=2)
+        # Check if we have atom labels in the molecule data
+        atom_labels_info = ""
+        if 'atom_labels' in molecule_data:
+            # Extract the atom labels mapping and format it for better LLM understanding
+            atom_labels = molecule_data['atom_labels']
+            atom_labels_formatted = "\n".join([f"{idx}: {label}" for idx, label in atom_labels.items()])
+            atom_labels_info = f"""
+ATOM LABELS MAPPING:
+The molecule has the following atom labels that you should use in your script:
+{atom_labels_formatted}
 
+When referring to atoms in your script, use these atom labels (like C1, H2, O1) 
+rather than numeric indices, as these labels are more chemically meaningful.
+"""
         
+        # Convert molecule_data to string representation safely
+        # Remove 'atom_labels' from the JSON to avoid redundancy
+        molecule_data_copy = molecule_data.copy()
+        if 'atom_labels' in molecule_data_copy:
+            del molecule_data_copy['atom_labels']
+        molecule_json = json.dumps(molecule_data_copy, indent=2)
+
         system_prompt = f"""You are an expert in scientific communication and 3D visualization. Your task is to create structured, engaging scripts for educational scientific scenes.
 
 Given:
 - A molecule name: {molecule_name}
 - A user query indicating the area of interest: {user_query}
 - Supplemental data about the molecule: {molecule_json}
+{atom_labels_info}
 
 Your Objective:
 Create a clear, informative script that explains the molecule's structure and properties, guided by the user's area of interest.
@@ -135,12 +154,12 @@ Script Guidelines:
 3. Align the script's complexity and length to the molecule's complexity:
     - Simple molecules (e.g., water, methane): 5-7 key points (~1 min)
     - Complex molecules (e.g., glucose, insulin): 9-12 key points (~2 min)
-4. Use the atoms to highlight the specific atoms in the molecule that are relevant to current caption's focus.
+4. Use the atoms field to highlight the specific atoms in the molecule that are relevant to the current caption's focus.
 
 IMPORTANT FORMATTING REQUIREMENTS:
 1. The "atoms" field MUST contain an array of STRING values, not numbers
-2. If you want to reference atom indices, convert them to strings like "0", "1", "2" 
-3. Atom labels like "C1", "H2" should also be strings
+2. If atom labels are provided above, use those labels (like "C1", "H2", "O1") in the atoms array
+3. If no atom labels are provided, use string indices like "0", "1", "2"
 4. NEVER include integers directly in the atoms array, ALWAYS wrap them in quotes
 5. The introduction caption should have an empty atoms array.
 

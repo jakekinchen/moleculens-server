@@ -66,7 +66,7 @@ function createMoleculeVisualization(THREE, scene, options = {}) {
         const container = document.querySelector('#container');
         if (container) {
             const labelContainer = document.createElement('div');
-            labelContainer.innerHTML = `<div id="molecule-label">norbornane</div>`;
+            labelContainer.innerHTML = `<div id="molecule-label">H2O</div>`;
             container.appendChild(labelContainer.firstChild);
         }
     }
@@ -100,33 +100,11 @@ function createMoleculeVisualization(THREE, scene, options = {}) {
     }
 
     // Convert SDF -> PDB in Python, embed it here
-    const pdbData = `COMPND    9233
-HETATM    1  C1  UNL     1       3.814  -1.599   0.000  1.00  0.00           C  
-HETATM    2  C2  UNL     1       3.833   0.894   0.000  1.00  0.00           C  
-HETATM    3  C3  UNL     1       2.962  -0.196   0.000  1.00  0.00           C  
-HETATM    4  C4  UNL     1       5.413   0.329   0.000  1.00  0.00           C  
-HETATM    5  C5  UNL     1       5.301  -1.264   0.000  1.00  0.00           C  
-HETATM    6  C6  UNL     1       2.020  -0.272   0.000  1.00  0.00           C  
-HETATM    7  C7  UNL     1       2.399  -1.774   0.000  1.00  0.00           C  
-HETATM    8  H1  UNL     1       4.188  -0.739   0.000  1.00  0.00           H  
-HETATM    9  H2  UNL     1       3.846   2.161   0.000  1.00  0.00           H  
-HETATM   10  H3  UNL     1       3.109   0.978   0.000  1.00  0.00           H  
-HETATM   11  H4  UNL     1       2.355   1.211   0.000  1.00  0.00           H  
-HETATM   12  H5  UNL     1       5.791   1.364   0.000  1.00  0.00           H  
-HETATM   13  H6  UNL     1       6.516   0.390   0.000  1.00  0.00           H  
-HETATM   14  H7  UNL     1       0.896  -0.520   0.000  1.00  0.00           H  
-HETATM   15  H8  UNL     1       1.087   0.523   0.000  1.00  0.00           H  
-HETATM   16  H9  UNL     1       5.576  -2.336   0.000  1.00  0.00           H  
-HETATM   17  H10 UNL     1       6.394  -1.435   0.000  1.00  0.00           H  
-HETATM   18  H11 UNL     1       1.386  -2.220   0.000  1.00  0.00           H  
-HETATM   19  H12 UNL     1       2.458  -2.875   0.000  1.00  0.00           H  
-CONECT    1    3    5    7    8
-CONECT    2    3    4    6    9
-CONECT    3   10   11
-CONECT    4    5   12   13
-CONECT    5   16   17
-CONECT    6    7   14   15
-CONECT    7   18   19
+    const pdbData = `COMPND    962
+HETATM    1  O1  UNL     1       2.572  -0.345   0.000  1.00  0.00           O  
+HETATM    2  H1  UNL     1       3.280   0.317   0.000  1.00  0.00           H  
+HETATM    3  H2  UNL     1       1.759   0.182   0.000  1.00  0.00           H  
+CONECT    1    2    3
 END
 `;
     
@@ -332,4 +310,7 @@ function setupAnnotationRenderer(renderer, scene, camera) {
     };
 }
 
-createMoleculeVisualization(THREE, scene);
+createMoleculeVisualization(THREE, scene, {
+  camera,
+  controls
+});

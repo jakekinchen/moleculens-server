@@ -11,6 +11,11 @@ Refactored to:
 
 import re
 from typing import Optional, Dict, Any
+import os
+from agent_management.debug_utils import DEBUG_PUBCHEM, write_debug_file
+import json
+import datetime
+import traceback
 
 class MoleculeVisualizer:
     """
@@ -372,7 +377,10 @@ function setupAnnotationRenderer(renderer, scene, camera) {{
     }};
 }}
 
-createMoleculeVisualization(THREE, scene);
+createMoleculeVisualization(THREE, scene, {{
+  camera,
+  controls
+}});
 """
 
     @classmethod
@@ -736,7 +744,6 @@ function animate() {{
         Returns:
             str: HTML content as a string if output_path is None, otherwise the path to the generated file
         """
-        import os
         import re
         import json
         from pathlib import Path

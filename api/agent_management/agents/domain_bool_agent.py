@@ -15,6 +15,17 @@ class DomainValidator:
     def __init__(self, llm_service: LLMService):
         self.llm_service = llm_service
 
+    def is_macromolecule(self, prompt: str) -> BooleanResponse:
+        """
+        Determine if a prompt is about a macromolecule.
+        """
+        request = StructuredLLMRequest[BooleanResponse](
+            user_prompt=f"""Does the following prompt contain something that can be built as a macromolecule? We are not talking about proteins in general, for instance, we would not consider the 20 standard amino acids as macromolecules, but we would consider DNA or RNA as macromolecules. '{prompt}'
+            """,
+            response_model=BooleanResponse
+        )
+        return self.llm_service.generate_structured(request)
+
     def molecular_structure(self, prompt: str) -> MolecularStructure:
         """
         Determine if a prompt can be built as molecular structure.
