@@ -1,0 +1,1333 @@
+{
+  "metadata": {
+    "cid": 4140276,
+    "timestamp": "2025-03-08T00:18:09.446197",
+    "data_source": "PubChem API"
+  },
+  "basic_info": {
+    "name": "N-(2-aminoethyl)-3-[[3-(2-aminoethylamino)-3-oxopropyl]-[2-[bis[3-(2-aminoethylamino)-3-oxopropyl]amino]ethyl]amino]propanamide",
+    "iupac_name": "N-(2-aminoethyl)-3-[[3-(2-aminoethylamino)-3-oxopropyl]-[2-[bis[3-(2-aminoethylamino)-3-oxopropyl]amino]ethyl]amino]propanamide",
+    "molecular_formula": "C22H48N10O4",
+    "molecular_weight": "516.7",
+    "exact_mass": "516.38600005",
+    "monoisotopic_mass": "516.38600005",
+    "charge": 0,
+    "complexity": 524
+  },
+  "structure": {
+    "smiles": "C(CN(CCC(=O)NCCN)CCN(CCC(=O)NCCN)CCC(=O)NCCN)C(=O)NCCN",
+    "canonical_smiles": "C(CN(CCC(=O)NCCN)CCN(CCC(=O)NCCN)CCC(=O)NCCN)C(=O)NCCN",
+    "sdf_2d": "4140276\n  -OEChem-03082501182D\n\n 84 83  0     0  0  0  0  0  0999 V2000\n   11.1972    3.2500    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n   13.7953   -1.2500    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    6.0010    1.2500    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    8.5991   -3.2500    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n   11.1972    0.2500    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    8.5991   -0.2500    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n   12.9292    3.2500    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n   14.6613    0.2500    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    5.1350   -0.2500    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    6.8671   -3.2500    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n   13.7953    5.7500    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n   17.2594   -0.2500    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    2.5369    0.2500    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n    6.0010   -5.7500    0.0000 N   0  0  0  0  0  0  0  0  0  0  0  0\n   10.3312   -0.2500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    9.4651    0.2500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   11.1972    1.2500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   12.0632   -0.2500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    7.7331    0.2500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    8.5991   -1.2500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   12.0632    1.7500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   12.9292    0.2500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    6.8671   -0.2500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    7.7331   -1.7500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   12.0632    2.7500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   13.7953   -0.2500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    6.0010    0.2500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    7.7331   -2.7500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   12.9292    4.2500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   15.5273   -0.2500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    4.2690    0.2500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    6.8671   -4.2500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   13.7953    4.7500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n   16.3933    0.2500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    3.4030   -0.2500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    6.0010   -4.7500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\n    9.9326   -0.7249    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   10.7297   -0.7249    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n    9.8637    0.7249    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n    9.0666    0.7249    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   10.9851    1.8326    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   10.5866    1.1423    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   11.6647   -0.7249    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   12.4617   -0.7249    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n    8.1316    0.7249    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n    7.3346    0.7249    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n    8.8112   -1.8326    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n    9.2097   -1.1423    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   12.2753    1.1674    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   12.6738    1.8577    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   13.3278    0.7249    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   12.5307    0.7249    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n    6.4685   -0.7249    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n    7.2656   -0.7249    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n    7.5210   -1.1674    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n    7.1225   -1.8577    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   13.4662    2.9400    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   14.6613    0.8700    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n    5.1350   -0.8700    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n    6.3301   -2.9400    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   12.7172    4.8326    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   12.3187    4.1423    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   15.1288   -0.7249    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   15.9258   -0.7249    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n    4.6675    0.7249    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n    3.8705    0.7249    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n    7.0791   -4.8326    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n    7.4776   -4.1423    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   14.0073    4.1674    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   14.4058    4.8577    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   16.7919    0.7249    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   15.9948    0.7249    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n    3.0044   -0.7249    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n    3.8015   -0.7249    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n    5.7890   -4.1674    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n    5.3905   -4.8577    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   14.3322    6.0600    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   13.2583    6.0600    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   17.7963    0.0600    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n   17.2594   -0.8700    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n    2.0000   -0.0600    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n    2.5369    0.8700    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n    5.4641   -6.0600    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n    6.5380   -6.0600    0.0000 H   0  0  0  0  0  0  0  0  0  0  0  0\n  1 25  2  0  0  0  0\n  2 26  2  0  0  0  0\n  3 27  2  0  0  0  0\n  4 28  2  0  0  0  0\n  5 15  1  0  0  0  0\n  5 17  1  0  0  0  0\n  5 18  1  0  0  0  0\n  6 16  1  0  0  0  0\n  6 19  1  0  0  0  0\n  6 20  1  0  0  0  0\n  7 25  1  0  0  0  0\n  7 29  1  0  0  0  0\n  7 57  1  0  0  0  0\n  8 26  1  0  0  0  0\n  8 30  1  0  0  0  0\n  8 58  1  0  0  0  0\n  9 27  1  0  0  0  0\n  9 31  1  0  0  0  0\n  9 59  1  0  0  0  0\n 10 28  1  0  0  0  0\n 10 32  1  0  0  0  0\n 10 60  1  0  0  0  0\n 11 33  1  0  0  0  0\n 11 77  1  0  0  0  0\n 11 78  1  0  0  0  0\n 12 34  1  0  0  0  0\n 12 79  1  0  0  0  0\n 12 80  1  0  0  0  0\n 13 35  1  0  0  0  0\n 13 81  1  0  0  0  0\n 13 82  1  0  0  0  0\n 14 36  1  0  0  0  0\n 14 83  1  0  0  0  0\n 14 84  1  0  0  0  0\n 15 16  1  0  0  0  0\n 15 37  1  0  0  0  0\n 15 38  1  0  0  0  0\n 16 39  1  0  0  0  0\n 16 40  1  0  0  0  0\n 17 21  1  0  0  0  0\n 17 41  1  0  0  0  0\n 17 42  1  0  0  0  0\n 18 22  1  0  0  0  0\n 18 43  1  0  0  0  0\n 18 44  1  0  0  0  0\n 19 23  1  0  0  0  0\n 19 45  1  0  0  0  0\n 19 46  1  0  0  0  0\n 20 24  1  0  0  0  0\n 20 47  1  0  0  0  0\n 20 48  1  0  0  0  0\n 21 25  1  0  0  0  0\n 21 49  1  0  0  0  0\n 21 50  1  0  0  0  0\n 22 26  1  0  0  0  0\n 22 51  1  0  0  0  0\n 22 52  1  0  0  0  0\n 23 27  1  0  0  0  0\n 23 53  1  0  0  0  0\n 23 54  1  0  0  0  0\n 24 28  1  0  0  0  0\n 24 55  1  0  0  0  0\n 24 56  1  0  0  0  0\n 29 33  1  0  0  0  0\n 29 61  1  0  0  0  0\n 29 62  1  0  0  0  0\n 30 34  1  0  0  0  0\n 30 63  1  0  0  0  0\n 30 64  1  0  0  0  0\n 31 35  1  0  0  0  0\n 31 65  1  0  0  0  0\n 31 66  1  0  0  0  0\n 32 36  1  0  0  0  0\n 32 67  1  0  0  0  0\n 32 68  1  0  0  0  0\n 33 69  1  0  0  0  0\n 33 70  1  0  0  0  0\n 34 71  1  0  0  0  0\n 34 72  1  0  0  0  0\n 35 73  1  0  0  0  0\n 35 74  1  0  0  0  0\n 36 75  1  0  0  0  0\n 36 76  1  0  0  0  0\nM  END\n> <PUBCHEM_COMPOUND_CID>\n4140276\n\n> <PUBCHEM_COMPOUND_CANONICALIZED>\n1\n\n> <PUBCHEM_CACTVS_COMPLEXITY>\n524\n\n> <PUBCHEM_CACTVS_HBOND_ACCEPTOR>\n10\n\n> <PUBCHEM_CACTVS_HBOND_DONOR>\n8\n\n> <PUBCHEM_CACTVS_ROTATABLE_BOND>\n23\n\n> <PUBCHEM_CACTVS_SUBSKEYS>\nAAADcfB7+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHgAQAAAACADBgAQAAAPAAAAIAAEQEAAAAAAAAAAAAIEIAAAAQAgAQAAUAAAAFgCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==\n\n> <PUBCHEM_IUPAC_OPENEYE_NAME>\nN-(2-aminoethyl)-3-[[3-(2-aminoethylamino)-3-oxo-propyl]-[2-[bis[3-(2-aminoethylamino)-3-oxo-propyl]amino]ethyl]amino]propanamide\n\n> <PUBCHEM_IUPAC_CAS_NAME>\nN-(2-aminoethyl)-3-[[3-(2-aminoethylamino)-3-oxopropyl]-[2-[bis[3-(2-aminoethylamino)-3-oxopropyl]amino]ethyl]amino]propanamide\n\n> <PUBCHEM_IUPAC_NAME_MARKUP>\n<I>N</I>-(2-aminoethyl)-3-[[3-(2-aminoethylamino)-3-oxopropyl]-[2-[bis[3-(2-aminoethylamino)-3-oxopropyl]amino]ethyl]amino]propanamide\n\n> <PUBCHEM_IUPAC_NAME>\nN-(2-aminoethyl)-3-[[3-(2-aminoethylamino)-3-oxopropyl]-[2-[bis[3-(2-aminoethylamino)-3-oxopropyl]amino]ethyl]amino]propanamide\n\n> <PUBCHEM_IUPAC_SYSTEMATIC_NAME>\nN-(2-azanylethyl)-3-[[3-(2-azanylethylamino)-3-oxidanylidene-propyl]-[2-[bis[3-(2-azanylethylamino)-3-oxidanylidene-propyl]amino]ethyl]amino]propanamide\n\n> <PUBCHEM_IUPAC_TRADITIONAL_NAME>\nN-(2-aminoethyl)-3-[[3-(2-aminoethylamino)-3-keto-propyl]-[2-[bis[3-(2-aminoethylamino)-3-keto-propyl]amino]ethyl]amino]propionamide\n\n> <PUBCHEM_IUPAC_INCHI>\nInChI=1S/C22H48N10O4/c23-5-9-27-19(33)1-13-31(14-2-20(34)28-10-6-24)17-18-32(15-3-21(35)29-11-7-25)16-4-22(36)30-12-8-26/h1-18,23-26H2,(H,27,33)(H,28,34)(H,29,35)(H,30,36)\n\n> <PUBCHEM_IUPAC_INCHIKEY>\nSENLDUJVTGGYIH-UHFFFAOYSA-N\n\n> <PUBCHEM_XLOGP3_AA>\n-6.5\n\n> <PUBCHEM_EXACT_MASS>\n516.38600005\n\n> <PUBCHEM_MOLECULAR_FORMULA>\nC22H48N10O4\n\n> <PUBCHEM_MOLECULAR_WEIGHT>\n516.7\n\n> <PUBCHEM_SMILES>\nC(CN(CCC(=O)NCCN)CCN(CCC(=O)NCCN)CCC(=O)NCCN)C(=O)NCCN\n\n> <PUBCHEM_OPENEYE_CAN_SMILES>\nC(CN(CCC(=O)NCCN)CCN(CCC(=O)NCCN)CCC(=O)NCCN)C(=O)NCCN\n\n> <PUBCHEM_OPENEYE_ISO_SMILES>\nC(CN(CCC(=O)NCCN)CCN(CCC(=O)NCCN)CCC(=O)NCCN)C(=O)NCCN\n\n> <PUBCHEM_CACTVS_TPSA>\n227\n\n> <PUBCHEM_MONOISOTOPIC_WEIGHT>\n516.38600005\n\n> <PUBCHEM_TOTAL_CHARGE>\n0\n\n> <PUBCHEM_HEAVY_ATOM_COUNT>\n36\n\n> <PUBCHEM_ATOM_DEF_STEREO_COUNT>\n0\n\n> <PUBCHEM_ATOM_UDEF_STEREO_COUNT>\n0\n\n> <PUBCHEM_BOND_DEF_STEREO_COUNT>\n0\n\n> <PUBCHEM_BOND_UDEF_STEREO_COUNT>\n0\n\n> <PUBCHEM_ISOTOPIC_ATOM_COUNT>\n0\n\n> <PUBCHEM_COMPONENT_COUNT>\n1\n\n> <PUBCHEM_CACTVS_TAUTO_COUNT>\n-1\n\n> <PUBCHEM_COORDINATE_TYPE>\n1\n5\n255\n\n$$$$\n",
+    "sdf_3d": null,
+    "inchi": "InChI=1S/C22H48N10O4/c23-5-9-27-19(33)1-13-31(14-2-20(34)28-10-6-24)17-18-32(15-3-21(35)29-11-7-25)16-4-22(36)30-12-8-26/h1-18,23-26H2,(H,27,33)(H,28,34)(H,29,35)(H,30,36)",
+    "inchikey": "SENLDUJVTGGYIH-UHFFFAOYSA-N",
+    "fingerprint": "00000371F07BF800000000000000000000000000000000000000000000000000000000000000001E00100000000800C18004000003C000000800011010000000000000000000810800000040080040001400000016008000000000000000000000000000000000000000000000000000000000",
+    "atoms": [
+      {
+        "number": 8,
+        "element": "O",
+        "x": 11.1972,
+        "y": 3.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 8,
+        "element": "O",
+        "x": 13.7953,
+        "y": -1.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 8,
+        "element": "O",
+        "x": 6.001,
+        "y": 1.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 8,
+        "element": "O",
+        "x": 8.5991,
+        "y": -3.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 7,
+        "element": "N",
+        "x": 11.1972,
+        "y": 0.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 7,
+        "element": "N",
+        "x": 8.5991,
+        "y": -0.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 7,
+        "element": "N",
+        "x": 12.9292,
+        "y": 3.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 7,
+        "element": "N",
+        "x": 14.6613,
+        "y": 0.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 7,
+        "element": "N",
+        "x": 5.135,
+        "y": -0.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 7,
+        "element": "N",
+        "x": 6.8671,
+        "y": -3.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 7,
+        "element": "N",
+        "x": 13.7953,
+        "y": 5.75,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 7,
+        "element": "N",
+        "x": 17.2594,
+        "y": -0.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 7,
+        "element": "N",
+        "x": 2.5369,
+        "y": 0.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 7,
+        "element": "N",
+        "x": 6.001,
+        "y": -5.75,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 6,
+        "element": "C",
+        "x": 10.3312,
+        "y": -0.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 6,
+        "element": "C",
+        "x": 9.4651,
+        "y": 0.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 6,
+        "element": "C",
+        "x": 11.1972,
+        "y": 1.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 6,
+        "element": "C",
+        "x": 12.0632,
+        "y": -0.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 6,
+        "element": "C",
+        "x": 7.7331,
+        "y": 0.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 6,
+        "element": "C",
+        "x": 8.5991,
+        "y": -1.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 6,
+        "element": "C",
+        "x": 12.0632,
+        "y": 1.75,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 6,
+        "element": "C",
+        "x": 12.9292,
+        "y": 0.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 6,
+        "element": "C",
+        "x": 6.8671,
+        "y": -0.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 6,
+        "element": "C",
+        "x": 7.7331,
+        "y": -1.75,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 6,
+        "element": "C",
+        "x": 12.0632,
+        "y": 2.75,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 6,
+        "element": "C",
+        "x": 13.7953,
+        "y": -0.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 6,
+        "element": "C",
+        "x": 6.001,
+        "y": 0.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 6,
+        "element": "C",
+        "x": 7.7331,
+        "y": -2.75,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 6,
+        "element": "C",
+        "x": 12.9292,
+        "y": 4.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 6,
+        "element": "C",
+        "x": 15.5273,
+        "y": -0.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 6,
+        "element": "C",
+        "x": 4.269,
+        "y": 0.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 6,
+        "element": "C",
+        "x": 6.8671,
+        "y": -4.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 6,
+        "element": "C",
+        "x": 13.7953,
+        "y": 4.75,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 6,
+        "element": "C",
+        "x": 16.3933,
+        "y": 0.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 6,
+        "element": "C",
+        "x": 3.403,
+        "y": -0.25,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 6,
+        "element": "C",
+        "x": 6.001,
+        "y": -4.75,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 9.9326,
+        "y": -0.7249,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 10.7297,
+        "y": -0.7249,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 9.8637,
+        "y": 0.7249,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 9.0666,
+        "y": 0.7249,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 10.9851,
+        "y": 1.8326,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 10.5866,
+        "y": 1.1423,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 11.6647,
+        "y": -0.7249,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 12.4617,
+        "y": -0.7249,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 8.1316,
+        "y": 0.7249,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 7.3346,
+        "y": 0.7249,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 8.8112,
+        "y": -1.8326,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 9.2097,
+        "y": -1.1423,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 12.2753,
+        "y": 1.1674,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 12.6738,
+        "y": 1.8577,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 13.3278,
+        "y": 0.7249,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 12.5307,
+        "y": 0.7249,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 6.4685,
+        "y": -0.7249,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 7.2656,
+        "y": -0.7249,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 7.521,
+        "y": -1.1674,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 7.1225,
+        "y": -1.8577,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 13.4662,
+        "y": 2.94,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 14.6613,
+        "y": 0.87,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 5.135,
+        "y": -0.87,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 6.3301,
+        "y": -2.94,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 12.7172,
+        "y": 4.8326,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 12.3187,
+        "y": 4.1423,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 15.1288,
+        "y": -0.7249,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 15.9258,
+        "y": -0.7249,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 4.6675,
+        "y": 0.7249,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 3.8705,
+        "y": 0.7249,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 7.0791,
+        "y": -4.8326,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 7.4776,
+        "y": -4.1423,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 14.0073,
+        "y": 4.1674,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 14.4058,
+        "y": 4.8577,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 16.7919,
+        "y": 0.7249,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 15.9948,
+        "y": 0.7249,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 3.0044,
+        "y": -0.7249,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 3.8015,
+        "y": -0.7249,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 5.789,
+        "y": -4.1674,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 5.3905,
+        "y": -4.8577,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 14.3322,
+        "y": 6.06,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 13.2583,
+        "y": 6.06,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 17.7963,
+        "y": 0.06,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 17.2594,
+        "y": -0.87,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 2,
+        "y": -0.06,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 2.5369,
+        "y": 0.87,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 5.4641,
+        "y": -6.06,
+        "z": null,
+        "charge": 0
+      },
+      {
+        "number": 1,
+        "element": "H",
+        "x": 6.538,
+        "y": -6.06,
+        "z": null,
+        "charge": 0
+      }
+    ],
+    "bonds": [
+      {
+        "aid1": 1,
+        "aid2": 25,
+        "order": 2,
+        "style": null
+      },
+      {
+        "aid1": 2,
+        "aid2": 26,
+        "order": 2,
+        "style": null
+      },
+      {
+        "aid1": 3,
+        "aid2": 27,
+        "order": 2,
+        "style": null
+      },
+      {
+        "aid1": 4,
+        "aid2": 28,
+        "order": 2,
+        "style": null
+      },
+      {
+        "aid1": 5,
+        "aid2": 15,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 5,
+        "aid2": 17,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 5,
+        "aid2": 18,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 6,
+        "aid2": 16,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 6,
+        "aid2": 19,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 6,
+        "aid2": 20,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 7,
+        "aid2": 25,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 7,
+        "aid2": 29,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 7,
+        "aid2": 57,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 8,
+        "aid2": 26,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 8,
+        "aid2": 30,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 8,
+        "aid2": 58,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 9,
+        "aid2": 27,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 9,
+        "aid2": 31,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 9,
+        "aid2": 59,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 10,
+        "aid2": 28,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 10,
+        "aid2": 32,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 10,
+        "aid2": 60,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 11,
+        "aid2": 33,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 11,
+        "aid2": 77,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 11,
+        "aid2": 78,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 12,
+        "aid2": 34,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 12,
+        "aid2": 79,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 12,
+        "aid2": 80,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 13,
+        "aid2": 35,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 13,
+        "aid2": 81,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 13,
+        "aid2": 82,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 14,
+        "aid2": 36,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 14,
+        "aid2": 83,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 14,
+        "aid2": 84,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 15,
+        "aid2": 16,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 15,
+        "aid2": 37,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 15,
+        "aid2": 38,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 16,
+        "aid2": 39,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 16,
+        "aid2": 40,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 17,
+        "aid2": 21,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 17,
+        "aid2": 41,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 17,
+        "aid2": 42,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 18,
+        "aid2": 22,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 18,
+        "aid2": 43,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 18,
+        "aid2": 44,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 19,
+        "aid2": 23,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 19,
+        "aid2": 45,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 19,
+        "aid2": 46,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 20,
+        "aid2": 24,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 20,
+        "aid2": 47,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 20,
+        "aid2": 48,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 21,
+        "aid2": 25,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 21,
+        "aid2": 49,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 21,
+        "aid2": 50,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 22,
+        "aid2": 26,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 22,
+        "aid2": 51,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 22,
+        "aid2": 52,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 23,
+        "aid2": 27,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 23,
+        "aid2": 53,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 23,
+        "aid2": 54,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 24,
+        "aid2": 28,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 24,
+        "aid2": 55,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 24,
+        "aid2": 56,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 29,
+        "aid2": 33,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 29,
+        "aid2": 61,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 29,
+        "aid2": 62,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 30,
+        "aid2": 34,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 30,
+        "aid2": 63,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 30,
+        "aid2": 64,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 31,
+        "aid2": 35,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 31,
+        "aid2": 65,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 31,
+        "aid2": 66,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 32,
+        "aid2": 36,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 32,
+        "aid2": 67,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 32,
+        "aid2": 68,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 33,
+        "aid2": 69,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 33,
+        "aid2": 70,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 34,
+        "aid2": 71,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 34,
+        "aid2": 72,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 35,
+        "aid2": 73,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 35,
+        "aid2": 74,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 36,
+        "aid2": 75,
+        "order": 1,
+        "style": null
+      },
+      {
+        "aid1": 36,
+        "aid2": 76,
+        "order": 1,
+        "style": null
+      }
+    ]
+  },
+  "composition": {
+    "elements": [
+      "O",
+      "O",
+      "O",
+      "O",
+      "N",
+      "N",
+      "N",
+      "N",
+      "N",
+      "N",
+      "N",
+      "N",
+      "N",
+      "N",
+      "C",
+      "C",
+      "C",
+      "C",
+      "C",
+      "C",
+      "C",
+      "C",
+      "C",
+      "C",
+      "C",
+      "C",
+      "C",
+      "C",
+      "C",
+      "C",
+      "C",
+      "C",
+      "C",
+      "C",
+      "C",
+      "C",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H",
+      "H"
+    ],
+    "atoms_count": 84,
+    "bonds_count": 83,
+    "rotatable_bond_count": 23,
+    "heavy_atom_count": 36,
+    "isotope_atom_count": 0,
+    "atom_stereo_count": 0,
+    "defined_atom_stereo_count": 0,
+    "undefined_atom_stereo_count": 0,
+    "bond_stereo_count": 0,
+    "defined_bond_stereo_count": 0,
+    "undefined_bond_stereo_count": 0,
+    "covalent_unit_count": 1
+  },
+  "properties": {
+    "h_bond_donor_count": 8,
+    "h_bond_acceptor_count": 10,
+    "tpsa": 227,
+    "xlogp": -6.5,
+    "molecular_volume": null,
+    "polarizability": null
+  },
+  "identifiers": {
+    "synonyms": [
+      "155773-72-1",
+      "PAMAM dendrimer",
+      "N-(2-aminoethyl)-3-[[3-(2-aminoethylamino)-3-oxopropyl]-[2-[bis[3-(2-aminoethylamino)-3-oxopropyl]amino]ethyl]amino]propanamide",
+      "STARBURST(R) (PAMAM) DENDRIMER, GENERATION O",
+      "DTXSID70399812",
+      "3,3',3'',3'''-(ethane-1,2-diylbis(azanetriyl))tetrakis(N-(2-aminoethyl)propanamide)",
+      "N-(2-aminoethyl)-3-({2-[(2-aminoethyl)carbamoyl]ethyl}({2-[bis({2-[(2-aminoethyl)carbamoyl]ethyl})amino]ethyl})amino)propanamide",
+      "PAMAM G0",
+      "SENLDUJVTGGYIH-UHFFFAOYSA-N",
+      "starburst(r)(pamam)dendrimer,generationo",
+      "PAMAM-G0",
+      "SCHEMBL10194547",
+      "DTXCID50350668",
+      "CS-0214819",
+      "G63429",
+      "EN300-19628062",
+      "3,3',3'',3'''-(Ethane-1,2-diyldinitrilo)tetrakis[N-(2-aminoethyl)propanamide] (non-preferred name)",
+      "813-404-4",
+      "N-(2-aminoethyl)-3-[[3-(2-aminoethylamino)-3-oxo-propyl]-[2-[bis[3-(2-aminoethylamino)-3-oxo-propyl]amino]ethyl]amino]propanamide"
+    ],
+    "mesh_entries": null,
+    "record_type": null
+  }
+}

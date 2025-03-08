@@ -1,0 +1,379 @@
+{
+  "summary": {
+    "total_topics": 28,
+    "successful_topics": 19,
+    "failed_topics": 9,
+    "success_rate": 67.85714285714286,
+    "total_time": 153.14841318130493,
+    "average_time_per_topic": 5.469586185046604,
+    "timestamp": "2025-03-07T20:37:03.350134"
+  },
+  "results": [
+    {
+      "topic": "Teach me about cryptands and 3D host-guest complexation",
+      "success": true,
+      "interpreted_molecule": "cryptand-222",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "cryptand-222",
+          "cid": 72801,
+          "formula": "C18H36N2O6"
+        }
+      ],
+      "error": null,
+      "processing_time": 4.254642963409424
+    },
+    {
+      "topic": "Teach me about norbornane and its bridging structure",
+      "success": true,
+      "interpreted_molecule": "norbornane",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "norbornane",
+          "cid": 9233,
+          "formula": "C7H12"
+        }
+      ],
+      "error": null,
+      "processing_time": 3.8247640132904053
+    },
+    {
+      "topic": "Teach me about carboranes and their polyhedral cage structures",
+      "success": false,
+      "interpreted_molecule": "closo-B12H12-2",
+      "num_molecules_found": 0,
+      "molecules": [],
+      "error": null,
+      "processing_time": 6.59188985824585
+    },
+    {
+      "topic": "Teach me about the DNA double helix and base-pair stacking",
+      "success": true,
+      "interpreted_molecule": "adenine",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "adenine",
+          "cid": 190,
+          "formula": "C5H5N5"
+        }
+      ],
+      "error": null,
+      "processing_time": 2.9523978233337402
+    },
+    {
+      "topic": "Teach me about metal-metal quadruple bonds in dimolybdenum complexes",
+      "success": true,
+      "interpreted_molecule": "Mo2(O2CCH3)4",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Mo2(O2CCH3)4",
+          "cid": 541372,
+          "formula": "C8H16Mo2O8"
+        }
+      ],
+      "error": null,
+      "processing_time": 3.323256015777588
+    },
+    {
+      "topic": "Teach me about rotaxanes and their mechanically interlocked architecture",
+      "success": false,
+      "interpreted_molecule": "[2]rotaxane",
+      "num_molecules_found": 0,
+      "molecules": [],
+      "error": null,
+      "processing_time": 8.716885805130005
+    },
+    {
+      "topic": "Teach me about dendrimers and their hyperbranched growth patterns",
+      "success": false,
+      "interpreted_molecule": "PAMAM",
+      "num_molecules_found": 0,
+      "molecules": [],
+      "error": null,
+      "processing_time": 5.0766401290893555
+    },
+    {
+      "topic": "Teach me about polyoxometalates and their metal-oxygen clusters",
+      "success": true,
+      "interpreted_molecule": "phosphotungstate",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "phosphotungstate",
+          "cid": 61424,
+          "formula": "MoNa2O4"
+        }
+      ],
+      "error": null,
+      "processing_time": 4.798308849334717
+    },
+    {
+      "topic": "Teach me about alkali-doped fullerenes and superconductivity",
+      "success": false,
+      "interpreted_molecule": "K3C60",
+      "num_molecules_found": 0,
+      "molecules": [],
+      "error": null,
+      "processing_time": 4.0187132358551025
+    },
+    {
+      "topic": "Teach me about helicenes and their helical chirality",
+      "success": true,
+      "interpreted_molecule": "hexahelicene",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "hexahelicene",
+          "cid": 98863,
+          "formula": "C26H16"
+        }
+      ],
+      "error": null,
+      "processing_time": 3.4149739742279053
+    },
+    {
+      "topic": "Teach me about metallophthalocyanines and their planar macrocycles",
+      "success": true,
+      "interpreted_molecule": "copper phthalocyanine",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "copper phthalocyanine",
+          "cid": 8978,
+          "formula": "C32H16CuN8"
+        }
+      ],
+      "error": null,
+      "processing_time": 3.3747200965881348
+    },
+    {
+      "topic": "Teach me about organosilanes and the silicon hypervalency debate",
+      "success": true,
+      "interpreted_molecule": "SiH4",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "SiH4",
+          "cid": 23953,
+          "formula": "H4Si"
+        }
+      ],
+      "error": null,
+      "processing_time": 3.732940673828125
+    },
+    {
+      "topic": "Teach me about zintl clusters and their electron-rich frameworks",
+      "success": true,
+      "interpreted_molecule": "Sn9(4-)",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Sn9(4-)",
+          "cid": 11966240,
+          "formula": "Pb9"
+        }
+      ],
+      "error": null,
+      "processing_time": 4.643256902694702
+    },
+    {
+      "topic": "Teach me about peptidic \u03b2-sheets and \u03b1-helices in proteins",
+      "success": true,
+      "interpreted_molecule": "alanine",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "alanine",
+          "cid": 5950,
+          "formula": "C3H7NO2"
+        }
+      ],
+      "error": null,
+      "processing_time": 3.3050501346588135
+    },
+    {
+      "topic": "Teach me about bridging metal-carbonyl ligands in cluster compounds",
+      "success": true,
+      "interpreted_molecule": "Fe2(CO)9",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Fe2(CO)9",
+          "cid": 25049,
+          "formula": "C8H2Co2O8"
+        }
+      ],
+      "error": null,
+      "processing_time": 4.829921007156372
+    },
+    {
+      "topic": "Teach me about the Jahn-Teller distortion in octahedral Cu(II) complexes",
+      "success": false,
+      "interpreted_molecule": "Cu(H2O)6",
+      "num_molecules_found": 0,
+      "molecules": [],
+      "error": null,
+      "processing_time": 4.46703314781189
+    },
+    {
+      "topic": "Teach me about cuneane and its strained cage system",
+      "success": true,
+      "interpreted_molecule": "cuneane",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "cuneane",
+          "cid": 140734,
+          "formula": "C8H8"
+        }
+      ],
+      "error": null,
+      "processing_time": 4.5126118659973145
+    },
+    {
+      "topic": "Teach me about tetraphenylporphyrin and its planar macrocycle",
+      "success": true,
+      "interpreted_molecule": "porphine",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "porphine",
+          "cid": 66868,
+          "formula": "C20H14N4"
+        }
+      ],
+      "error": null,
+      "processing_time": 3.863067865371704
+    },
+    {
+      "topic": "Teach me about the Kekul\u00e9 structure of benzene",
+      "success": true,
+      "interpreted_molecule": "benzene",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "benzene",
+          "cid": 241,
+          "formula": "C6H6"
+        }
+      ],
+      "error": null,
+      "processing_time": 3.597790002822876
+    },
+    {
+      "topic": "Teach me about the Woodward-Hoffmann rules for conrotatory and disrotatory reactions",
+      "success": true,
+      "interpreted_molecule": "butadiene",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "butadiene",
+          "cid": 7845,
+          "formula": "C4H6"
+        }
+      ],
+      "error": null,
+      "processing_time": 3.059187889099121
+    },
+    {
+      "topic": "Teach me about circulene and its unique ring structure",
+      "success": true,
+      "interpreted_molecule": "coronene",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "coronene",
+          "cid": 9115,
+          "formula": "C24H12"
+        }
+      ],
+      "error": null,
+      "processing_time": 3.3308911323547363
+    },
+    {
+      "topic": "Teach me about diiron nonacarbonyl Fe2(CO)9 and its bridging CO groups",
+      "success": false,
+      "interpreted_molecule": "Fe2(CO)9",
+      "num_molecules_found": 0,
+      "molecules": [],
+      "error": null,
+      "processing_time": 4.402037858963013
+    },
+    {
+      "topic": "Teach me about cryptophanes and their host-guest chemistry",
+      "success": false,
+      "interpreted_molecule": "cryptophane-A",
+      "num_molecules_found": 0,
+      "molecules": [],
+      "error": null,
+      "processing_time": 4.610730171203613
+    },
+    {
+      "topic": "Teach me about double helical sulfur (S\u221e chains) and polysulfur rings",
+      "success": true,
+      "interpreted_molecule": "S8",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "S8",
+          "cid": 139602,
+          "formula": "S6"
+        }
+      ],
+      "error": null,
+      "processing_time": 4.615669012069702
+    },
+    {
+      "topic": "Teach me about the Schrock carbene complexes and metal-ligand multiple bonds",
+      "success": false,
+      "interpreted_molecule": "W(CH3)6",
+      "num_molecules_found": 0,
+      "molecules": [],
+      "error": null,
+      "processing_time": 5.682891130447388
+    },
+    {
+      "topic": "Teach me about hydrogen-bonded molecular knots and trefoil structures",
+      "success": true,
+      "interpreted_molecule": "cyclotricatechylene",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "cyclotricatechylene",
+          "cid": 2724971,
+          "formula": "C21H18O6"
+        }
+      ],
+      "error": null,
+      "processing_time": 3.2978968620300293
+    },
+    {
+      "topic": "Teach me about buckminsterfullerene (C60)",
+      "success": true,
+      "interpreted_molecule": "C60",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "C60",
+          "cid": 123591,
+          "formula": "C60"
+        }
+      ],
+      "error": null,
+      "processing_time": 3.3402960300445557
+    },
+    {
+      "topic": "Teach me about catenanes and how their rings interlock",
+      "success": false,
+      "interpreted_molecule": "[2]catenane",
+      "num_molecules_found": 0,
+      "molecules": [],
+      "error": null,
+      "processing_time": 9.422765254974365
+    }
+  ]
+}

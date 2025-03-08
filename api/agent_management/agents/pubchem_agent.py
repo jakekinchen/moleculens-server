@@ -7,7 +7,7 @@ import tempfile
 import json
 import pubchempy as pcp
 import requests
-from typing import Optional, Dict, Any, NamedTuple
+from typing import Optional, Dict, Any, NamedTuple, List
 from agent_management.molecule_visualizer import MoleculeVisualizer
 from agent_management.models import PubChemSearchResult, PubChemCompound
 from agent_management.agents.script_agent import ScriptAgent
@@ -24,6 +24,8 @@ from rdkit.Chem import Fragments, Descriptors, AllChem
 import logging
 from agent_management.debug_utils import DEBUG_PUBCHEM, write_debug_file
 import datetime
+import re
+import urllib.parse
 
 def _sdf_to_pdb_block(sdf_data: str) -> str:
     """
@@ -52,6 +54,22 @@ class MoleculePackage(NamedTuple):
 class PubChemAgent:
     """Agent for retrieving and processing molecular data from PubChem"""
     
+    FORMULA_EXTRACTION_PROMPT = """Given a chemical compound name, provide its molecular formula.
+Only respond with the formula, nothing else. If you're not certain, respond with 'unknown'.
+
+Example inputs and outputs:
+Input: "water"
+Output: H2O
+
+Input: "glucose"
+Output: C6H12O6
+
+Input: "random chemical"
+Output: unknown
+
+Input: "{query}"
+Output:"""
+
     def __init__(self, llm_service: LLMService, use_element_labels: bool = True, 
                  convert_back_to_indices: bool = False, script_model: Optional[str] = None):
         """
@@ -68,6 +86,180 @@ class PubChemAgent:
         self.convert_back_to_indices = convert_back_to_indices  # Convert back to numeric indices after script generation
         self.script_model = script_model  # Optional model override for script agent
         self.logger = logging.getLogger(__name__)
+
+    def _normalize_query(self, query: str) -> List[str]:
+        """
+        Normalize a chemical query string to improve search results.
+        
+        Args:
+            query: Raw query string
+            
+        Returns:
+            List of normalized query strings to try
+        """
+        # Remove any extra whitespace
+        query = query.strip()
+        
+        # List to store variations
+        variations = []
+        
+        # Add the original query
+        variations.append(query)
+        
+        # Handle special cases for chemical notation
+        if '[' in query and ']' in query:
+            # For cases like [2]Rotaxane or cryptand[2.2.2], try multiple formats
+            no_space = re.sub(r'\[\s*(\d+)\s*\]', r'[\1]', query)
+            with_space = re.sub(r'\[\s*(\d+)\s*\]', r'[ \1 ]', query)
+            no_brackets = re.sub(r'\[\s*(\d+)\s*\]', r'\1-', query)
+            variations.extend([no_space, with_space, no_brackets])
+            
+            # For cryptands, try alternative notations
+            if 'cryptand' in query.lower():
+                cryptand_base = query.lower().replace('cryptand', '').strip('[]')
+                variations.extend([
+                    f"Cryptand-{cryptand_base}",
+                    f"Kryptofix {cryptand_base}",
+                    "4,7,13,16,21,24-Hexaoxa-1,10-diazabicyclo[8.8.8]hexacosane"  # Common cryptand
+                ])
+        
+        # Handle complex names with multiple parts
+        if ' and ' in query.lower() or ' with ' in query.lower():
+            # Try the first part of compound names
+            parts = re.split(r'\s+(?:and|with)\s+', query, flags=re.IGNORECASE)
+            if parts:
+                variations.append(parts[0].strip())
+        
+        # Handle specific chemical classes
+        if 'phosphazene' in query.lower():
+            variations.extend([
+                "Hexachlorocyclotriphosphazene",  # Common phosphazene
+                "Cyclophosphazene",
+                "Phosphonitrilic chloride trimer"
+            ])
+            
+        if 'crown ether' in query.lower():
+            variations.extend([
+                "18-crown-6",
+                "15-crown-5",
+                "12-crown-4"
+            ])
+            
+        if 'metal-carbonyl' in query.lower():
+            variations.extend([
+                "Fe(CO)5",
+                "Ni(CO)4",
+                "Cr(CO)6"
+            ])
+            
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_variations = []
+        for v in variations:
+            if v not in seen:
+                seen.add(v)
+                unique_variations.append(v)
+                
+        return unique_variations
+
+    def _search_pubchem_rest(self, query: str, max_results: int = 5) -> List[Dict[str, Any]]:
+        """
+        Search PubChem using the REST API directly.
+        
+        Args:
+            query: Search query
+            max_results: Maximum number of results to return
+            
+        Returns:
+            List of compound data dictionaries
+        """
+        self.logger.info(f"[DEBUG] Searching PubChem REST API for: {query}")
+        
+        # Encode the query for URL
+        encoded_query = urllib.parse.quote(query)
+        
+        # First, search for compounds matching the query
+        search_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{encoded_query}/cids/JSON"
+        
+        try:
+            search_response = requests.get(search_url, timeout=30)
+            if search_response.status_code != 200:
+                self.logger.warning(f"PubChem REST search failed with status {search_response.status_code}")
+                return []
+                
+            data = search_response.json()
+            if 'IdentifierList' not in data:
+                return []
+                
+            cids = data['IdentifierList'].get('CID', [])
+            if not cids:
+                return []
+                
+            # Limit the number of CIDs
+            cids = cids[:max_results]
+            
+            # Get detailed information for each CID
+            compounds = []
+            for cid in cids:
+                try:
+                    # Get compound details using pubchempy for consistency
+                    compound = pcp.Compound.from_cid(cid)
+                    compounds.append(compound)
+                except Exception as e:
+                    self.logger.warning(f"Failed to get details for CID {cid}: {str(e)}")
+                    continue
+                    
+            return compounds
+            
+        except Exception as e:
+            self.logger.error(f"Error in PubChem REST search: {str(e)}")
+            return []
+
+    def _search_pubchem_direct(self, query: str) -> List[Dict[str, Any]]:
+        """
+        Search PubChem using direct compound search that matches the web interface.
+        
+        Args:
+            query: Search query (e.g. 'cryptand[2.2.2]')
+            
+        Returns:
+            List of compound data dictionaries
+        """
+        self.logger.info(f"[DEBUG] Direct PubChem search for: {query}")
+        
+        try:
+            # First try exact name match
+            search_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{urllib.parse.quote(query)}/JSON"
+            response = requests.get(search_url, timeout=30)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'PC_Compounds' in data:
+                    cid = data['PC_Compounds'][0]['id']['id']['cid']
+                    self.logger.info(f"[DEBUG] Found exact match CID: {cid}")
+                    compound = pcp.Compound.from_cid(int(cid))
+                    return [compound]
+                    
+            # If exact match fails, try the autocomplete API
+            autocomplete_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/autocomplete/compound/{urllib.parse.quote(query)}/json"
+            response = requests.get(autocomplete_url, timeout=30)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if 'dictionary_terms' in data and 'compound' in data['dictionary_terms']:
+                    # Get the first suggestion's CID
+                    for suggestion in data['dictionary_terms']['compound']:
+                        if 'cid' in suggestion:
+                            cid = suggestion['cid']
+                            self.logger.info(f"[DEBUG] Found suggested CID: {cid}")
+                            compound = pcp.Compound.from_cid(int(cid))
+                            return [compound]
+            
+            return []
+            
+        except Exception as e:
+            self.logger.error(f"Error in direct PubChem search: {str(e)}")
+            return []
 
     def interpret_user_query(self, user_input: str) -> str:
         """
@@ -86,9 +278,24 @@ class PubChemAgent:
         try:
             request = LLMRequest(
                 user_prompt=f"""Given this user input is related to molecular structures or trying to learn something about the microscopic structures of molecules or some topic related, give us the molecule that would best help the user learn what they are trying to learn about, return 'N/A' if you can't determine a valid molecule.
-                User input: '{user_input}'
-                Only respond with the molecule name or 'N/A', no other text.""",
-                system_prompt="You are a chemistry professor that helps identify molecule names from user queries. For instance, if the user asks about wanting to learn about chiral carbon centers then you should return '2-Butanol' or 'CC(O)CC' and if the user says 'Teach me about transition metal complexes with octahedral geometry' then you should return 'titanocene dichloride' or Hexamminecobalt(III) chloride"
+
+Important guidelines:
+1. Prefer simple, well-known examples over complex ones
+2. For complex structures, choose a representative simple example
+3. Use common names over systematic names when possible
+4. Avoid special characters unless absolutely necessary
+5. For metal complexes, prefer simple coordination compounds
+6. For organic structures, prefer parent compounds over derivatives
+
+Examples:
+- For "metal carbonyl complexes" → "Fe(CO)5" (not a complex derivative)
+- For "crown ethers" → "18-crown-6" (the most common example)
+- For "phosphazenes" → "hexachlorocyclophosphazene" (the parent compound)
+- For "cryptands" → "cryptand-222" (standard notation)
+
+User input: '{user_input}'
+Only respond with the molecule name or 'N/A', no other text.""",
+                system_prompt="You are a chemistry professor that helps identify the simplest, most representative molecule names from user queries. Always prefer well-known, simple examples that clearly demonstrate the concept."
             )
             response = self.llm_service.generate(request)
             return response.content.strip()
@@ -115,73 +322,172 @@ class PubChemAgent:
             return resp.text
         return None
 
-    def get_molecule_sdfs(self, user_input: str, skip_llm: bool = False) -> PubChemSearchResult:
+    def _get_molecular_formula(self, compound_name: str) -> Optional[str]:
         """
-        1. Uses LLM to interpret the user input into a molecule name or ID.
-        2. Queries PubChem for up to 5 matches.
-        3. Fetches each match's SDF.
-        4. Returns a structured result with the data.
+        Use LLM to get the molecular formula for a compound name.
+        
+        Args:
+            compound_name: Name of the chemical compound
+            
+        Returns:
+            Molecular formula if LLM is confident, None otherwise
         """
-        if skip_llm:
-            # If skip_llm is True, directly use the input as the molecule name
-            molecule_name = user_input
-        else:
-            # Step 1: Interpret the user's input via LLM
-            molecule_name = self.interpret_user_query(user_input)
-            secondary_molecule_name = self.interpret_user_query(user_input+" but not "+molecule_name + "so try to find a similar molecule that would be relevant to the user's query")
-            if molecule_name == "N/A":
-                # If the LLM can't parse or guess a name, return an empty structure
-                return PubChemSearchResult(
-                    query=user_input,
-                    interpreted_query=molecule_name,
-                    results=[]
-                )
-
-        # Step 2: Query PubChem for the interpreted name
-        compounds = pcp.get_compounds(molecule_name, 'name')
-        if not compounds:
-            compounds = pcp.get_compounds(secondary_molecule_name, 'name')
-            if not compounds:
-                return PubChemSearchResult(
-                query=user_input,
-                interpreted_query=molecule_name,
-                results=[]
+        try:
+            request = LLMRequest(
+                system_prompt="You are a chemistry expert. Provide molecular formulas for chemical compounds.",
+                user_prompt=self.FORMULA_EXTRACTION_PROMPT.format(query=compound_name),
+                temperature=0.1  # Low temperature for more deterministic output
             )
+            
+            response = self.llm_service.generate(request)
+            formula = response.content.strip()
+            
+            if formula.lower() == 'unknown':
+                return None
+                
+            return formula
+            
+        except Exception as e:
+            self.logger.error(f"Error getting molecular formula from LLM: {str(e)}")
+            return None
 
-        # Step 3: Take up to 5 matching CIDs
-        limited_compounds = compounds[:5]
+    def _search_with_fallbacks(self, query: str) -> List[Dict[str, Any]]:
+        """
+        Search for a compound using multiple methods with fallbacks.
+        
+        Args:
+            query: The compound name or identifier to search for
+            
+        Returns:
+            List of compound data dictionaries
+        """
+        self.logger.info(f"Starting search with fallbacks for: {query}")
+        
+        # Step 1: Try direct search with normalized queries
+        normalized_queries = self._normalize_query(query)
+        for normalized_query in normalized_queries:
+            try:
+                results = self._search_pubchem_direct(normalized_query)
+                if results:
+                    self.logger.info(f"Found results using direct search with query: {normalized_query}")
+                    return results
+            except Exception as e:
+                self.logger.warning(f"Direct search failed for {normalized_query}: {str(e)}")
+        
+        # Step 2: Try REST search with normalized queries
+        for normalized_query in normalized_queries:
+            try:
+                results = self._search_pubchem_rest(normalized_query)
+                if results:
+                    self.logger.info(f"Found results using REST search with query: {normalized_query}")
+                    return results
+            except Exception as e:
+                self.logger.warning(f"REST search failed for {normalized_query}: {str(e)}")
+        
+        # Step 3: Try getting formula from LLM and searching with that
+        formula = self._get_molecular_formula(query)
+        if formula:
+            self.logger.info(f"Got formula from LLM: {formula}")
+            try:
+                # Try searching by formula using PubChemPy
+                compounds = pcp.get_compounds(formula, 'formula')
+                if compounds:
+                    self.logger.info(f"Found results using formula search: {formula}")
+                    return compounds
+            except Exception as e:
+                self.logger.warning(f"Formula search failed for {formula}: {str(e)}")
+        
+        self.logger.warning(f"All search methods failed for query: {query}")
+        return []
 
-        # Step 4: For each CID, gather metadata + SDF
+    def get_molecule_sdfs(self, user_input: str) -> List[Dict[str, Any]]:
+        """
+        Get SDF data for molecules based on user input.
+        
+        Args:
+            user_input: User's query about a molecule
+            
+        Returns:
+            List of dictionaries containing molecule data and SDF content
+        """
+        self.logger.info(f"Processing request for: {user_input}")
+        
+        # First interpret the user's query to get the molecule name
+        molecule_name = self.interpret_user_query(user_input)
+        if not molecule_name:
+            self.logger.warning("Could not interpret user query into a molecule name")
+            return []
+            
+        # Search for the molecule using our fallback pipeline
+        compounds = self._search_with_fallbacks(molecule_name)
+        if not compounds:
+            self.logger.warning(f"No compounds found for {molecule_name}")
+            return []
+            
+        # Process the compounds and get their SDF data
         results = []
-        for cmpd in limited_compounds:
-            sdf_str = self.fetch_sdf_for_cid(cmpd.cid)
-            
-            # Transform atoms and bonds into expected format
-            atom_numbers = [atom.number for atom in cmpd.atoms] if cmpd.atoms else None
-            bond_tuples = [(bond.aid1, bond.aid2, bond.order) for bond in cmpd.bonds] if cmpd.bonds else None
-            
-            results.append(PubChemCompound(
-                name=molecule_name,
-                cid=cmpd.cid,
-                molecular_formula=cmpd.molecular_formula,
-                molecular_weight=cmpd.molecular_weight,
-                iupac_name=cmpd.iupac_name,
-                sdf=sdf_str,
-                canonical_smiles=cmpd.canonical_smiles,
-                isomeric_smiles=cmpd.isomeric_smiles,
-                elements=cmpd.elements,
-                atoms=atom_numbers,
-                bonds=bond_tuples,
-                charge=cmpd.charge,
-                synonyms=cmpd.synonyms
-            ))
+        for compound in compounds:
+            try:
+                # Handle both Compound objects and dictionaries
+                cid = compound.cid if hasattr(compound, 'cid') else compound.get('cid')
+                if not cid:
+                    continue
+                    
+                # First try to get 3D SDF
+                sdf_data = None
+                sdf_3d_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/SDF?record_type=3d"
+                try:
+                    response = requests.get(sdf_3d_url, timeout=30)
+                    if response.status_code == 200:
+                        sdf_data = response.text
+                        self.logger.info(f"Successfully got 3D SDF for CID {cid}")
+                    else:
+                        self.logger.warning(f"Failed to get 3D SDF for CID {cid} (status {response.status_code})")
+                except Exception as e:
+                    self.logger.warning(f"Error getting 3D SDF for CID {cid}: {str(e)}")
 
-        # Step 5: Return structured result
-        return PubChemSearchResult(
-            query=user_input,
-            interpreted_query=molecule_name,
-            results=results
-        )
+                # If 3D failed, try 2D
+                if not sdf_data:
+                    sdf_2d_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/SDF"
+                    try:
+                        response = requests.get(sdf_2d_url, timeout=30)
+                        if response.status_code == 200:
+                            sdf_data = response.text
+                            self.logger.info(f"Successfully got 2D SDF for CID {cid}")
+                        else:
+                            self.logger.warning(f"Failed to get 2D SDF for CID {cid} (status {response.status_code})")
+                    except Exception as e:
+                        self.logger.warning(f"Error getting 2D SDF for CID {cid}: {str(e)}")
+
+                if sdf_data:
+                    # Get compound attributes safely
+                    name = (
+                        compound.iupac_name if hasattr(compound, 'iupac_name')
+                        else compound.get('iupac_name', str(cid))
+                    )
+                    formula = (
+                        compound.molecular_formula if hasattr(compound, 'molecular_formula')
+                        else compound.get('formula', '')
+                    )
+                    
+                    results.append({
+                        'name': name,
+                        'cid': cid,
+                        'formula': formula,
+                        'sdf': sdf_data
+                    })
+                    self.logger.info(f"Successfully processed compound CID {cid}")
+                else:
+                    self.logger.error(f"Failed to get any SDF data for CID {cid}")
+                    
+            except Exception as e:
+                self.logger.error(f"Error processing compound: {str(e)}")
+                continue
+                
+        if not results:
+            self.logger.warning(f"No valid compounds with SDF data found for {molecule_name}")
+            
+        return results
 
     def get_compound_details(self, cid: int) -> Optional[PubChemCompound]:
         """
@@ -205,14 +511,133 @@ class PubChemAgent:
                 bonds=compound.bonds,
                 charge=compound.charge,
                 synonyms=compound.synonyms
-
-                
-                
             )
         except Exception as e:
             print(f"Error fetching compound details for CID {cid}: {str(e)}")
             return None
+
+    def save_compound_details_to_json(self, cid: int, base_dir: str = "compound_data") -> str:
+        """
+        Save all available compound details to a JSON file in a subdirectory.
+        
+        Args:
+            cid: PubChem Compound ID
+            base_dir: Base directory for saving compound data (default: "compound_data")
             
+        Returns:
+            Path to the created JSON file
+            
+        Raises:
+            ValueError: If compound details cannot be fetched
+        """
+        try:
+            # Create the compound directory
+            compound_dir = os.path.join(base_dir, f"cid_{cid}")
+            os.makedirs(compound_dir, exist_ok=True)
+            
+            # Get compound details
+            compound = pcp.Compound.from_cid(cid)
+            sdf_str = self.fetch_sdf_for_cid(cid)
+            
+            # Get 3D SDF if available
+            sdf_3d_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/SDF?record_type=3d"
+            response = requests.get(sdf_3d_url, timeout=30)
+            sdf_3d = response.text if response.status_code == 200 else None
+            
+            # Create a comprehensive data structure
+            data = {
+                "metadata": {
+                    "cid": cid,
+                    "timestamp": datetime.datetime.now().isoformat(),
+                    "data_source": "PubChem API"
+                },
+                "basic_info": {
+                    "name": compound.iupac_name,
+                    "iupac_name": compound.iupac_name,
+                    "molecular_formula": compound.molecular_formula,
+                    "molecular_weight": compound.molecular_weight,
+                    "exact_mass": getattr(compound, 'exact_mass', None),
+                    "monoisotopic_mass": getattr(compound, 'monoisotopic_mass', None),
+                    "charge": compound.charge,
+                    "complexity": getattr(compound, 'complexity', None)
+                },
+                "structure": {
+                    "smiles": compound.isomeric_smiles,
+                    "canonical_smiles": compound.canonical_smiles,
+                    "sdf_2d": sdf_str,
+                    "sdf_3d": sdf_3d,
+                    "inchi": getattr(compound, 'inchi', None),
+                    "inchikey": getattr(compound, 'inchikey', None),
+                    "fingerprint": getattr(compound, 'fingerprint', None)
+                },
+                "composition": {
+                    "elements": compound.elements,
+                    "atoms_count": len(compound.atoms) if compound.atoms else 0,
+                    "bonds_count": len(compound.bonds) if compound.bonds else 0,
+                    "rotatable_bond_count": getattr(compound, 'rotatable_bond_count', None),
+                    "heavy_atom_count": getattr(compound, 'heavy_atom_count', None),
+                    "isotope_atom_count": getattr(compound, 'isotope_atom_count', None),
+                    "atom_stereo_count": getattr(compound, 'atom_stereo_count', None),
+                    "defined_atom_stereo_count": getattr(compound, 'defined_atom_stereo_count', None),
+                    "undefined_atom_stereo_count": getattr(compound, 'undefined_atom_stereo_count', None),
+                    "bond_stereo_count": getattr(compound, 'bond_stereo_count', None),
+                    "defined_bond_stereo_count": getattr(compound, 'defined_bond_stereo_count', None),
+                    "undefined_bond_stereo_count": getattr(compound, 'undefined_bond_stereo_count', None),
+                    "covalent_unit_count": getattr(compound, 'covalent_unit_count', None)
+                },
+                "properties": {
+                    "h_bond_donor_count": getattr(compound, 'h_bond_donor_count', None),
+                    "h_bond_acceptor_count": getattr(compound, 'h_bond_acceptor_count', None),
+                    "tpsa": getattr(compound, 'tpsa', None),
+                    "xlogp": getattr(compound, 'xlogp', None),
+                    "molecular_volume": getattr(compound, 'molecular_volume', None),
+                    "polarizability": getattr(compound, 'polarizability', None)
+                },
+                "identifiers": {
+                    "synonyms": compound.synonyms,
+                    "mesh_entries": getattr(compound, 'mesh_entries', None),
+                    "record_type": getattr(compound, 'record_type', None)
+                }
+            }
+            
+            # Add atom details if available
+            if compound.atoms:
+                data["structure"]["atoms"] = [
+                    {
+                        "number": atom.number if hasattr(atom, 'number') else None,
+                        "element": atom.element if hasattr(atom, 'element') else None,
+                        "x": getattr(atom, 'x', None),
+                        "y": getattr(atom, 'y', None),
+                        "z": getattr(atom, 'z', None),
+                        "charge": getattr(atom, 'charge', None)
+                    }
+                    for atom in compound.atoms
+                ]
+            
+            # Add bond details if available
+            if compound.bonds:
+                data["structure"]["bonds"] = [
+                    {
+                        "aid1": bond.aid1,
+                        "aid2": bond.aid2,
+                        "order": bond.order,
+                        "style": getattr(bond, 'style', None)
+                    }
+                    for bond in compound.bonds
+                ]
+            
+            # Save to JSON file
+            json_path = os.path.join(compound_dir, "compound_details.json")
+            with open(json_path, 'w') as f:
+                json.dump(data, f, indent=2)
+            
+            self.logger.info(f"Saved compound details to {json_path}")
+            return json_path
+            
+        except Exception as e:
+            self.logger.error(f"Error saving compound details for CID {cid}: {str(e)}")
+            raise
+
     def get_molecule_package(self, user_query: str) -> MoleculePackage:
         """
         Get a complete molecule visualization package from a user query.
@@ -241,208 +666,110 @@ class PubChemAgent:
             # First, get the molecule SDFs
             search_result = self.get_molecule_sdfs(user_query)
             
-            if not search_result.results:
+            if not search_result:
                 raise ValueError(f"No molecules found for query: {user_query}, search result: {search_result}")
                 
             # Use the first compound
-            compound = search_result.results[0]
+            compound = search_result[0]
 
-            if compound.sdf is None:
-                raise ValueError(f"No SDF data available for compound {compound.name} (CID: {compound.cid})")
+            if compound['sdf'] is None:
+                raise ValueError(f"No SDF data available for compound {compound['name']} (CID: {compound['cid']})")
 
-            pdb_data = _sdf_to_pdb_block(compound.sdf)
+            pdb_data = _sdf_to_pdb_block(compound['sdf'])
             
             # Get a display title (use name if available, otherwise ID)
-            display_title = compound.name if compound.name else f"CID {compound.cid}"
+            display_title = compound['name'] if compound['name'] else f"CID {compound['cid']}"
             self.logger.info(f"[DEBUG] Using molecule: {display_title}")
 
             if DEBUG_PUBCHEM:
-                write_debug_file('pubchem_sdf.txt', compound.sdf or '')
+                write_debug_file('pubchem_sdf.txt', compound['sdf'] or '')
 
             try:
                 # Generate a display title for the molecule
-                display_title = compound.name if compound.name else compound.iupac_name if compound.iupac_name else "Molecule"
+                display_title = compound['name'] if compound['name'] else "Molecule"
                 self.logger.info(f"Using display title: {display_title}")
 
-                if compound.isomeric_smiles:
-                    mol = Chem.MolFromSmiles(compound.isomeric_smiles)
+                # Get compound details using PubChemPy for additional data
+                compound_details = pcp.Compound.from_cid(compound['cid'])
+                
+                if compound_details.isomeric_smiles:
+                    mol = Chem.MolFromSmiles(compound_details.isomeric_smiles)
                     if mol is None:
-                        raise ValueError(f"Failed to parse SMILES for compound {compound.name} (CID: {compound.cid})")
+                        raise ValueError(f"Failed to parse SMILES for compound {compound_details.name} (CID: {compound_details.cid})")
                     
                     smarts_pattern = Chem.MolToSmarts(mol)
 
                     # NEW: Identify functional groups using RDKit fragment functions
-                    functional_groups = {}
-                    try:
-                        functional_groups['aliphatic_OH_count'] = Fragments.fr_Al_OH(mol)
-                        functional_groups['aromatic_OH_count'] = Fragments.fr_Ar_OH(mol)
-                        functional_groups['halogen_count'] = Fragments.fr_halogen(mol)
-                        self.logger.info(f"[DEBUG] Functional groups: {functional_groups}")
-                    except Exception as e:
-                        self.logger.warning(f"[WARNING] Error counting functional groups: {str(e)}")
-                        functional_groups = {
-                            'aliphatic_OH_count': 0,
-                            'aromatic_OH_count': 0,
-                            'halogen_count': 0,
-                            'amine_count': 0
-                        }
-
-                    # Create a list of functional groups to highlight
-                    highlight_groups = []
-                    if functional_groups['aliphatic_OH_count'] > 0:
-                        highlight_groups.append('aliphatic_OH')
-                    if functional_groups['aromatic_OH_count'] > 0:
-                        highlight_groups.append('aromatic_OH')
-                    if functional_groups['halogen_count'] > 0:
-                        highlight_groups.append('halogen')
-                    if functional_groups['amine_count'] > 0:
-                        highlight_groups.append('amine')
-                    self.logger.info(f"[DEBUG] Highlight groups: {highlight_groups}")
-
 
                 molecule_data = {
-                    'name': compound.name,
-                    'cid': compound.cid,
-                    'smiles': compound.isomeric_smiles,
-                    'highlight_groups': highlight_groups,
-                    'smarts_pattern': smarts_pattern,
-                    'functional_groups': functional_groups,
-                    'iupac_name': compound.iupac_name,
-                    'molecular_formula': compound.molecular_formula,
-                    'molecular_weight': compound.molecular_weight,
-                    'elements': compound.elements,
-                    'atoms': compound.atoms,
-                    'bonds': compound.bonds,
-                    'charge': compound.charge,
-                    'synonyms': compound.synonyms
+                    'name': compound['name'],
+                    'cid': compound['cid'],
+                    'smiles': compound_details.isomeric_smiles if hasattr(compound_details, 'isomeric_smiles') else None,
+                    'smarts_pattern': smarts_pattern if 'smarts_pattern' in locals() else None,
+                    'iupac_name': compound_details.iupac_name if hasattr(compound_details, 'iupac_name') else None,
+                    'molecular_formula': compound_details.molecular_formula if hasattr(compound_details, 'molecular_formula') else None,
+                    'molecular_weight': compound_details.molecular_weight if hasattr(compound_details, 'molecular_weight') else None,
+                    'elements': compound_details.elements if hasattr(compound_details, 'elements') else None,
+                    'atoms': [
+                        {
+                            'number': atom.number if hasattr(atom, 'number') else None,
+                            'element': atom.element if hasattr(atom, 'element') else None,
+                            'x': getattr(atom, 'x', None),
+                            'y': getattr(atom, 'y', None),
+                            'z': getattr(atom, 'z', None),
+                            'charge': getattr(atom, 'charge', None)
+                        }
+                        for atom in compound_details.atoms
+                    ] if hasattr(compound_details, 'atoms') and compound_details.atoms else None,
+                    'bonds': [
+                        {
+                            'aid1': bond.aid1 if hasattr(bond, 'aid1') else None,
+                            'aid2': bond.aid2 if hasattr(bond, 'aid2') else None,
+                            'order': bond.order if hasattr(bond, 'order') else None,
+                            'style': getattr(bond, 'style', None)
+                        }
+                        for bond in compound_details.bonds
+                    ] if hasattr(compound_details, 'bonds') and compound_details.bonds else None,
+                    'charge': compound_details.charge if hasattr(compound_details, 'charge') else None,
+                    'synonyms': compound_details.synonyms if hasattr(compound_details, 'synonyms') else None
                 }
 
                 self.logger.info(f"[DEBUG] Molecule data: {molecule_data}")
                     
 
-                # Send the molecule info and the user query to the script agent to get a script
-                # Use script_model override if provided, otherwise use the same LLM service as PubChem agent
-                if self.script_model:
-                    from agent_management.agent_factory import AgentFactory
-                    script_agent = AgentFactory.create_script_agent(self.script_model)
-                else:
-                    script_agent = ScriptAgent(self.llm_service)
+                # Create a script agent with the specified model if provided
+                script_agent = ScriptAgent(
+                    llm_service=self.llm_service
+                )
 
-                # First convert molecule data to use elemental indices for better LLM understanding
-                from agent_management.agents.pubchem_agent_helper import generate_atom_label_mapping
-                atom_label_mapping = generate_atom_label_mapping(molecule_data)
-                
-                # Update molecule_data with element labels for the script agent
-                molecule_data_with_labels = molecule_data.copy()
-                molecule_data_with_labels['atom_labels'] = atom_label_mapping
-                
                 # Generate script using molecule data with elemental indices
-                script = script_agent.generate_script_from_molecule(compound.name, user_query, molecule_data_with_labels)
+                script = script_agent.generate_script_from_molecule(compound['name'], user_query, molecule_data)
                 
-                self.logger.info(f"[DEBUG] Generated raw script: {script}")
+                # Validate and convert script if needed
+                script = validate_and_convert_script(script)
                 
-                # We ALWAYS convert elemental indices (C1, H1, etc.) back to numeric indices (0, 1, 2)
-                # This is required for PDB visualization regardless of the use_element_labels setting
-                script = validate_and_convert_script(
-                    script=script,
-                    molecule_data=molecule_data,
-                    use_element_labels=False,
-                    convert_back_to_indices=True
-                )
-                    
-                self.logger.info(f"[DEBUG] Processed script with numeric indices: {script}")
-                
-                # Explicitly verify that all atom references are numeric indices, not element labels
-                if DEBUG_PUBCHEM:
-                    try:
-                        all_numeric = True
-                        for time_point in script['content']:
-                            for atom_ref in time_point['atoms']:
-                                # Check if any atom reference contains alphabet characters (would indicate element labels)
-                                if any(c.isalpha() for c in str(atom_ref)):
-                                    self.logger.error(f"[ERROR] Found non-numeric atom reference: {atom_ref}")
-                                    all_numeric = False
-                        
-                        if all_numeric:
-                            self.logger.info("[DEBUG] Verification passed: All atom references are numeric")
-                        else:
-                            self.logger.error("[ERROR] Verification failed: Some atom references are not numeric")
-                    except Exception as e:
-                        self.logger.error(f"[ERROR] Error during atom reference verification: {str(e)}")
-                
-                self.logger.info(f"[DEBUG] Generated script: {script}")
-
-                
-                
-                # Generate the HTML content
-                self.logger.info("[DEBUG] Generating HTML content...")
-                html_content = MoleculeVisualizer.generate_html_viewer_from_pdb(pdb_data, display_title)
-                
-                if DEBUG_PUBCHEM:
-                    write_debug_file('pubchem_html.html', html_content)
-
-                self.logger.info(f"[DEBUG] Creating interactive visualization...")
-                # Create a script data structure for the interactive visualization
-                # The script variable appears to be an object with its own 'content' property,
-                # but the JavaScript code expects scriptData.content to be an array directly
-                if isinstance(script, dict) and 'content' in script:
-                    # If script is a dict with a 'content' property, use that directly
-                    script_data = {
-                        "title": display_title,
-                        "content": script['content']
-                    }
-                else:
-                    # Otherwise, use the script as the content
-                    script_data = {
-                        "title": display_title,
-                        "content": script
-                    }
-                
-                self.logger.info(f"[DEBUG] Script data structure: {type(script_data['content'])}")
-                
-                # Generate interactive HTML with both PDB data and script data
-                interactive_html = MoleculeVisualizer.generate_interactive_html(
-                    pdb_data=pdb_data, 
-                    title=display_title,
-                    script_data=script_data
-                )
-                
-                if DEBUG_PUBCHEM:
-                    write_debug_file('pubchem_interactive.html', interactive_html)
-                
-                # Generate minimal JS for embedding
-                self.logger.info("[DEBUG] Generating JS content...")
-                js_content = MoleculeVisualizer.generate_js_code_from_pdb(pdb_data, display_title)
-                
-                if DEBUG_PUBCHEM:
-                    write_debug_file('pubchem_js.js', js_content)
-
-                # Create the package
-                self.logger.info("[DEBUG] Creating molecule package")
-                package = MoleculePackage(
+                # Create the visualization HTML
+                visualizer = MoleculeVisualizer()
+                html = visualizer.generate_interactive_html(
                     pdb_data=pdb_data,
-                    html=interactive_html,
+                    title=display_title,
+                    script_data={"title": display_title, "content": script}
+                )
+                
+                if DEBUG_PUBCHEM:
+                    write_debug_file('pubchem_debug.json', json.dumps({
+                        'query': user_query,
+                        'pdb_data_length': len(pdb_data),
+                        'html_length': len(html),
+                        'sdf_length': len(compound['sdf']),
+                        'timestamp': datetime.datetime.now().isoformat()
+                    }))
+                
+                return MoleculePackage(
+                    pdb_data=pdb_data,
+                    html=html,
                     title=display_title
                 )
-                
-                if DEBUG_PUBCHEM:
-                    try:
-                        debug_package = {
-                            'title': package.title,
-                            'pdb_data_length': len(package.pdb_data),
-                            'html_length': len(package.html),
-                            'sdf_length': len(compound.sdf),
-                            'timestamp': datetime.datetime.now().isoformat()
-                        }
-                        write_debug_file('pubchem_package.json', json.dumps(debug_package, indent=2))
-                        self.logger.info("[DEBUG] Package debug info written to: pubchem_package.json")
-                    except Exception as e:
-                        error_msg = f"Error writing package debug file: {str(e)}"
-                        self.logger.error(f"[ERROR] {error_msg}")
-                        write_debug_file('pubchem_package_write_error.txt', error_msg)
-                
-                self.logger.info("[DEBUG] Successfully created molecule package")
-                return package
             
             except Exception as e:
                 self.logger.error(f"[ERROR] Failed to generate visualization: {str(e)}")
@@ -456,4 +783,131 @@ class PubChemAgent:
             self.logger.error(f"[ERROR] Error type: {type(e).__name__}")
             import traceback
             self.logger.error(f"[ERROR] Traceback:\n{traceback.format_exc()}")
+            raise
+
+    def visualize_molecule(self, user_query: str) -> MoleculePackage:
+        """
+        Create a visualization package for a molecule based on user query.
+        
+        Args:
+            user_query: User's query about a molecule
+            
+        Returns:
+            MoleculePackage containing PDB data and visualization HTML
+        """
+        try:
+            # Get molecule data
+            search_result = self.get_molecule_sdfs(user_query)
+            
+            if not search_result:
+                raise ValueError(f"No molecules found for query: {user_query}, search result: {search_result}")
+                
+            # Use the first compound
+            compound = search_result[0]
+
+            if compound['sdf'] is None:
+                raise ValueError(f"No SDF data available for compound {compound['name']} (CID: {compound['cid']})")
+
+            pdb_data = _sdf_to_pdb_block(compound['sdf'])
+            
+            # Get a display title (use name if available, otherwise ID)
+            display_title = compound['name'] if compound['name'] else f"CID {compound['cid']}"
+            self.logger.info(f"[DEBUG] Using molecule: {display_title}")
+
+            if DEBUG_PUBCHEM:
+                write_debug_file('pubchem_sdf.txt', compound['sdf'] or '')
+
+            try:
+                # Generate a display title for the molecule
+                display_title = compound['name'] if compound['name'] else "Molecule"
+                self.logger.info(f"Using display title: {display_title}")
+
+                # Get compound details using PubChemPy for additional data
+                compound_details = pcp.Compound.from_cid(compound['cid'])
+                
+                if compound_details.isomeric_smiles:
+                    mol = Chem.MolFromSmiles(compound_details.isomeric_smiles)
+                    if mol is None:
+                        raise ValueError(f"Failed to parse SMILES for compound {compound_details.name} (CID: {compound_details.cid})")
+                    
+                    smarts_pattern = Chem.MolToSmarts(mol)
+
+                    # NEW: Identify functional groups using RDKit fragment functions
+
+                molecule_data = {
+                    'name': compound['name'],
+                    'cid': compound['cid'],
+                    'smiles': compound_details.isomeric_smiles if hasattr(compound_details, 'isomeric_smiles') else None,
+                    'smarts_pattern': smarts_pattern if 'smarts_pattern' in locals() else None,
+                    'iupac_name': compound_details.iupac_name if hasattr(compound_details, 'iupac_name') else None,
+                    'molecular_formula': compound_details.molecular_formula if hasattr(compound_details, 'molecular_formula') else None,
+                    'molecular_weight': compound_details.molecular_weight if hasattr(compound_details, 'molecular_weight') else None,
+                    'elements': compound_details.elements if hasattr(compound_details, 'elements') else None,
+                    'atoms': [
+                        {
+                            'number': atom.number if hasattr(atom, 'number') else None,
+                            'element': atom.element if hasattr(atom, 'element') else None,
+                            'x': getattr(atom, 'x', None),
+                            'y': getattr(atom, 'y', None),
+                            'z': getattr(atom, 'z', None),
+                            'charge': getattr(atom, 'charge', None)
+                        }
+                        for atom in compound_details.atoms
+                    ] if hasattr(compound_details, 'atoms') and compound_details.atoms else None,
+                    'bonds': [
+                        {
+                            'aid1': bond.aid1 if hasattr(bond, 'aid1') else None,
+                            'aid2': bond.aid2 if hasattr(bond, 'aid2') else None,
+                            'order': bond.order if hasattr(bond, 'order') else None,
+                            'style': getattr(bond, 'style', None)
+                        }
+                        for bond in compound_details.bonds
+                    ] if hasattr(compound_details, 'bonds') and compound_details.bonds else None,
+                    'charge': compound_details.charge if hasattr(compound_details, 'charge') else None,
+                    'synonyms': compound_details.synonyms if hasattr(compound_details, 'synonyms') else None
+                }
+
+                self.logger.info(f"[DEBUG] Molecule data: {molecule_data}")
+                    
+
+                # Create a script agent with the specified model if provided
+                script_agent = ScriptAgent(
+                    llm_service=self.llm_service
+                )
+
+                # Generate script using molecule data with elemental indices
+                script = script_agent.generate_script_from_molecule(compound['name'], user_query, molecule_data)
+                
+                # Validate and convert script if needed
+                script = validate_and_convert_script(script)
+                
+                # Create the visualization HTML
+                visualizer = MoleculeVisualizer()
+                html = visualizer.generate_interactive_html(
+                    pdb_data=pdb_data,
+                    title=display_title,
+                    script_data={"title": display_title, "content": script}
+                )
+                
+                if DEBUG_PUBCHEM:
+                    write_debug_file('pubchem_debug.json', json.dumps({
+                        'query': user_query,
+                        'pdb_data_length': len(pdb_data),
+                        'html_length': len(html),
+                        'sdf_length': len(compound['sdf']),
+                        'timestamp': datetime.datetime.now().isoformat()
+                    }))
+                
+                return MoleculePackage(
+                    pdb_data=pdb_data,
+                    html=html,
+                    title=display_title
+                )
+                
+            except Exception as e:
+                self.logger.error(f"Error in script generation or visualization: {str(e)}")
+                raise
+                
+        except Exception as e:
+            self.logger.error(f"Error in molecule visualization: {str(e)}")
             raise

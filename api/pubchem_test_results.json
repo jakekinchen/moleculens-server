@@ -1,0 +1,542 @@
+{
+  "summary": {
+    "success_rate": 75.0,
+    "total_topics": 44,
+    "successful_queries": 33,
+    "failed_queries": 11,
+    "timestamp": "2025-03-07T17:51:07.264826"
+  },
+  "results": [
+    {
+      "topic": "Teach me about water molecules and their 3D structure",
+      "success": true,
+      "interpreted_molecule": "H2O",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "H2O",
+          "cid": 962,
+          "formula": "H2O"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about carbon hybridization and sp3 bonding",
+      "success": true,
+      "interpreted_molecule": "Methane",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Methane",
+          "cid": 297,
+          "formula": "CH4"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about benzene's aromatic structure",
+      "success": true,
+      "interpreted_molecule": "Benzene",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Benzene",
+          "cid": 241,
+          "formula": "C6H6"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about tetrahedral carbon geometry",
+      "success": true,
+      "interpreted_molecule": "Methane",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Methane",
+          "cid": 297,
+          "formula": "CH4"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about cyclohexane chair conformations",
+      "success": true,
+      "interpreted_molecule": "Cyclohexane",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Cyclohexane",
+          "cid": 8078,
+          "formula": "C6H12"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about diborane's bridging hydrogen bonds",
+      "success": true,
+      "interpreted_molecule": "B2H6",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "B2H6",
+          "cid": 12544637,
+          "formula": "B2H6"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about boranes and 3-center 2-electron bonds",
+      "success": true,
+      "interpreted_molecule": "diborane",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "diborane",
+          "cid": 12544637,
+          "formula": "B2H6"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about ferrocene's sandwich structure",
+      "success": true,
+      "interpreted_molecule": "Ferrocene",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Ferrocene",
+          "cid": 10219726,
+          "formula": "C10H10Fe"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about cubane's unusual bond angles",
+      "success": true,
+      "interpreted_molecule": "Cubane",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Cubane",
+          "cid": 136090,
+          "formula": "C8H8"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about bullvalene's fluxional structure",
+      "success": true,
+      "interpreted_molecule": "Bullvalene",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Bullvalene",
+          "cid": 136796,
+          "formula": "C10H10"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about porphyrin rings and their coordination sites",
+      "success": true,
+      "interpreted_molecule": "Heme",
+      "num_molecules_found": 5,
+      "molecules": [
+        {
+          "name": "Heme",
+          "cid": 26945,
+          "formula": "C34H32FeN4O4"
+        },
+        {
+          "name": "Heme",
+          "cid": 4973,
+          "formula": "C34H32FeN4O4"
+        },
+        {
+          "name": "Heme",
+          "cid": 444097,
+          "formula": "C34H32FeN4O4"
+        },
+        {
+          "name": "Heme",
+          "cid": 444098,
+          "formula": "C34H32FeN4O4"
+        },
+        {
+          "name": "Heme",
+          "cid": 53356659,
+          "formula": "C34H32FeN4O4-2"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about crown ethers' coordination geometry",
+      "success": true,
+      "interpreted_molecule": "18-crown-6",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "18-crown-6",
+          "cid": 28557,
+          "formula": "C12H24O6"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about transition metal complexes with octahedral geometry",
+      "success": true,
+      "interpreted_molecule": "Hexamminecobalt(III) chloride",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Hexamminecobalt(III) chloride",
+          "cid": 159295,
+          "formula": "Cl3CoH18N6"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about metal-carbonyl complexes and back-bonding",
+      "success": true,
+      "interpreted_molecule": "Tetracarbonylnickel",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Tetracarbonylnickel",
+          "cid": 518772,
+          "formula": "C4NiO4"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about phosphazenes and their ring structures",
+      "success": false,
+      "interpreted_molecule": "N,N',N'',N'''-Tetraphenylcyclophosphazene",
+      "num_molecules_found": 0,
+      "molecules": []
+    },
+    {
+      "topic": "Teach me about the metal sandwich complexes like bis(cyclopentadienyl) complexes",
+      "success": true,
+      "interpreted_molecule": "Ferrocene",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Ferrocene",
+          "cid": 10219726,
+          "formula": "C10H10Fe"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about cryptands and 3D host-guest complexation",
+      "success": false,
+      "interpreted_molecule": "cryptand[2.2.2]",
+      "num_molecules_found": 0,
+      "molecules": []
+    },
+    {
+      "topic": "Teach me about norbornane and its bridging structure",
+      "success": true,
+      "interpreted_molecule": "norbornane",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "norbornane",
+          "cid": 9233,
+          "formula": "C7H12"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about carboranes and their polyhedral cage structures",
+      "success": false,
+      "interpreted_molecule": "closo-1,2-dicarbadodecaborane",
+      "num_molecules_found": 0,
+      "molecules": []
+    },
+    {
+      "topic": "Teach me about the DNA double helix and base-pair stacking",
+      "success": true,
+      "interpreted_molecule": "Adenine-Thymine base pair",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Adenine-Thymine base pair",
+          "cid": 136380186,
+          "formula": "C9H10N8O2"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about metal-metal quadruple bonds in dimolybdenum complexes",
+      "success": true,
+      "interpreted_molecule": "Mo2(O2CCH3)4",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Mo2(O2CCH3)4",
+          "cid": 541372,
+          "formula": "C8H16Mo2O8"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about rotaxanes and their mechanically interlocked architecture",
+      "success": false,
+      "interpreted_molecule": "[24]Crown-8-rotaxane",
+      "num_molecules_found": 0,
+      "molecules": []
+    },
+    {
+      "topic": "Teach me about dendrimers and their hyperbranched growth patterns",
+      "success": false,
+      "interpreted_molecule": "polyamidoamine dendrimer",
+      "num_molecules_found": 0,
+      "molecules": []
+    },
+    {
+      "topic": "Teach me about polyoxometalates and their metal-oxygen clusters",
+      "success": false,
+      "interpreted_molecule": "[NH4]6[Mo7O24]",
+      "num_molecules_found": 0,
+      "molecules": []
+    },
+    {
+      "topic": "Teach me about alkali-doped fullerenes and superconductivity",
+      "success": false,
+      "interpreted_molecule": "K3C60",
+      "num_molecules_found": 0,
+      "molecules": []
+    },
+    {
+      "topic": "Teach me about helicenes and their helical chirality",
+      "success": true,
+      "interpreted_molecule": "Hexahelicene",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Hexahelicene",
+          "cid": 98863,
+          "formula": "C26H16"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about metallophthalocyanines and their planar macrocycles",
+      "success": true,
+      "interpreted_molecule": "Copper(II) phthalocyanine",
+      "num_molecules_found": 2,
+      "molecules": [
+        {
+          "name": "Copper(II) phthalocyanine",
+          "cid": 8978,
+          "formula": "C32H16CuN8"
+        },
+        {
+          "name": "Copper(II) phthalocyanine",
+          "cid": 475701,
+          "formula": "C32H16CuN8"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about organosilanes and the silicon hypervalency debate",
+      "success": true,
+      "interpreted_molecule": "tetramethylsilane",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "tetramethylsilane",
+          "cid": 6396,
+          "formula": "C4H12Si"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about zintl clusters and their electron-rich frameworks",
+      "success": true,
+      "interpreted_molecule": "Pb9",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Pb9",
+          "cid": 17758322,
+          "formula": "C28H33N7O4S"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about peptidic \u03b2-sheets and \u03b1-helices in proteins",
+      "success": true,
+      "interpreted_molecule": "Alanine polypeptide",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Alanine polypeptide",
+          "cid": 70678557,
+          "formula": "C256H381N65O77S6"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about bridging metal-carbonyl ligands in cluster compounds",
+      "success": true,
+      "interpreted_molecule": "Triosmium dodecacarbonyl",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Triosmium dodecacarbonyl",
+          "cid": 6096995,
+          "formula": "C12O12Os3"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about the Jahn-Teller distortion in octahedral Cu(II) complexes",
+      "success": false,
+      "interpreted_molecule": "[Cu(H2O)6]2+",
+      "num_molecules_found": 0,
+      "molecules": []
+    },
+    {
+      "topic": "Teach me about cuneane and its strained cage system",
+      "success": true,
+      "interpreted_molecule": "Cubane",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Cubane",
+          "cid": 136090,
+          "formula": "C8H8"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about tetraphenylporphyrin and its planar macrocycle",
+      "success": true,
+      "interpreted_molecule": "Tetraphenylporphyrin",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Tetraphenylporphyrin",
+          "cid": 86280046,
+          "formula": "C44H30N4"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about the Kekul\u00e9 structure of benzene",
+      "success": true,
+      "interpreted_molecule": "Benzene",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Benzene",
+          "cid": 241,
+          "formula": "C6H6"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about the Woodward-Hoffmann rules for conrotatory and disrotatory reactions",
+      "success": true,
+      "interpreted_molecule": "1,3-Butadiene",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "1,3-Butadiene",
+          "cid": 7845,
+          "formula": "C4H6"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about circulene and its unique ring structure",
+      "success": true,
+      "interpreted_molecule": "Circulene",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Circulene",
+          "cid": 11831840,
+          "formula": "C20H10"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about diiron nonacarbonyl Fe2(CO)9 and its bridging CO groups",
+      "success": true,
+      "interpreted_molecule": "Diiron nonacarbonyl",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Diiron nonacarbonyl",
+          "cid": 6096993,
+          "formula": "C9Fe2O9"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about cryptophanes and their host-guest chemistry",
+      "success": false,
+      "interpreted_molecule": "cryptophane-A",
+      "num_molecules_found": 0,
+      "molecules": []
+    },
+    {
+      "topic": "Teach me about double helical sulfur (S\u221e chains) and polysulfur rings",
+      "success": true,
+      "interpreted_molecule": "Cyclo-S8",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Cyclo-S8",
+          "cid": 19310,
+          "formula": "C2H6S3"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about the Schrock carbene complexes and metal-ligand multiple bonds",
+      "success": false,
+      "interpreted_molecule": "Tetrabenzyltantalum neopentylidene",
+      "num_molecules_found": 0,
+      "molecules": []
+    },
+    {
+      "topic": "Teach me about hydrogen-bonded molecular knots and trefoil structures",
+      "success": true,
+      "interpreted_molecule": "Cucurbit[8]uril",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Cucurbit[8]uril",
+          "cid": 16133299,
+          "formula": "C48H48N32O16"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about buckminsterfullerene (C60)",
+      "success": true,
+      "interpreted_molecule": "Buckminsterfullerene",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Buckminsterfullerene",
+          "cid": 123591,
+          "formula": "C60"
+        }
+      ]
+    },
+    {
+      "topic": "Teach me about catenanes and how their rings interlock",
+      "success": false,
+      "interpreted_molecule": "[34]Catenane",
+      "num_molecules_found": 0,
+      "molecules": []
+    }
+  ]
+}

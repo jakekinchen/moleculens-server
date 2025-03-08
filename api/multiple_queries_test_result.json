@@ -1,0 +1,88 @@
+{
+  "summary": {
+    "total_topics": 5,
+    "successful_topics": 5,
+    "failed_topics": 0,
+    "success_rate": 100.0,
+    "total_time": 24.169707775115967,
+    "average_time_per_topic": 4.833941555023193,
+    "timestamp": "2025-03-07T20:32:39.000094"
+  },
+  "results": [
+    {
+      "topic": "Teach me about cryptands and 3D host-guest complexation",
+      "success": true,
+      "interpreted_molecule": "cryptand-222",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "cryptand-222",
+          "cid": 72801,
+          "formula": "C18H36N2O6"
+        }
+      ],
+      "error": null,
+      "processing_time": 3.9545459747314453
+    },
+    {
+      "topic": "Teach me about norbornane and its bridging structure",
+      "success": true,
+      "interpreted_molecule": "norbornane",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "norbornane",
+          "cid": 9233,
+          "formula": "C7H12"
+        }
+      ],
+      "error": null,
+      "processing_time": 3.7548201084136963
+    },
+    {
+      "topic": "Teach me about carboranes and their polyhedral cage structures",
+      "success": true,
+      "interpreted_molecule": "B10H14",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "B10H14",
+          "cid": 129627906,
+          "formula": "B10"
+        }
+      ],
+      "error": null,
+      "processing_time": 3.4321107864379883
+    },
+    {
+      "topic": "Teach me about the DNA double helix and base-pair stacking",
+      "success": true,
+      "interpreted_molecule": "adenine",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "adenine",
+          "cid": 190,
+          "formula": "C5H5N5"
+        }
+      ],
+      "error": null,
+      "processing_time": 3.8973639011383057
+    },
+    {
+      "topic": "Teach me about metal-metal quadruple bonds in dimolybdenum complexes",
+      "success": true,
+      "interpreted_molecule": "Mo2(O2CCH3)4",
+      "num_molecules_found": 1,
+      "molecules": [
+        {
+          "name": "Mo2(O2CCH3)4",
+          "cid": 541372,
+          "formula": "C8H16Mo2O8"
+        }
+      ],
+      "error": null,
+      "processing_time": 4.125062942504883
+    }
+  ]
+}
