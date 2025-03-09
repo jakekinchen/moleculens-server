@@ -762,7 +762,7 @@ Only respond with the molecule name or 'N/A', no other text.""",
             html = visualizer.generate_interactive_html(
                 pdb_data=pdb_data,
                 title=display_title,
-                script_data={"title": display_title, "content": script}
+                script_data=script
             )
             return html
 
@@ -878,7 +878,7 @@ Only respond with the molecule name or 'N/A', no other text.""",
                 html = visualizer.generate_interactive_html(
                     pdb_data=pdb_data,
                     title=display_title,
-                    script_data={"title": display_title, "content": script}
+                    script_data=script
                 )
                 
                 if DEBUG_PUBCHEM:
@@ -1021,7 +1021,7 @@ Only respond with the molecule name or 'N/A', no other text.""",
                 html = visualizer.generate_interactive_html(
                     pdb_data=pdb_data,
                     title=display_title,
-                    script_data={"title": display_title, "content": script}
+                    script_data=script
                 )
                 
                 if DEBUG_PUBCHEM:
@@ -1154,7 +1154,7 @@ Only respond with the molecule name or 'N/A', no other text.""",
                 html = visualizer.generate_interactive_html(
                     pdb_data=pdb_data,
                     title=display_title,
-                    script_data={"title": display_title, "content": script}
+                    script_data=script
                 )
                 
                 if DEBUG_PUBCHEM:

@@ -770,11 +770,32 @@ function animate() {{
         
         # Replace script data if provided
         if script_data:
+            # Validate script data structure
+            if not isinstance(script_data, dict):
+                raise ValueError("script_data must be a dictionary")
+            if "title" not in script_data:
+                raise ValueError("script_data must have a 'title' field")
+            if "content" not in script_data:
+                raise ValueError("script_data must have a 'content' field")
+            if not isinstance(script_data["content"], list):
+                raise ValueError("script_data['content'] must be a list")
+            for item in script_data["content"]:
+                if not isinstance(item, dict):
+                    raise ValueError("Each content item must be a dictionary")
+                if "timecode" not in item:
+                    raise ValueError("Each content item must have a 'timecode' field")
+                if "atoms" not in item:
+                    raise ValueError("Each content item must have an 'atoms' field")
+                if "caption" not in item:
+                    raise ValueError("Each content item must have a 'caption' field")
+                if not isinstance(item["atoms"], list):
+                    raise ValueError("The 'atoms' field must be a list")
+
             # Convert script data to JSON string with proper formatting
             script_json = json.dumps(script_data, indent=2)
             
             # Find the scriptData constant in the template
-            script_pattern = r'const scriptData = \{[\s\S]*?\};'
+            script_pattern = r'const\s+scriptData\s*=\s*\{[^}]*(?:}[^;]*)*\};'
             script_match = re.search(script_pattern, template_content)
             
             if script_match:
