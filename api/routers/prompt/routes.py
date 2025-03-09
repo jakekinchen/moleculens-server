@@ -880,6 +880,52 @@ async def generate_animation(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+class FetchMoleculeRequest(BaseModel):
+    query: str
+
+class GenerateHTMLRequest(BaseModel):
+    molecule_data: Dict[str, Any]
+
+
+@router.post("/fetch-molecule-data/")
+async def fetch_molecule_data(request: FetchMoleculeRequest):
+    """
+    Step A: Return molecule info + PDB block (no HTML).
+    Frontend can store or pass it later to generate HTML.
+    """
+    try:
+        # Create or get the PubChemAgent
+        pubchem_agent = AgentFactory.create_pubchem_agent(
+            script_model=None,
+            use_element_labels=True,
+            convert_back_to_indices=True
+        )
+        data = pubchem_agent.get_molecule_data(request.query)
+        return data
+    except Exception as e:
+        logger.error(f"Error in fetch_molecule_data: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/generate-molecule-html/")
+async def generate_molecule_html(request: GenerateHTMLRequest):
+    """
+    Step B: Given existing molecule data, generate script + HTML,
+    without re-downloading from PubChem or re-calling earlier steps.
+    """
+    try:
+        pubchem_agent = AgentFactory.create_pubchem_agent(
+            script_model=None,
+            use_element_labels=True,
+            convert_back_to_indices=True
+        )
+        html = pubchem_agent.generate_visualization(request.molecule_data)
+        return {"html": html}
+    except Exception as e:
+        logger.error(f"Error generating HTML: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/package-scene/", response_model=PackagedSceneResponse)
 async def package_scene(request: PackagedSceneRequest):
     """
