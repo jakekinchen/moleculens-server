@@ -44,7 +44,7 @@ DEFAULT_AGENT_MODELS = [
     
     AgentModelConfig(
         agent_type=AgentType.SCRIPT,
-        preferred_model="gpt-4o",  # High quality required for script generation
+        preferred_model="o3-mini",  # High quality required for script generation
         fallback_models=["claude-3-7-sonnet-latest", "gpt-4.5-preview"],
         required_categories=[ModelCategory.REASONING],
         description="Generates animation scripts with timecodes and captions"
