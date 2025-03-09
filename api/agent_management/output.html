@@ -52,6 +52,8 @@
             padding: 10px;
             border-radius: 5px;
             z-index: 100;
+            display: flex;
+            gap: 10px;
         }
         #controls button {
             background-color: #333;
@@ -61,6 +63,7 @@
             cursor: pointer;
             border-radius: 3px;
             transition: background-color 0.3s;
+            white-space: nowrap;
         }
         #controls button:hover {
             background-color: #555;
@@ -492,9 +495,17 @@ END`;
         const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
 
         const positions = geometryAtoms.getAttribute('position');
-        const colors = geometryAtoms.getAttribute('color');
         const position = new THREE.Vector3();
-        const color = new THREE.Color();
+
+        // Define element colors
+        const elementColors = {
+            'C': 0x777777,  // Gray for carbon
+            'H': 0xffffff,  // White for hydrogen
+            'O': 0xff0000,  // Red for oxygen
+            'N': 0x0000ff,  // Blue for nitrogen
+            'S': 0xffff00,  // Yellow for sulfur
+            'P': 0xffa500,  // Orange for phosphorus
+        };
 
         // Create atoms
         for (let i = 0; i < positions.count; i++) {
@@ -503,14 +514,13 @@ END`;
                 positions.getY(i),
                 positions.getZ(i)
             );
-            color.setRGB(
-                colors.getX(i),
-                colors.getY(i),
-                colors.getZ(i)
-            );
+
+            // Get atom symbol and determine color
+            const atomSymbol = json.atoms[i] && json.atoms[i][4];
+            const elementColor = elementColors[atomSymbol] || 0xffffff; // Default to white if unknown
 
             const material = new THREE.MeshPhongMaterial({
-                color: color.clone(),
+                color: elementColor,
                 emissive: 0x000000,
                 emissiveIntensity: 1.0
             });
@@ -527,7 +537,6 @@ END`;
 
             atomMeshes.push(atom);
 
-            const atomSymbol = json.atoms[i] && json.atoms[i][4];
             if (atomSymbol) {
                 const text = document.createElement('div');
                 text.className = 'atom-label';
@@ -670,14 +679,25 @@ function unhighlightAll(duration = 500) {
     unhighlightAtoms(indices, duration);
 }
 
-// Add a button for entering VR
+// Add a button for entering VR and controlling rotation
 function addVRButton() {
     const controls = document.createElement('div');
     controls.id = 'controls';
-    controls.innerHTML = '<button id="vr-button">Enter VR</button>';
+    controls.innerHTML = `
+        <button id="pause-rotation">Pause Rotation</button>
+        <button id="vr-button">Enter VR</button>
+    `;
     document.body.appendChild(controls);
     
+    const pauseRotationButton = document.getElementById('pause-rotation');
     const vrButton = document.getElementById('vr-button');
+
+    // Add pause rotation functionality
+    pauseRotationButton.addEventListener('click', () => {
+        const isRotating = toggleAutoRotate();
+        pauseRotationButton.textContent = isRotating ? 'Pause Rotation' : 'Resume Rotation';
+    });
+    
     vrButton.addEventListener('click', () => {
         aframeScene.style.display = 'block';
         aframeScene.enterVR();
