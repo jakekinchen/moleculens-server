@@ -24,3 +24,4 @@ anthropic>=0.18.0
 pubchempy
 requests>=2.31.0
 rdkit
+svgwrite
