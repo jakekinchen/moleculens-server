@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from pydantic import BaseModel
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Tuple, Literal
 from agent_management.models import ModelRegistry
 from dependencies.use_llm import use_llm
 from agent_management.agents.geometry_agent import GeometryAgent
@@ -23,6 +23,7 @@ from agent_management.agent_factory import AgentFactory
 from agent_management.agent_model_config import AgentType
 from agent_management.scene_packager import ScenePackager
 from agent_management.llm_service import LLMService, LLMModelConfig, ProviderType
+from agent_management.diagram_renderer import render_diagram
 import os
 import asyncio
 import traceback
@@ -622,6 +623,66 @@ async def validate_scientific(request: PromptRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+DIAGRAM_SYSTEM_PROMPT = (
+    "You are a chemistry teaching assistant.\n"
+    "Return ONLY valid JSON conforming to the schema below.\n"
+    "Do NOT wrap in markdown."
+)
+
+
+def _create_pubchem_agent(model: Optional[str] = None) -> PubChemAgent:
+    return AgentFactory.create_pubchem_agent(
+        override_model=model,
+        script_model=None,
+        use_element_labels=True,
+        convert_back_to_indices=True,
+    )
+
+
+@router.post("/prompt/generate-molecule-diagram/", response_model=DiagramResponse)
+async def generate_molecule_diagram(request: DiagramPromptRequest):
+    """Generate a 2-D molecule diagram from a text prompt."""
+    try:
+        model_name = request.model or get_default_model()
+        llm_service = get_llm_service(model_name)
+
+        structured_request = StructuredLLMRequest[
+            DiagramPlan
+        ](
+            user_prompt=request.prompt,
+            system_prompt=DIAGRAM_SYSTEM_PROMPT,
+            response_model=DiagramPlan,
+            llm_config=LLMModelConfig(provider=ProviderType.OPENAI, model_name=model_name),
+        )
+
+        plan = llm_service.generate_structured(structured_request)
+
+        queries = []
+        for placement in plan.molecule_list:
+            w = placement.width if placement.width is not None else 200
+            h = placement.height if placement.height is not None else 200
+            queries.append({"query": placement.molecule, "box": {"x": placement.x, "y": placement.y, "width": w, "height": h}})
+
+        pubchem_agent = _create_pubchem_agent(request.model)
+        molecules = pubchem_agent.get_molecules_2d_layout(queries)
+
+        for mol, placement in zip(molecules, plan.molecule_list):
+            mol["label"] = placement.label or placement.molecule
+            mol["label_position"] = placement.label_position
+
+        svg = render_diagram(
+            molecules,
+            [a.model_dump() for a in plan.arrows] if plan.arrows else [],
+            request.canvas_width,
+            request.canvas_height,
+        )
+
+        return DiagramResponse(diagram_image=svg, diagram_plan=plan)
+    except Exception as e:
+        logger.error(f"Error generating molecule diagram: {str(e)}")
+        return DiagramResponse(status="failed", diagram_image="", diagram_plan=DiagramPlan(plan="", molecule_list=[]), error=str(e))
+
+
 @router.post("/generate-geometry/", response_model=GeometryResponse)
 async def generate_geometry(
     request: GeometryRequest, llm_service: LLMService = Depends(use_llm)
@@ -964,6 +1025,47 @@ class MoleculeLayoutRequest(BaseModel):
     """Request multiple molecules with layout information."""
 
     molecules: List[MoleculeBoxRequest]
+
+
+class MoleculePlacement(BaseModel):
+    """Placement information for a molecule in a diagram."""
+
+    molecule: str
+    x: float
+    y: float
+    width: Optional[float] = None
+    height: Optional[float] = None
+    label: Optional[str] = None
+    label_position: Literal["above", "below", "left", "right"] = "below"
+
+
+class Arrow(BaseModel):
+    start: Tuple[float, float]
+    end: Tuple[float, float]
+    style: Literal["straight", "curved"] = "straight"
+    text: Optional[str] = None
+
+
+class DiagramPromptRequest(BaseModel):
+    prompt: str
+    canvas_width: int = 960
+    canvas_height: int = 640
+    model: Optional[str] = None
+    preferred_model_category: Optional[ModelCategory] = None
+
+
+class DiagramPlan(BaseModel):
+    plan: str
+    molecule_list: List[MoleculePlacement]
+    arrows: Optional[List[Arrow]] = None
+
+
+class DiagramResponse(BaseModelWithConfig):
+    diagram_image: str
+    diagram_plan: DiagramPlan
+    status: Literal["completed", "failed", "processing"] = "completed"
+    job_id: Optional[str] = None
+    error: Optional[str] = None
 
 
 class GenerateHTMLRequest(BaseModel):
