@@ -907,6 +907,22 @@ async def fetch_molecule_data(request: FetchMoleculeRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/fetch-molecule-2d/")
+async def fetch_molecule_2d_data(request: FetchMoleculeRequest):
+    """Return 2D coordinate information for a molecule."""
+    try:
+        pubchem_agent = AgentFactory.create_pubchem_agent(
+            script_model=None,
+            use_element_labels=True,
+            convert_back_to_indices=True,
+        )
+        data = pubchem_agent.get_molecule_2d_info(request.query)
+        return data
+    except Exception as e:
+        logger.error(f"Error in fetch_molecule_2d_data: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/generate-molecule-html/")
 async def generate_molecule_html(request: GenerateHTMLRequest):
     """
