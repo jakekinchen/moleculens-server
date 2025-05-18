@@ -1,6 +1,39 @@
-import svgwrite
+import svgwrite # type: ignore
 from typing import List, Dict, Any
 
+# CPK colors dictionary (common elements)
+CPK_COLORS = {
+    'H': 'white',
+    'C': 'black',
+    'N': 'blue',
+    'O': 'red',
+    'F': 'lightgreen',
+    'Cl': 'green',
+    'Br': 'darkred',
+    'I': 'purple',
+    'S': 'yellow',
+    'P': 'orange',
+    'B': 'tan',
+    'Si': 'grey',
+    # Add more elements and colors as needed
+    'DEFAULT': 'pink' # Default color for unknown elements
+}
+
+TEXT_COLORS = {
+    'white': 'black', # Text color for light backgrounds
+    'black': 'white', # Text color for dark backgrounds
+    'blue': 'white',
+    'red': 'white',
+    'lightgreen': 'black',
+    'green': 'white',
+    'darkred': 'white',
+    'purple': 'white',
+    'yellow': 'black',
+    'orange': 'black',
+    'tan': 'black',
+    'grey': 'white',
+    'DEFAULT': 'black'
+}
 
 def _render_single_molecule(dwg: svgwrite.Drawing, data: Dict[str, Any]):
     atoms = data.get("atoms", [])
@@ -16,12 +49,26 @@ def _render_single_molecule(dwg: svgwrite.Drawing, data: Dict[str, Any]):
     ys = [a["y"] for a in atoms]
     min_x, max_x = min(xs), max(xs)
     min_y, max_y = min(ys), max(ys)
-    width = max_x - min_x or 1.0
-    height = max_y - min_y or 1.0
+    # Add a small epsilon to prevent division by zero for single atoms or linear molecules with no height/width
+    mol_width = (max_x - min_x) or 0.1 
+    mol_height = (max_y - min_y) or 0.1
 
-    scale = min(box.get("width", 1.0) / width, box.get("height", 1.0) / height)
-    offset_x = box.get("x", 0) + (box.get("width", 0) - width * scale) / 2 - min_x * scale
-    offset_y = box.get("y", 0) + (box.get("height", 0) - height * scale) / 2 - min_y * scale
+    # Use a slightly larger radius for atoms to make them more visible
+    atom_radius = 5 
+    font_size_pixels = atom_radius * 1.5 # Make font size relative to radius
+
+    # Calculate scale and offset to fit molecule within its designated box
+    # The box width/height are from the LLM's plan
+    box_w = box.get("width", 100.0) # Default box width if not provided by LLM
+    box_h = box.get("height", 100.0) # Default box height if not provided by LLM
+
+    scale_w = box_w / mol_width
+    scale_h = box_h / mol_height
+    scale = min(scale_w, scale_h) * 0.8 # Use 80% of box to leave some padding
+
+    # Center the molecule within its box
+    offset_x = box.get("x", 0) + (box_w - (mol_width * scale)) / 2 - (min_x * scale)
+    offset_y = box.get("y", 0) + (box_h - (mol_height * scale)) / 2 - (min_y * scale)
 
     for bond in bonds:
         a1 = atoms[bond["start"]]
@@ -30,40 +77,98 @@ def _render_single_molecule(dwg: svgwrite.Drawing, data: Dict[str, Any]):
         y1 = offset_y + a1["y"] * scale
         x2 = offset_x + a2["x"] * scale
         y2 = offset_y + a2["y"] * scale
-        dwg.add(dwg.line(start=(x1, y1), end=(x2, y2), stroke="black"))
+        dwg.add(dwg.line(start=(x1, y1), end=(x2, y2), stroke="black", stroke_width=1.5))
 
-    for atom in atoms:
-        cx = offset_x + atom["x"] * scale
-        cy = offset_y + atom["y"] * scale
-        dwg.add(dwg.circle(center=(cx, cy), r=2, fill="white", stroke="black"))
-        dwg.add(dwg.text(atom["element"], insert=(cx + 4, cy - 4), font_size="10px"))
+    for atom_data in atoms:
+        element = atom_data.get("element", "X") # Default to X if no element
+        cx = offset_x + atom_data["x"] * scale
+        cy = offset_y + atom_data["y"] * scale
+        
+        atom_color = CPK_COLORS.get(element.capitalize(), CPK_COLORS['DEFAULT'])
+        text_color = TEXT_COLORS.get(atom_color, TEXT_COLORS['DEFAULT'])
+        
+        dwg.add(dwg.circle(center=(cx, cy), r=atom_radius, fill=atom_color, stroke="black", stroke_width=0.5))
+        dwg.add(dwg.text(
+            element,
+            insert=(cx, cy),
+            font_size=f"{font_size_pixels}px",
+            fill=text_color,
+            text_anchor="middle",
+            dominant_baseline="central" # More reliable for vertical centering
+        ))
 
     if label:
-        if label_position in ("above", "below"):
-            x = box.get("x", 0) + box.get("width", 0) / 2
-            y = box.get("y", 0) - 5 if label_position == "above" else box.get("y", 0) + box.get("height", 0) + 12
+        label_font_size = 12
+        padding = 5 # Padding between molecule box and label
+        if label_position == "above":
+            x = box.get("x", 0) + box_w / 2
+            y = box.get("y", 0) - padding - (label_font_size / 2) # Position above the box
             anchor = "middle"
-        else:
-            x = box.get("x", 0) - 5 if label_position == "left" else box.get("x", 0) + box.get("width", 0) + 5
-            y = box.get("y", 0) + box.get("height", 0) / 2
-            anchor = "start"
-        dwg.add(dwg.text(label, insert=(x, y), text_anchor=anchor, font_size="12px"))
-
+        elif label_position == "below":
+            x = box.get("x", 0) + box_w / 2
+            y = box.get("y", 0) + box_h + padding + label_font_size # Position below the box
+            anchor = "middle"
+        elif label_position == "left":
+            x = box.get("x", 0) - padding
+            y = box.get("y", 0) + box_h / 2
+            anchor = "end" # Anchor text to its end for left positioning
+        elif label_position == "right":
+            x = box.get("x", 0) + box_w + padding
+            y = box.get("y", 0) + box_h / 2
+            anchor = "start" # Anchor text to its start for right positioning
+        else: # Default to below if invalid position
+            x = box.get("x", 0) + box_w / 2
+            y = box.get("y", 0) + box_h + padding + label_font_size
+            anchor = "middle"
+            
+        dwg.add(dwg.text(label, insert=(x, y), text_anchor=anchor, font_size=f"{label_font_size}px"))
 
 def render_diagram(molecules: List[Dict[str, Any]], arrows: List[Dict[str, Any]], width: int, height: int) -> str:
-    dwg = svgwrite.Drawing(size=(width, height))
+    dwg = svgwrite.Drawing(size=(f"{width}px", f"{height}px"), profile='full') # Added units and profile
+    # Optional: Add a background color for clarity, or make it transparent
+    # dwg.add(dwg.rect(insert=(0, 0), size=('100%', '100%'), fill='lightgrey'))
 
-    for mol in molecules:
-        _render_single_molecule(dwg, mol)
+    for mol_data in molecules:
+        _render_single_molecule(dwg, mol_data)
 
-    for arrow in arrows or []:
-        start = arrow.get("start")
-        end = arrow.get("end")
-        if start and end:
-            dwg.add(dwg.line(start=start, end=end, stroke="black"))
-            if arrow.get("text"):
+    for arrow_data in arrows or []:
+        start = arrow_data.get("start")
+        end = arrow_data.get("end")
+        if start and end and len(start) == 2 and len(end) == 2:
+            # Draw arrow line
+            line = dwg.line(start=start, end=end, stroke="black", stroke_width=1.5)
+            # Add arrowhead - simple triangle
+            # Calculate direction vector
+            dir_x = end[0] - start[0]
+            dir_y = end[1] - start[1]
+            length = (dir_x**2 + dir_y**2)**0.5
+            if length == 0: continue # Avoid division by zero for zero-length arrows
+            
+            # Normalize direction vector
+            udx, udy = dir_x / length, dir_y / length
+            
+            arrow_size = 8 # Size of arrowhead lines
+            angle = 0.5 # radians, about 30 degrees
+            
+            # Point 1 for arrowhead
+            p1x = end[0] - arrow_size * (udx * svgwrite.utils.cos(angle) - udy * svgwrite.utils.sin(angle))
+            p1y = end[1] - arrow_size * (udy * svgwrite.utils.cos(angle) + udx * svgwrite.utils.sin(angle))
+            
+            # Point 2 for arrowhead
+            p2x = end[0] - arrow_size * (udx * svgwrite.utils.cos(-angle) - udy * svgwrite.utils.sin(-angle))
+            p2y = end[1] - arrow_size * (udy * svgwrite.utils.cos(-angle) + udx * svgwrite.utils.sin(-angle))
+            
+            dwg.add(line)
+            dwg.add(dwg.polyline(points=[(p1x,p1y), end, (p2x,p2y)], stroke="black", fill="none", stroke_width=1.5))
+            
+            if arrow_data.get("text"):
+                # Position text near the middle of the arrow, slightly offset perpendicular to the arrow
                 mid_x = (start[0] + end[0]) / 2
                 mid_y = (start[1] + end[1]) / 2
-                dwg.add(dwg.text(arrow["text"], insert=(mid_x, mid_y - 4), text_anchor="middle", font_size="12px"))
+                # Offset perpendicular to the arrow direction
+                offset_val = 10
+                text_x = mid_x + offset_val * -udy # Perpendicular x
+                text_y = mid_y + offset_val * udx  # Perpendicular y
+                dwg.add(dwg.text(arrow_data["text"], insert=(text_x, text_y), text_anchor="middle", font_size="12px"))
 
     return dwg.tostring()

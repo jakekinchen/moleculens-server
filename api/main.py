@@ -3,6 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 import routers
 import os
+from pathlib import Path
 
 # Import and initialize the model registry at startup
 from agent_management.model_config import register_models
@@ -14,7 +15,14 @@ app = FastAPI(
     title="AI Backend",
     version="0.0.1",
 )
-app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Construct an absolute path to the static directory
+# Assuming main.py is in the api/ directory, and static is api/static/
+STATIC_DIR = Path(__file__).parent / "static"
+# Ensure the directory exists (though it should from test setup or deployment)
+STATIC_DIR.mkdir(parents=True, exist_ok=True) 
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # Determine if we're in development or production mode
 is_development = os.environ.get("ENVIRONMENT", "development").lower() == "development"

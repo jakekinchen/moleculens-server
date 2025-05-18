@@ -82,42 +82,56 @@ class OpenAIProvider(LLMProvider):
             raise Exception(f"OpenAI API error: {str(e)}")
 
     def generate_structured(self, request: StructuredLLMRequest[T]) -> T:
-        """Generate a structured response using OpenAI's API"""
+        """Generate a structured response using OpenAI's API with client.beta.chat.completions.parse."""
         try:
             if not request.llm_config:
                 raise ValueError("LLM configuration is required")
 
             messages = self._convert_messages(request)
             
-            # Build parameters dictionary with proper typing
+            # Parameters for the .parse() method might differ slightly or some might be implicit.
+            # Temperature, max_tokens, top_p are typically part of the create/parse call.
             params: Dict[str, Any] = {
                 "model": request.llm_config.model_name,
                 "messages": messages,
-                "response_format": {"type": "json_object"},
-                "stream": request.stream
+                "response_format": request.response_model, # Pass Pydantic model directly
+                # stream is not typically used with .parse() as it expects a full response to parse.
+                # If streaming with parsing is needed, SDK might have other utilities or it needs custom handling.
             }
-            
-            # Only add parameters if the model supports them (o* models don't support these)
+
+            # Add temperature, max_tokens, top_p if applicable and supported by .parse()
+            # (Consult SDK docs for .parse() specific parameters)
             if not request.llm_config.model_name.startswith("o"):
                 params["temperature"] = request.temperature
                 if request.max_tokens is not None:
-                    params["max_tokens"] = request.max_tokens
+                    params["max_tokens"] = request.max_tokens # Check if .parse() supports this
                 if request.top_p is not None:
-                    params["top_p"] = request.top_p
-                
-            response = self.client.chat.completions.create(**params)
+                    params["top_p"] = request.top_p # Check if .parse() supports this
+
+            # Using client.beta.chat.completions.parse
+            completion_parse_result = self.client.beta.chat.completions.parse(**params)
             
-            # Cast the response to ChatCompletion since we know it's not a stream
-            completion = cast(ChatCompletion, response)
+            # The .parse() method should return a result where the parsed Pydantic object is accessible.
+            # Based on search results, it might be in: completion.choices[0].message.parsed
+            if not completion_parse_result.choices or \
+               not completion_parse_result.choices[0].message or \
+               not hasattr(completion_parse_result.choices[0].message, 'parsed') or \
+               completion_parse_result.choices[0].message.parsed is None:
+                raise ValueError("No parsed structured content received from OpenAI using .parse()")
             
-            if not completion.choices or not completion.choices[0].message or not completion.choices[0].message.content:
-                raise ValueError("No response content received from OpenAI")
+            # The .parsed attribute should already be an instance of request.response_model (T)
+            parsed_object = completion_parse_result.choices[0].message.parsed
             
-            content = completion.choices[0].message.content
-            if not content:
-                raise ValueError("Empty response content from OpenAI")
-                
-            json_response = json.loads(content)
-            return request.response_model.model_validate(json_response)
+            # Ensure it's the correct type (though .parse() should handle this)
+            if not isinstance(parsed_object, request.response_model):
+                 raise TypeError(
+                    f"Parsed object is not of type {request.response_model.__name__}. "
+                    f"Got {type(parsed_object).__name__}."
+                )
+            
+            return cast(T, parsed_object) # Cast for type safety, though it should already be T
+
         except Exception as e:
-            raise Exception(f"OpenAI structured output error: {str(e)}") 
+            # Catch specific OpenAI API errors if possible for better error reporting
+            # For now, a general catch with a clear message.
+            raise Exception(f"OpenAI structured output error (using .parse()): {str(e)}") 

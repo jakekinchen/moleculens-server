@@ -17,7 +17,7 @@ class ScriptAgent:
     def __init__(self, llm_service: LLMService):
         self.llm_service = llm_service
     
-    def generate_script(self, topic: str) -> Dict[str, Any]:
+    def generate_script(self, topic: str) -> SceneScript:
         """
         Generate a structured scene script for a scientific topic.
         
@@ -25,7 +25,7 @@ class ScriptAgent:
             topic: The scientific topic to explain in the scene
             
         Returns:
-            Dict[str, Any]: A structured script with title and timed content points
+            SceneScript: A Pydantic model instance of the structured script
         """
         # Create a request for script generation
         request = StructuredLLMRequest(
@@ -103,17 +103,15 @@ Always return complete, properly formatted JSON objects matching the requested s
             response_model=SceneScript,
         )
         
-        # Get the structured response
         script = self.llm_service.generate_structured(request)
-        # Ensure the response is converted to a dictionary
-        return script.dict() if hasattr(script, 'dict') else script
+        return script
     
-    def generate_script_from_molecule(self, molecule_name: str, user_query: str, molecule_data: Dict[str, Any]) -> Dict[str, Any]:
+    def generate_script_from_molecule(self, molecule_name: str, user_query: str, molecule_data: Dict[str, Any]) -> SceneScript:
         """
         Generate a structured scene script for a molecule.
         
         Returns:
-            Dict[str, Any]: A structured script with title and timed content points
+            SceneScript: A Pydantic model instance of the structured script
         """
         # Check if we have atom labels in the molecule data
         atom_labels_info = ""
@@ -243,5 +241,4 @@ Use the user query to guide the emphasis of your script content without explicit
         )
 
         script = self.llm_service.generate_structured(request)
-        # Ensure the response is converted to a dictionary
-        return script.dict() if hasattr(script, 'dict') else script
+        return script
