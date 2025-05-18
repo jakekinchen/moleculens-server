@@ -16,13 +16,17 @@ def extract_code_block(content: str, language: Optional[str] = None) -> str:
         The extracted code with markers removed
     """
     
-    # Try language-specific code block
+    # Try language-specific code block first
     if language:
         pattern = f"```{language}\s*(.*?)\s*```"
         match = re.search(pattern, content, re.DOTALL)
         if match:
             return match.group(1).strip()
-    
-    
+
+    # Fallback to generic fenced code block
+    match = re.search(r"```\s*(.*?)\s*```", content, re.DOTALL)
+    if match:
+        return match.group(1).strip()
+
     # If no code block found, return cleaned content
-    return content.strip() 
+    return content.strip()
