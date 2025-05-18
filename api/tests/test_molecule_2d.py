@@ -65,37 +65,39 @@ def test_get_molecule_2d_info_mock(monkeypatch, sample_sdf):
     assert len(result["atoms"]) == 3  # 1 O + 2 H
     assert len(result["bonds"]) == 2  # 2 O-H bonds
     assert result["formula"] == "H2O"
-    
+
     # Validate atom types
     elements = [atom["element"] for atom in result["atoms"]]
     assert elements.count("O") == 1
     assert elements.count("H") == 2
-    
+
     # Validate bond orders
-    assert all(bond["order"] == 1.0 for bond in result["bonds"])  # All single bonds in water
+    assert all(
+        bond["order"] == 1.0 for bond in result["bonds"]
+    )  # All single bonds in water
 
 
 def test_get_molecule_2d_info_real():
     """Test the 2D molecule info endpoint with real PubChem data for water."""
     agent = make_agent()
     result = agent.get_molecule_2d_info("water")
-    
+
     # Basic structure checks
     assert isinstance(result, dict)
     assert all(key in result for key in ["atoms", "bonds", "name", "cid", "formula"])
-    
+
     # Water molecule specific checks
     assert result["formula"] == "H2O"
     assert len(result["atoms"]) == 3  # 1 O + 2 H
     assert len(result["bonds"]) == 2  # 2 O-H bonds
-    
+
     # Check atom structure
     for atom in result["atoms"]:
         assert all(key in atom for key in ["element", "x", "y"])
         assert atom["element"] in ["H", "O"]
         assert isinstance(atom["x"], (int, float))
         assert isinstance(atom["y"], (int, float))
-    
+
     # Check bond structure
     for bond in result["bonds"]:
         assert all(key in bond for key in ["start", "end", "order"])
@@ -108,55 +110,63 @@ def test_get_molecule_2d_info_complex():
     """Test the 2D molecule info endpoint with a more complex molecule (benzene)."""
     agent = make_agent()
     result = agent.get_molecule_2d_info("benzene")
-    
+
     # Basic structure checks
     assert isinstance(result, dict)
     assert all(key in result for key in ["atoms", "bonds", "name", "cid", "formula"])
-    
+
     # Benzene specific checks
     assert result["formula"] == "C6H6"
     assert len(result["atoms"]) == 12  # 6 C + 6 H
-    
+
     # Count carbon and hydrogen atoms
     elements = [atom["element"] for atom in result["atoms"]]
     assert elements.count("C") == 6
     assert elements.count("H") == 6
-    
+
     # Check bonds
     carbon_bonds = []
     ch_bonds = []
-    
+
     for bond in result["bonds"]:
         # Get the elements involved in this bond
         start_element = result["atoms"][bond["start"]]["element"]
         end_element = result["atoms"][bond["end"]]["element"]
-        
+
         if start_element == "C" and end_element == "C":
             carbon_bonds.append(bond)
-        elif (start_element == "C" and end_element == "H") or (start_element == "H" and end_element == "C"):
+        elif (start_element == "C" and end_element == "H") or (
+            start_element == "H" and end_element == "C"
+        ):
             ch_bonds.append(bond)
-    
+
     # Verify we have 6 C-C bonds forming the ring and 6 C-H bonds
     assert len(carbon_bonds) == 6, "Should have 6 C-C bonds"
     assert len(ch_bonds) == 6, "Should have 6 C-H bonds"
-    
+
     # All C-H bonds should be single bonds
-    assert all(bond["order"] == 1.0 for bond in ch_bonds), "All C-H bonds should be single bonds"
-    
+    assert all(
+        bond["order"] == 1.0 for bond in ch_bonds
+    ), "All C-H bonds should be single bonds"
+
     # Verify the ring structure by checking connectivity
-    carbon_indices = [i for i, atom in enumerate(result["atoms"]) if atom["element"] == "C"]
+    carbon_indices = [
+        i for i, atom in enumerate(result["atoms"]) if atom["element"] == "C"
+    ]
     ring_bonds = set()
     for bond in carbon_bonds:
         if bond["start"] in carbon_indices and bond["end"] in carbon_indices:
-            ring_bonds.add((min(bond["start"], bond["end"]), max(bond["start"], bond["end"])))
-    
+            ring_bonds.add(
+                (min(bond["start"], bond["end"]), max(bond["start"], bond["end"]))
+            )
+
     assert len(ring_bonds) == 6, "Should have 6 unique bonds in the ring"
 
 
 def test_get_molecule_2d_info_invalid():
     """Test the 2D molecule info endpoint with invalid input."""
     agent = make_agent()
-    
+
     with pytest.raises(ValueError) as exc_info:
         agent.get_molecule_2d_info("not_a_real_molecule_name_123456789")
     assert "No compounds found" in str(exc_info.value)
@@ -166,19 +176,19 @@ def test_get_molecule_2d_info_large():
     """Test the 2D molecule info endpoint with a larger molecule (caffeine)."""
     agent = make_agent()
     result = agent.get_molecule_2d_info("caffeine")
-    
+
     # Basic structure checks
     assert isinstance(result, dict)
     assert all(key in result for key in ["atoms", "bonds", "name", "cid", "formula"])
-    
+
     # Caffeine specific checks
     assert result["formula"] == "C8H10N4O2"
     assert len(result["atoms"]) == 24  # 8 C + 10 H + 4 N + 2 O
-    
+
     # Check coordinate system
     x_coords = [atom["x"] for atom in result["atoms"]]
     y_coords = [atom["y"] for atom in result["atoms"]]
-    
+
     # Verify the molecule is properly laid out in 2D space
     assert max(x_coords) - min(x_coords) > 0  # Has width
     assert max(y_coords) - min(y_coords) > 0  # Has height
@@ -190,7 +200,7 @@ def validate_molecule_response(response: Dict[str, Any]) -> bool:
     required_keys = ["atoms", "bonds", "name", "cid", "formula"]
     if not all(key in response for key in required_keys):
         return False
-    
+
     # Validate atoms
     for atom in response["atoms"]:
         if not all(key in atom for key in ["element", "x", "y"]):
@@ -201,7 +211,7 @@ def validate_molecule_response(response: Dict[str, Any]) -> bool:
             return False
         if not isinstance(atom["y"], (int, float)):
             return False
-    
+
     # Validate bonds
     for bond in response["bonds"]:
         if not all(key in bond for key in ["start", "end", "order"]):
@@ -212,11 +222,13 @@ def validate_molecule_response(response: Dict[str, Any]) -> bool:
             return False
         if not isinstance(bond["order"], (int, float)):
             return False
-        
+
         # Validate bond indices
-        if bond["start"] >= len(response["atoms"]) or bond["end"] >= len(response["atoms"]):
+        if bond["start"] >= len(response["atoms"]) or bond["end"] >= len(
+            response["atoms"]
+        ):
             return False
-    
+
     return True
 
 
@@ -224,7 +236,36 @@ def test_molecule_response_validation():
     """Test the response validation for various molecules."""
     agent = make_agent()
     molecules = ["water", "methane", "ethanol", "benzene"]
-    
+
     for molecule in molecules:
         result = agent.get_molecule_2d_info(molecule)
-        assert validate_molecule_response(result), f"Invalid response structure for {molecule}"
+        assert validate_molecule_response(
+            result
+        ), f"Invalid response structure for {molecule}"
+
+
+def test_get_molecules_2d_layout(monkeypatch):
+    """Ensure multi-molecule layout combines box data with molecule info."""
+    agent = make_agent()
+
+    def fake_single(query):
+        return {
+            "atoms": [],
+            "bonds": [],
+            "name": query,
+            "cid": 1,
+            "formula": "H2O",
+        }
+
+    monkeypatch.setattr(agent, "get_molecule_2d_info", fake_single)
+
+    layout_requests = [
+        {"query": "water", "box": {"x": 0, "y": 0, "width": 10, "height": 10}},
+        {"query": "ethanol", "box": {"x": 10, "y": 0, "width": 10, "height": 10}},
+    ]
+
+    result = agent.get_molecules_2d_layout(layout_requests)
+
+    assert len(result) == 2
+    assert result[0]["query"] == "water"
+    assert result[1]["box"]["x"] == 10
