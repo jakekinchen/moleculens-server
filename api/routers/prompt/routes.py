@@ -886,6 +886,19 @@ class FetchMoleculeRequest(BaseModel):
 class GenerateHTMLRequest(BaseModel):
     molecule_data: Dict[str, Any]
 
+class Box2D(BaseModel):
+    x: float
+    y: float
+    width: float
+    height: float
+
+class MoleculeBoxRequest(BaseModel):
+    query: str
+    box: Box2D
+
+class MoleculeLayoutRequest(BaseModel):
+    molecules: List[MoleculeBoxRequest]
+
 
 @router.post("/fetch-molecule-data/")
 async def fetch_molecule_data(request: FetchMoleculeRequest):
@@ -904,6 +917,42 @@ async def fetch_molecule_data(request: FetchMoleculeRequest):
         return data
     except Exception as e:
         logger.error(f"Error in fetch_molecule_data: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/fetch-molecule-2d/")
+async def fetch_molecule_2d_data(request: FetchMoleculeRequest):
+    """Return 2D coordinate information for a molecule."""
+    try:
+        pubchem_agent = AgentFactory.create_pubchem_agent(
+            script_model=None,
+            use_element_labels=True,
+            convert_back_to_indices=True,
+        )
+        data = pubchem_agent.get_molecule_2d_info(request.query)
+        return data
+    except Exception as e:
+        logger.error(f"Error in fetch_molecule_2d_data: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/fetch-molecule-layout/")
+async def fetch_molecule_layout(request: MoleculeLayoutRequest):
+    """Return 2D data for multiple molecules with layout boxes."""
+    try:
+        pubchem_agent = AgentFactory.create_pubchem_agent(
+            script_model=None,
+            use_element_labels=True,
+            convert_back_to_indices=True,
+        )
+        layouts = [
+            {"query": m.query, "box": m.box.model_dump()}
+            for m in request.molecules
+        ]
+        data = pubchem_agent.get_molecules_2d_layout(layouts)
+        return {"molecules": data}
+    except Exception as e:
+        logger.error(f"Error in fetch_molecule_layout: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

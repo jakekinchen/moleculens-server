@@ -719,6 +719,107 @@ Only respond with the molecule name or 'N/A', no other text.""",
             # For advanced usage, see self.get_compound_details
         }
 
+    def get_molecule_2d_info(self, user_query: str) -> Dict[str, Any]:
+        """Fetch 2D structural information for a molecule.
+
+        This is similar to :meth:`get_molecule_data` but instead of returning a
+        PDB block intended for 3D visualization it provides atomic coordinates
+        in two dimensions for drawing a 2D diagram.
+
+        Args:
+            user_query: User supplied text describing the molecule.
+
+        Returns:
+            Dictionary with keys ``atoms`` and ``bonds`` containing 2D
+            coordinates and connectivity information as well as ``name``,
+            ``cid`` and ``formula``.
+        """
+
+        self.logger.info(f"[DEBUG] Fetching 2D molecule info for: {user_query}")
+
+        molecule_name = self.interpret_user_query(user_query)
+        if not molecule_name:
+            raise ValueError("Could not interpret user query into a molecule name.")
+
+        compounds = self._search_with_fallbacks(molecule_name)
+        if not compounds:
+            raise ValueError(f"No compounds found for {molecule_name}")
+
+        compound = compounds[0]
+        cid = compound.cid if hasattr(compound, "cid") else compound.get("cid")
+        if not cid:
+            raise ValueError("Compound has no valid CID.")
+
+        sdf_url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/SDF"
+        response = requests.get(sdf_url, timeout=30)
+        if response.status_code != 200:
+            raise ValueError(f"Failed to get 2D SDF for CID {cid}")
+
+        sdf_data = response.text
+
+        mol = Chem.MolFromMolBlock(sdf_data, sanitize=True, removeHs=False)
+        if mol is None:
+            raise ValueError("Unable to parse SDF data")
+
+        if mol.GetNumConformers() == 0:
+            AllChem.Compute2DCoords(mol)
+
+        conf = mol.GetConformer()
+        atoms = []
+        for atom in mol.GetAtoms():
+            pos = conf.GetAtomPosition(atom.GetIdx())
+            atoms.append({
+                "element": atom.GetSymbol(),
+                "x": pos.x,
+                "y": pos.y,
+            })
+
+        bonds = []
+        for bond in mol.GetBonds():
+            bonds.append({
+                "start": bond.GetBeginAtomIdx(),
+                "end": bond.GetEndAtomIdx(),
+                "order": bond.GetBondTypeAsDouble(),
+            })
+
+        name = (
+            compound.iupac_name if hasattr(compound, "iupac_name")
+            else compound.get("iupac_name", str(cid))
+        )
+        formula = (
+            compound.molecular_formula if hasattr(compound, "molecular_formula")
+            else compound.get("formula", "")
+        )
+
+        return {
+            "atoms": atoms,
+            "bonds": bonds,
+            "name": name,
+            "cid": cid,
+            "formula": formula,
+        }
+
+    def get_molecules_2d_layout(self, layouts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Fetch 2D data for multiple molecules and preserve layout information.
+
+        Each item in ``layouts`` must contain ``query`` (molecule search string)
+        and ``box`` (a dictionary with positioning data). The returned list will
+        include the fetched molecule data plus the ``box`` for downstream use.
+        """
+
+        results = []
+        for item in layouts:
+            query = item.get("query")
+            box = item.get("box")
+            if query is None or box is None:
+                raise ValueError("Each layout item must include 'query' and 'box'")
+
+            mol_data = self.get_molecule_2d_info(query)
+            mol_data["box"] = box
+            results.append(mol_data)
+
+        return results
+
     def generate_visualization(self, molecule_data: Dict[str, Any]) -> str:
         """
         Step B:
