@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from agent_management.models import ModelRegistry
 from dependencies.use_llm import use_llm
 from agent_management.agents.geometry_agent import GeometryAgent
-from agent_management.agents.pubchem_agent import PubChemAgent
+from agent_management.agents.pubchem_agent import PubChemAgent, _sdf_to_pdb_block
 from agent_management.agents.domain_bool_agent import DomainValidator
 from agent_management.agents.script_agent import ScriptAgent
 from agent_management.agents.orchestration_agent import OrchestrationAgent
@@ -1155,6 +1155,15 @@ class MoleculeLayoutRequest(BaseModel):
 class GenerateHTMLRequest(BaseModel):
     molecule_data: Dict[str, Any]
 
+class SDFToPDBRequest(BaseModel):
+    """Input SDF text to convert to PDB."""
+
+    sdf: str
+
+
+class SDFToPDBResponse(BaseModel):
+    pdb_data: str
+
 @router.post("/fetch-molecule-data/")
 async def fetch_molecule_data(request: FetchMoleculeRequest):
     """
@@ -1220,6 +1229,19 @@ async def generate_molecule_html(request: GenerateHTMLRequest):
     except Exception as e:
         logger.error(f"Error generating HTML: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/sdf-to-pdb/", response_model=SDFToPDBResponse)
+async def convert_sdf_to_pdb(request: SDFToPDBRequest):
+    """Convert SDF text to PDB format using RDKit."""
+    try:
+        pdb_data = _sdf_to_pdb_block(request.sdf)
+        if not pdb_data:
+            raise ValueError("Failed to convert SDF to PDB")
+        return {"pdb_data": pdb_data}
+    except Exception as e:
+        logger.error(f"Error in convert_sdf_to_pdb: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/package-scene/", response_model=PackagedSceneResponse)
 async def package_scene(request: PackagedSceneRequest):
