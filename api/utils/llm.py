@@ -21,6 +21,7 @@ client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 
 def description_to_commands(description: str) -> list[str]:
+    """Call the LLM to translate a free-form description into a list of PyMOL commands."""
     response = client.chat.completions.create(
         model="o3-mini",
         messages=[
