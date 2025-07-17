@@ -20,7 +20,7 @@ FUNCTION_SCHEMA = {
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 
-def description_to_commands(description: str) -> list[str]:
+async def description_to_commands(description: str) -> list[str]:
     response = client.chat.completions.create(
         model="o3-mini",
         messages=[

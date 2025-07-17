@@ -1,13 +1,12 @@
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from typing import Literal
+from typing import Optional, Dict, Any
 from pathlib import Path
-import tempfile
 import json
-from hashlib import sha256
+import hashlib
 import subprocess
-from pymol import cmd
+import tempfile
 import threading
 
 from api.utils import llm, cache, security
@@ -18,57 +17,84 @@ lock = threading.Lock()
 
 class RenderRequest(BaseModel):
     description: str
-    format: Literal["image", "model", "animation"] = "image"
+    format: Optional[str] = "image"
 
 
-def _output_path(key: str, fmt: str) -> Path:
+def _output_path(digest: str, fmt: str) -> Path:
     ext = {"image": "png", "model": "pdb", "animation": "mp4"}[fmt]
-    return cache.CACHE_DIR / f"{key}.{ext}"
+    return cache.CACHE_DIR / f"{digest}.{ext}"
 
 
-def _metadata() -> dict:
-    return {
-        "camera": cmd.get_view(),
-        "center": cmd.centerofmass(),
-        "bbox": cmd.get_extent()
-    }
+def _get_metadata(cmd_module) -> Dict[str, Any]:
+    meta: Dict[str, Any] = {}
+    try:
+        ext = cmd_module.get_extent()
+        meta["bbox"] = ext
+        meta["center"] = [(ext[0][i] + ext[1][i]) / 2.0 for i in range(3)]
+    except Exception:
+        pass
+    try:
+        meta["camera"] = cmd_module.get_view()
+    except Exception:
+        pass
+    return meta
 
 
-@router.post("")
+@router.post("/render")
 async def render(req: RenderRequest):
-    key = sha256(f"{req.description}_{req.format}".encode()).hexdigest()
-    cached = cache.get(key)
+    fmt = (req.format or "image").lower()
+    if fmt not in {"image", "model", "animation"}:
+        raise HTTPException(status_code=400, detail="Invalid format")
+    digest = hashlib.sha256((req.description + fmt).encode()).hexdigest()
+    cached = cache.get(digest)
     if cached:
-        metadata = json.dumps({"cached": True})
-        return FileResponse(cached, media_type="application/octet-stream", headers={"X-Metadata": metadata})
+        path, meta = cached
+        return _build_response(path, fmt, meta)
 
-    commands = llm.description_to_commands(req.description)
+    commands = await llm.description_to_commands(req.description)
     try:
         security.validate_commands(commands)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
 
-    out_path = _output_path(key, req.format)
+    from pymol import cmd
+
+    out_path = _output_path(digest, fmt)
     with lock:
         cmd.reinitialize()
         for c in commands:
-            cmd.do(c)
-        if req.format == "image":
+            eval(f"cmd.{c}")
+        if fmt == "image":
             cmd.png(str(out_path))
-        elif req.format == "model":
+        elif fmt == "model":
             cmd.save(str(out_path))
-        else:  # animation
-            tmp_dir = tempfile.mkdtemp()
-            frame = Path(tmp_dir) / "frame.png"
+        else:
+            tmp = tempfile.mkdtemp()
+            frame = Path(tmp) / "frame.png"
             cmd.png(str(frame))
-            subprocess.run(["ffmpeg", "-y", "-loop", "1", "-i", str(frame), "-t", "2", str(out_path)], check=True)
+            subprocess.run([
+                "ffmpeg",
+                "-y",
+                "-loop",
+                "1",
+                "-i",
+                str(frame),
+                "-t",
+                "1",
+                str(out_path),
+            ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-    cache.set(key, str(out_path))
-    meta = json.dumps(_metadata())
-    if out_path.stat().st_size > 25 * 1024 * 1024:
-        url_path = f"/static/{out_path.name}"
-        out_static = Path("api/static") / out_path.name
-        out_path.rename(out_static)
-        return JSONResponse({"url": url_path, "metadata": json.loads(meta)})
+        meta = _get_metadata(cmd)
 
-    return FileResponse(out_path, media_type="application/octet-stream", headers={"X-Metadata": meta})
+    meta.update({"file_path": str(out_path), "format": fmt})
+    cache.set(digest, meta)
+    return _build_response(str(out_path), fmt, meta)
+
+
+def _build_response(path: str, fmt: str, meta: Dict[str, Any]) -> StreamingResponse:
+    media = {
+        "image": "image/png",
+        "model": "chemical/x-pdb",
+        "animation": "video/mp4",
+    }[fmt]
+    return StreamingResponse(open(path, "rb"), media_type=media, headers={"X-Meta": json.dumps(meta)})
