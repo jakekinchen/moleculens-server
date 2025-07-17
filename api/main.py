@@ -4,6 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 import routers
 import os
 from pathlib import Path
+import threading
+from pymol import cmd
+from api.utils.rate_limit import RateLimitMiddleware
 
 # Import and initialize the model registry at startup
 from agent_management.model_config import register_models
@@ -15,6 +18,13 @@ app = FastAPI(
     title="AI Backend",
     version="0.0.1",
 )
+
+# launch PyMOL once at startup
+pymol_lock = threading.Lock()
+
+@app.on_event("startup")
+def startup_pymol():
+    cmd.finish_launching(["pymol", "-cq"])
 
 # Construct an absolute path to the static directory
 # Assuming main.py is in the api/ directory, and static is api/static/
@@ -56,6 +66,10 @@ app.add_middleware(
     max_age=86400,  # Cache preflight response for 24 hours
 )
 
+# rate limiting
+app.add_middleware(RateLimitMiddleware)
+
 # user management related endpoints
 app.include_router(routers.prompt.router)
 app.include_router(routers.geometry.router)
+app.include_router(routers.render.router)

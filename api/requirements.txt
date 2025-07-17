@@ -25,3 +25,5 @@ pubchempy
 requests>=2.31.0
 rdkit
 svgwrite
+gunicorn
+redis
