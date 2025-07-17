@@ -1,7 +1,8 @@
 import os
+import json
 from pathlib import Path
 from typing import Optional, Tuple, Dict, Any
-import json
+
 import redis
 
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
@@ -13,16 +14,24 @@ CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def get(key: str) -> Optional[Tuple[str, Dict[str, Any]]]:
-    data = redis_client.get(key)
-    if not data:
+    """Retrieve cached (file_path, metadata) tuple if it exists and the file is still present."""
+    raw = redis_client.get(key)
+    if not raw:
         return None
-    meta = json.loads(data)
+
+    try:
+        meta: Dict[str, Any] = json.loads(raw)
+    except (json.JSONDecodeError, TypeError):
+        return None
+
     path = Path(meta.get("file_path", ""))
     if not path.exists():
         return None
+
     return str(path), meta
 
 
-def set(key: str, meta: Dict[str, Any]):
+def set(key: str, meta: Dict[str, Any]) -> None:
+    """Cache metadata under the provided key."""
     redis_client.set(key, json.dumps(meta))
 

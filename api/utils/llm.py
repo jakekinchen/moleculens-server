@@ -20,7 +20,8 @@ FUNCTION_SCHEMA = {
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 
-async def description_to_commands(description: str) -> list[str]:
+def description_to_commands(description: str) -> list[str]:
+    """Call the LLM to translate a free-form description into a list of PyMOL commands."""
     response = client.chat.completions.create(
         model="o3-mini",
         messages=[
