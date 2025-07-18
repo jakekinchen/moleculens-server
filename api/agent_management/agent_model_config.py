@@ -97,6 +97,13 @@ DEFAULT_AGENT_MODELS = [
         fallback_models=["gpt-4o", "claude-3-7-sonnet-latest", "gpt-4.5-preview"],
         required_categories=[ModelCategory.REASONING],
         description="Handles PubChem data retrieval and processing"
+    ),
+    AgentModelConfig(
+        agent_type=AgentType.RCSB,
+        preferred_model="o3-mini",
+        fallback_models=[],
+        required_categories=[],
+        description="Fetches structures, predicted models and metadata from RCSB and AlphaFold"
     )
 ]
 
