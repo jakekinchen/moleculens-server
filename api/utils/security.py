@@ -10,6 +10,7 @@ ALLOWED_COMMANDS = {
     "rotate",
     "png",
     "save",
+    "label",
 }
 
 

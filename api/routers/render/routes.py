@@ -64,9 +64,13 @@ async def render(req: RenderRequest):
     # render a simple alanine fragment so that the PNG is not blank.
     if not commands:
         commands = [
-            "cmd.fragment('ala')",
-            "cmd.show('sticks')",
+            "cmd.fetch('1ubq')",  # Ubiquitin
+            "cmd.hide('everything')",
+            "cmd.show('cartoon')",
+            "cmd.color('red', 'chain A')",
+            "cmd.color('cyan', 'chain B')",
             "cmd.orient()",
+            "cmd.label('name ca', 'resi')",  # label residues
         ]
     try:
         security.validate_commands(commands)
