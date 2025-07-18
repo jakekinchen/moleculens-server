@@ -32,33 +32,39 @@ sys.modules.setdefault("dependencies", importlib.import_module("api.dependencies
 
 import types as _types
 
-if "pymol" not in sys.modules:
-    _pymol = _types.ModuleType("pymol")
+try:
+    import pymol  # Attempt to import the real PyMOL if available
+except ImportError:  # Fallback to a lightweight stub during CI / local dev
+    if "pymol" not in sys.modules:
+        _pymol = _types.ModuleType("pymol")
 
-    class _CmdStub:
-        def reinitialize(self):
-            pass
+        class _CmdStub:
+            def finish_launching(self, *args, **kwargs):
+                pass
 
-        def get_view(self):
-            return []
+            def reinitialize(self):
+                pass
 
-        def centerofmass(self):
-            return []
+            def get_view(self):
+                return []
 
-        def get_extent(self):
-            return ((), ())
+            def centerofmass(self):
+                return []
 
-        def png(self, *args, **kwargs):
-            pass
+            def get_extent(self):
+                return ((), ())
 
-        def save(self, *args, **kwargs):
-            pass
+            def png(self, *args, **kwargs):
+                pass
 
-        def do(self, *args, **kwargs):
-            pass
+            def save(self, *args, **kwargs):
+                pass
 
-    _pymol.cmd = _CmdStub()
-    sys.modules["pymol"] = _pymol
+            def do(self, *args, **kwargs):
+                pass
+
+        _pymol.cmd = _CmdStub()
+        sys.modules["pymol"] = _pymol
 
 # Provide a stub for the `redis` module (used by rate-limiting and caching)
 # when Redis is not installed in the environment.
