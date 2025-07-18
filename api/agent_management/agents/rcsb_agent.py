@@ -27,7 +27,8 @@ class RCSBAgent:
             File contents as a string.
         """
         fmt = self._check_format(file_format)
-        url = f"{self.BASE_URL}{identifier.upper()}.{ 'cif' if fmt == 'cif' else 'pdb' }"
+        extension = "cif" if fmt == "cif" else "pdb"
+        url = f"{self.BASE_URL}{identifier.upper()}.{extension}"
         resp = requests.get(url, timeout=30)
         resp.raise_for_status()
         return resp.text

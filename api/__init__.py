@@ -1,9 +1,12 @@
-"""API package root.
-
-This file sets up import aliases so code/tests that expect top-level
-`agent_management` and `llm_service` modules can still work even though the
-actual implementation lives under `api.agent_management`.
 """
+Moleculens Server API Package
+
+This package provides the FastAPI-based server implementation for molecular visualization
+and analysis, featuring AI-powered molecule rendering and diagram generation.
+"""
+
+__version__ = "0.0.1"
+__author__ = "Moleculens Team"
 
 import importlib
 import sys
@@ -20,7 +23,8 @@ sys.modules.setdefault(
 # Backwards-compatibility single-file modules referenced in some tests
 
 sys.modules.setdefault(
-    "geometry_agent", importlib.import_module("api.agent_management.agents.geometry_agent")
+    "geometry_agent",
+    importlib.import_module("api.agent_management.agents.geometry_agent"),
 )
 
 # Alias the `api.dependencies` package so imports like `dependencies.use_llm` work
@@ -70,6 +74,7 @@ except ImportError:  # Fallback to a lightweight stub during CI / local dev
 # when Redis is not installed in the environment.
 
 if "redis" not in sys.modules:
+
     class _RedisStubClient(dict):
         def pipeline(self):
             return self

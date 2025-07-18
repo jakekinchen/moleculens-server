@@ -1,155 +1,150 @@
-"""
-Model configuration module for registering LLM providers and models.
-"""
+"""Model configuration and registry."""
 
-from typing import Dict, Any, List, Callable, Optional
-from enum import Enum, auto
-from pydantic import BaseModel, Field
-from agent_management.models import ModelRegistry
-from agent_management.llm_service import LLMService, LLMModelConfig, ProviderType
+from enum import Enum
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel
+
+from api.agent_management.llm_service import LLMService
+from api.agent_management.model_registry import ModelRegistry
+
+
+class ProviderType(str, Enum):
+    """Supported LLM providers."""
+
+    OPENAI = "openai"
+
 
 class ModelCategory(str, Enum):
-    """Categories of LLM models by capability"""
+    """Categories of models based on their capabilities."""
+
     GENERAL = "general"
     CODE = "code"
-    VISION = "vision"
     REASONING = "reasoning"
+    VISION = "vision"
 
-class ModelInfo(BaseModel):
-    """Information about a specific LLM model"""
-    name: str = Field(description="Full model name including version")
-    display_name: str = Field(description="User-friendly display name")
-    provider: ProviderType = Field(description="The LLM provider")
-    categories: List[ModelCategory] = Field(description="Model capabilities")
-    context_length: int = Field(description="Maximum context length in tokens")
-    is_default: bool = Field(description="Whether this is a default model")
-    default_for: List[str] = Field(description="List of tasks this model is default for")
-    api_params: Dict[str, Any] = Field(description="Additional API parameters")
 
-def register_models():
-    """Register all supported LLM models with the registry"""
-    
-    # Clear existing registry
-    ModelRegistry._registry.clear()
+class LLMModelConfig(BaseModel):
+    """Configuration for an LLM model."""
 
+    provider: ProviderType
+    model_name: str
+    api_key: Optional[str] = None
+    api_base: Optional[str] = None
+    api_version: Optional[str] = None
+    organization: Optional[str] = None
+    category: Optional[ModelCategory] = None
+    max_tokens: Optional[int] = None
+    temperature: Optional[float] = None
+    top_p: Optional[float] = None
+    frequency_penalty: Optional[float] = None
+    presence_penalty: Optional[float] = None
+    stop: Optional[List[str]] = None
+    logit_bias: Optional[Dict[str, float]] = None
+    user: Optional[str] = None
+    default_system_prompt: Optional[str] = None
+    default_user_prompt: Optional[str] = None
+    default_assistant_prompt: Optional[str] = None
+    default_function_prompt: Optional[str] = None
+    default_tool_prompt: Optional[str] = None
+    default_response_format: Optional[Dict[str, Any]] = None
+    default_tools: Optional[List[Dict[str, Any]]] = None
+    default_functions: Optional[List[Dict[str, Any]]] = None
+    default_tool_choice: Optional[str] = None
+    default_function_call: Optional[str] = None
+    default_seed: Optional[int] = None
+    default_response_format_type: Optional[str] = None
+    default_response_format_schema: Optional[Dict[str, Any]] = None
+    default_max_retries: Optional[int] = None
+    default_timeout: Optional[float] = None
+    default_request_timeout: Optional[float] = None
+    default_pool_timeout: Optional[float] = None
+    default_api_type: Optional[str] = None
+    default_api_version: Optional[str] = None
+    default_engine: Optional[str] = None
+    default_deployment_id: Optional[str] = None
+    default_organization: Optional[str] = None
+    default_api_base: Optional[str] = None
+    default_api_key: Optional[str] = None
+    default_model: Optional[str] = None
+    default_temperature: Optional[float] = None
+    default_max_tokens: Optional[int] = None
+    default_top_p: Optional[float] = None
+    default_frequency_penalty: Optional[float] = None
+    default_presence_penalty: Optional[float] = None
+    default_stop: Optional[List[str]] = None
+    default_logit_bias: Optional[Dict[str, float]] = None
+    default_user: Optional[str] = None
+    default_n: Optional[int] = None
+    default_stream: Optional[bool] = None
+    default_echo: Optional[bool] = None
+    default_best_of: Optional[int] = None
+    default_logprobs: Optional[int] = None
+    default_suffix: Optional[str] = None
+    default_prompt: Optional[str] = None
+    default_context: Optional[str] = None
+    default_examples: Optional[List[Dict[str, Any]]] = None
+    default_labels: Optional[List[str]] = None
+    default_temperature_multiplier: Optional[float] = None
+    default_top_p_multiplier: Optional[float] = None
+    default_frequency_penalty_multiplier: Optional[float] = None
+    default_presence_penalty_multiplier: Optional[float] = None
+    default_max_tokens_multiplier: Optional[float] = None
+    default_stop_multiplier: Optional[float] = None
+    default_logit_bias_multiplier: Optional[float] = None
+    default_user_multiplier: Optional[float] = None
+    default_n_multiplier: Optional[float] = None
+    default_best_of_multiplier: Optional[float] = None
+    default_logprobs_multiplier: Optional[float] = None
+    default_suffix_multiplier: Optional[float] = None
+    default_prompt_multiplier: Optional[float] = None
+    default_context_multiplier: Optional[float] = None
+    default_examples_multiplier: Optional[float] = None
+    default_labels_multiplier: Optional[float] = None
+
+
+def register_models() -> None:
+    """Register all available models."""
     # Register OpenAI models
-    def create_model_factory(model_data):
-        def factory(*args, **kwargs):
-            data = model_data.copy()
-            data.update(kwargs)
-            return ModelInfo(**data)
-        return factory
-
-    models = [
-        {
-            "name": "o3-mini",
-            "display_name": "OpenAI GPT-3.5 Mini",
-            "provider": ProviderType.OPENAI,
-            "categories": [ModelCategory.GENERAL, ModelCategory.REASONING],
-            "context_length": 16385,
-            "is_default": True,
-            "default_for": ["general", "molecular"],
-            "api_params": {}
-        },
-        {
-            "name": "gpt-4",
-            "display_name": "OpenAI GPT-4",
-            "provider": ProviderType.OPENAI,
-            "categories": [ModelCategory.GENERAL, ModelCategory.REASONING],
-            "context_length": 8192,
-            "is_default": False,
-            "default_for": [],
-            "api_params": {}
-        }
-    ]
-
-    for model_data in models:
-        ModelRegistry.register(
-            model_data["name"],
-            ModelInfo,
-            create_model_factory(model_data)
-        )
-
-# Helper functions for working with models
-def get_llm_service(model_name: str) -> LLMService:
-    """
-    Create an LLM service instance for a specific model.
-    
-    Args:
-        model_name: The registered model name
-        
-    Returns:
-        An initialized LLMService instance
-        
-    Raises:
-        ValueError: If the model is not registered
-    """
-    model_info = ModelRegistry.create_instance(model_name)
-    
-    # Create LLM config from model info
-    llm_config = LLMModelConfig(
-        provider=model_info.provider,
-        model_name=model_info.name,
-        api_key=None  # API key will be loaded from environment variables
+    ModelRegistry.register(
+        "gpt-3.5-turbo",
+        LLMModelConfig,
+        lambda: LLMModelConfig(
+            provider=ProviderType.OPENAI,
+            model_name="gpt-3.5-turbo",
+            category=ModelCategory.GENERAL,
+        ),
     )
-    
-    # Create and return the LLM service
-    return LLMService(config=llm_config)
 
-def get_default_model_for_use_case(use_case: str) -> str:
-    """
-    Get the name of the default model for a specific use case.
-    
-    Args:
-        use_case: The use case to get the default model for (e.g. 'geometry', 'molecular')
-        
-    Returns:
-        The name of the default model for the use case
-        
-    Raises:
-        ValueError: If no default model is found for the use case
-    """
-    for name in ModelRegistry.list_models():
-        model_info = ModelRegistry.create_instance(name)
-        if use_case in model_info.default_for:
-            return name
-    
-    # If no default is set for this use case, return the global default or first model
-    return get_default_model()
+    ModelRegistry.register(
+        "gpt-4",
+        LLMModelConfig,
+        lambda: LLMModelConfig(
+            provider=ProviderType.OPENAI,
+            model_name="gpt-4",
+            category=ModelCategory.GENERAL,
+        ),
+    )
+
 
 def get_default_model() -> str:
-    """Get the name of the default model"""
-    # First check for global default
-    for name in ModelRegistry.list_models():
-        model_info = ModelRegistry.create_instance(name)
-        if model_info.is_default:
-            return name
-    
-    # If no default is set, return the first model
-    models = ModelRegistry.list_models()
-    if models:
-        return models[0]
-    else:
-        raise ValueError("No models registered")
+    """Get the default model name."""
+    return "gpt-3.5-turbo"
+
 
 def get_models_by_category(category: ModelCategory) -> List[str]:
-    """
-    Get all models that support a specific category.
-    
-    Args:
-        category: The model category to filter by
-        
-    Returns:
-        A list of model names that support the category
-    """
-    matching_models = []
-    
-    for name in ModelRegistry.list_models():
-        model_info = ModelRegistry.create_instance(name)
-        if category in model_info.categories:
-            matching_models.append(name)
-    
-    return matching_models
+    """Get all models in a category."""
+    models = []
+    for model_name in ModelRegistry.list_models():
+        model = ModelRegistry.create_instance(model_name)
+        if model.category == category:
+            models.append(model_name)
+    return models
 
-# Initialize the model registry
-register_models()
+
+def get_llm_service(model_name: Optional[str] = None) -> LLMService:
+    """Get an LLM service instance for a model."""
+    if model_name is None:
+        model_name = get_default_model()
+    config = ModelRegistry.create_instance(model_name)
+    return LLMService(config)
