@@ -79,3 +79,17 @@ The Moleculens server already leverages PyMOL and RDKit to render molecular imag
 * Registered this agent in `AgentFactory` and extended `AgentType` with a `RCSB` option.
 * Created tests that stub heavy dependencies (RDKit, OpenAI) and validate both geometry and RCSB routes.
 * Pinned `httpx` to a compatible version so Starlette's `TestClient` works correctly during testing.
+
+## RCSB Agent expansion (July 18 2025)
+
+Following the initial integration of the RCSB agent, the back‑end now exposes additional capabilities to support computed structure models and metadata retrieval:
+
+* Added `fetch_alphafold_model` and `fetch_entry_metadata` methods to `RCSBAgent`.  These allow downloading predicted structures from the AlphaFold database (using UniProt accessions) and retrieving JSON metadata for PDB entries via the RCSB Data API.  A common `_check_format` helper normalizes the PDB/mmCIF format argument.
+* Extended `api/routers/rcsb/routes.py` with two new endpoints:
+  * `POST /rcsb/fetch-model/` accepts a UniProt ID and format (pdb or cif) and returns a predicted model downloaded from the AlphaFold DB.
+  * `GET /rcsb/entry/{identifier}` returns metadata for a PDB entry by delegating to the Data API.
+* Added a default `AgentModelConfig` for the `rcsb` agent type to `agent_model_config.py` to ensure consistent registration in the factory.
+* Added `tests/test_rcsb_extensions.py` which stubs external dependencies and verifies the new endpoints.  These tests follow the pattern used for geometry and RCSB structure tests by injecting fake modules and patching agent methods to avoid network calls.
+* The original `fetch_structure` endpoint and tests continue to function unchanged.
+
+This update progresses the data retrieval layer outlined in the expansion plan and lays groundwork for subsequent features like sequence annotations, alignments and user uploads.
