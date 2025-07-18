@@ -64,7 +64,7 @@ The ability to deliver immersive molecular experiences differentiates the platfo
 	4.	AR annotations and analytics.  Overlay labels, interaction distances and domain boundaries in XR.  Enable measurement tools similar to Mol* so users can interrogate structures in 3‑D space.
 
 6. Optional Enhancements
-	•	ChimeraX integration.  Offer high‑end GPU rendering and VR features by running ChimeraX headless for certain scenes (e.g., cryo‑EM segmentation).  Use --cmd to load a structure and export PNGs or glTF when PyMOL’s visuals are insufficient.
+	•	ChimeraX (or regular Chimera) integration.  Offer high‑end GPU rendering and VR features by running ChimeraX headless for certain scenes (e.g., cryo‑EM segmentation).  Use --cmd to load a structure and export PNGs or glTF when PyMOL’s visuals are insufficient.
 	•	Cheminformatics metrics.  Annotate ligand 2‑D diagrams with properties (molecular weight, logP) computed by RDKit.  Provide cross‑links between 2‑D diagrams and 3‑D views.
 	•	Automated reporting.  Generate PDF/PowerPoint reports summarizing binding site features, interactions and comparative analyses using Python libraries.
 
