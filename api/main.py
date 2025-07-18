@@ -5,7 +5,7 @@ import routers
 import os
 from pathlib import Path
 import threading
-from pymol import cmd
+import pymol
 from api.utils.rate_limit import RateLimitMiddleware
 
 # Import and initialize the model registry at startup
@@ -24,7 +24,7 @@ pymol_lock = threading.Lock()
 
 @app.on_event("startup")
 def startup_pymol():
-    cmd.finish_launching(["pymol", "-cq"])
+    pymol.finish_launching(["pymol", "-cq"])
 
 # Construct an absolute path to the static directory
 # Assuming main.py is in the api/ directory, and static is api/static/
