@@ -22,6 +22,7 @@ class AgentType(str, Enum):
     CAPTION = "caption"
     AGGREGATOR = "aggregator"
     PUBCHEM = "pubchem"
+    RCSB = "rcsb"
 
 class AgentModelConfig(BaseModel):
     """Configuration for which model an agent should use"""

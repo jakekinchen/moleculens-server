@@ -13,6 +13,7 @@ from agent_management.agents.animation_agent import AnimationAgent
 from agent_management.agents.caption_agent import CaptionAgent
 from agent_management.agents.aggregator_agent import AggregatorAgent
 from agent_management.agents.pubchem_agent import PubChemAgent
+from agent_management.agents.rcsb_agent import RCSBAgent
 
 class AgentFactory:
     """Factory for creating agent instances with appropriate model configurations."""
@@ -75,11 +76,16 @@ class AgentFactory:
         """
         llm_service = create_agent_llm_service(AgentType.PUBCHEM, override_model)
         return PubChemAgent(
-            llm_service, 
+            llm_service,
             use_element_labels=use_element_labels,
             convert_back_to_indices=convert_back_to_indices,
             script_model=script_model
         )
+
+    @staticmethod
+    def create_rcsb_agent() -> RCSBAgent:
+        """Create an agent for fetching structures from RCSB."""
+        return RCSBAgent()
     
     @staticmethod
     def create_all_agents(global_override_model: Optional[str] = None) -> Dict[AgentType, Any]:
@@ -105,6 +111,7 @@ class AgentFactory:
                 script_model=global_override_model,
                 use_element_labels=True,       # Use element-based labels for better LLM understanding
                 convert_back_to_indices=True   # ALWAYS convert element-based labels back to numeric indices
-            )
+            ),
+            AgentType.RCSB: AgentFactory.create_rcsb_agent(),
         }
         return agents
