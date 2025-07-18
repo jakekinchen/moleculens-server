@@ -2,7 +2,7 @@
 Pydantic models for Three.js structured output generation.
 """
 
-from typing import List, Dict, Optional, Any, Union, Type, TypeVar, Callable, Tuple
+from typing import List, Dict, Optional, Any, Union, Type, TypeVar, Callable, Tuple, Literal
 from pydantic import BaseModel, Field
 
 
@@ -20,74 +20,63 @@ T = TypeVar("T")
 
 
 class ModelRegistry:
-    """
-    Central registry for managing model classes and their instantiation.
-    Implements the Registry design pattern to decouple model references.
-    """
-
-    _registry = {}
-
+    """Registry for managing model classes and factory functions."""
+    
+    _registry: Dict[str, Tuple[Type[BaseModel], Callable[..., Any]]] = {}
+    
     @classmethod
-    def register(cls, name: str, model_cls, factory: Optional[Callable] = None):
+    def register(cls, model_name: str, model_cls: Type[BaseModel], factory_func: Callable[..., Any]):
         """
-        Register a model class with an optional factory function.
-
+        Register a model class and its factory function.
+        
         Args:
-            name: Unique identifier for the model
-            model_cls: The model class to register
-            factory: Optional factory function to instantiate the model
+            model_name: Name to register the model under
+            model_cls: The model class
+            factory_func: Factory function to create model instances
         """
-        if factory is None:
-            # Create a default factory that accepts kwargs
-            factory = lambda *args, **kwargs: model_cls(**kwargs)
-
-        cls._registry[name] = {"class": model_cls, "factory": factory}
-        return model_cls  # Return for decorator use
-
+        cls._registry[model_name] = (model_cls, factory_func)
+    
     @classmethod
-    def get_model(cls, name: str):
+    def get_model(cls, model_name: str) -> Type[BaseModel]:
         """
-        Get a model class by name.
-
+        Get the registered model class.
+        
         Args:
-            name: Name of the registered model
-
+            model_name: Name of the registered model
+            
         Returns:
             The model class
-
+            
         Raises:
             ValueError: If the model is not registered
         """
-        model_data = cls._registry.get(name)
-        if model_data is None:
-            raise ValueError(f"Model '{name}' not registered.")
-        return model_data["class"]
-
+        if model_name not in cls._registry:
+            raise ValueError(f"Model '{model_name}' not registered.")
+        return cls._registry[model_name][0]
+    
     @classmethod
     def create_instance(cls, model_name: str, *args, **kwargs):
         """
         Create an instance of a registered model.
-
+        
         Args:
             model_name: Name of the registered model
             *args, **kwargs: Arguments to pass to the factory function
-
+            
         Returns:
             An instance of the model
-
+            
         Raises:
             ValueError: If the model is not registered
         """
-        model_data = cls._registry.get(model_name)
-        if model_data is None:
+        if model_name not in cls._registry:
             raise ValueError(f"Model '{model_name}' not registered.")
-
-        factory = model_data["factory"]
-        return factory(*args, **kwargs)
-
+        _, factory_func = cls._registry[model_name]
+        return factory_func(*args, **kwargs)
+    
     @classmethod
-    def list_models(cls):
-        """List all registered model names"""
+    def list_models(cls) -> List[str]:
+        """Get a list of all registered model names."""
         return list(cls._registry.keys())
 
 
@@ -320,3 +309,41 @@ class MoleculeLayoutRequest(BaseModel):
     """Request containing multiple molecules and their boxes."""
 
     molecules: List[MoleculeBoxRequest]
+
+
+class MoleculePosition(BaseModel):
+    """Position and name of a molecule in a diagram"""
+    name: str = Field(description="Name of the molecule")
+    position: Tuple[float, float] = Field(description="X, Y coordinates of the molecule")
+
+
+class Arrow(BaseModel):
+    """Arrow connecting two points in a diagram"""
+    start: Tuple[float, float] = Field(description="Starting coordinates")
+    end: Tuple[float, float] = Field(description="Ending coordinates")
+    text: Optional[str] = Field(description="Optional text to display along the arrow")
+
+
+class DiagramPlan(BaseModel):
+    """Plan for rendering a molecular diagram"""
+    plan: str = Field(description="Description of the diagram plan")
+    molecule_list: List[MoleculePosition] = Field(description="List of molecules and their positions")
+    arrows: List[Arrow] = Field(description="List of arrows connecting molecules")
+    canvas_width: int = Field(default=800, description="Width of the canvas in pixels")
+    canvas_height: int = Field(default=600, description="Height of the canvas in pixels")
+
+
+class MoleculePlacement(BaseModel):
+    """Placement information for a molecule in a diagram."""
+    molecule: str
+    x: float
+    y: float
+    width: Optional[float] = None
+    height: Optional[float] = None
+    label: Optional[str] = None
+    label_position: Literal["above", "below", "left", "right"] = "below"
+
+    @property
+    def position(self) -> Tuple[float, float]:
+        """Get the position as a tuple."""
+        return (self.x, self.y)

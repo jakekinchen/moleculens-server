@@ -40,6 +40,10 @@ def extract_javascript_from_deepseek_response(response: str) -> str:
     if html_match:
         return html_match.group(1).strip()
     
+    # Fallback: capture the first generic fenced code block without language
+    generic_match = re.search(r"```\s*([\s\S]*?)\s*```", response)
+    if generic_match:
+        return generic_match.group(1).strip()
     
     # If no code block is found, return the original response
     return response

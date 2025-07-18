@@ -784,24 +784,27 @@ async def generate_molecule_diagram(request: DiagramPromptRequest, llm_service: 
         if len(fetched_molecules_data) != len(final_diagram_plan_obj.molecule_list):
             raise ValueError("Mismatch between planned molecules and fetched molecule data.")
 
-        renderable_molecules = []
-        for fetched_data, plan_data_from_list in zip(fetched_molecules_data, final_diagram_plan_obj.molecule_list):
-            renderable_molecules.append({
+        # Create renderable molecules list
+        renderable_molecules = {}
+        for plan_data_from_list in final_diagram_plan_obj.molecule_list:
+            name = plan_data_from_list.molecule
+            fetched_data = await fetch_molecule_2d_data(FetchMoleculeRequest(query=name))
+            renderable_molecules[name] = {
                 **fetched_data,
                 "label": plan_data_from_list.label or plan_data_from_list.molecule,
                 "label_position": plan_data_from_list.label_position
-            })
+            }
 
         svg_image = render_diagram(
-            molecules=renderable_molecules,
-            arrows=[arrow.model_dump() for arrow in final_diagram_plan_obj.arrows] if final_diagram_plan_obj.arrows else [],
-            width=request.canvas_width, # Or final_diagram_plan_obj.canvas_width
-            height=request.canvas_height, # Or final_diagram_plan_obj.canvas_height
+            plan=final_diagram_plan_obj,
+            molecule_data=renderable_molecules,
+            canvas_width=request.canvas_width,
+            canvas_height=request.canvas_height
         )
 
         return DiagramResponse(
             diagram_image=svg_image,
-            diagram_plan=final_diagram_plan_obj.model_dump(), 
+            diagram_plan=final_diagram_plan_obj.model_dump(),
             status="completed"
         )
 

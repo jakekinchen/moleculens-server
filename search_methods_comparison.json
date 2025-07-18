@@ -1,0 +1,627 @@
+{
+  "results": [
+    {
+      "topic": "Teach me about norbornane and its bridging structure",
+      "direct_rest_exact": {
+        "success": true,
+        "interpreted_molecule": "norbornane",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 9233,
+            "formula": "C7H12"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.40532588958740234
+      },
+      "direct_rest_fuzzy": {
+        "success": true,
+        "interpreted_molecule": "norbornane",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 9233,
+            "formula": "C7H12"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.38923120498657227
+      },
+      "pubchempy_name": {
+        "success": true,
+        "interpreted_molecule": "norbornane",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 9233,
+            "formula": "C7H12"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.39997220039367676
+      },
+      "pubchempy_formula": {
+        "success": true,
+        "interpreted_molecule": "norbornane",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 9233,
+            "formula": "C7H12"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.39319801330566406
+      },
+      "sourcetable": {
+        "success": true,
+        "interpreted_molecule": "norbornane",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 9233,
+            "formula": "C7H12"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.395313024520874
+      }
+    },
+    {
+      "topic": "Teach me about cryptand[2.2.2] and 3D host-guest complexation",
+      "direct_rest_exact": {
+        "success": true,
+        "interpreted_molecule": "cryptand-222",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 72801,
+            "formula": "C18H36N2O6"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.4115321636199951
+      },
+      "direct_rest_fuzzy": {
+        "success": true,
+        "interpreted_molecule": "cryptand-222",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 72801,
+            "formula": "C18H36N2O6"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.4014930725097656
+      },
+      "pubchempy_name": {
+        "success": true,
+        "interpreted_molecule": "cryptand-222",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 72801,
+            "formula": "C18H36N2O6"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.4004218578338623
+      },
+      "pubchempy_formula": {
+        "success": true,
+        "interpreted_molecule": "cryptand-222",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 72801,
+            "formula": "C18H36N2O6"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.5910210609436035
+      },
+      "sourcetable": {
+        "success": true,
+        "interpreted_molecule": "cryptand-222",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 72801,
+            "formula": "C18H36N2O6"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.44832372665405273
+      }
+    },
+    {
+      "topic": "Teach me about metal-metal quadruple bonds in dimolybdenum complexes",
+      "direct_rest_exact": {
+        "success": true,
+        "interpreted_molecule": "Mo2(O2CCH3)4",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 541372,
+            "formula": "C8H16Mo2O8"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.3892631530761719
+      },
+      "direct_rest_fuzzy": {
+        "success": true,
+        "interpreted_molecule": "Mo2(O2CCH3)4",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 541372,
+            "formula": "C8H16Mo2O8"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.3830568790435791
+      },
+      "pubchempy_name": {
+        "success": true,
+        "interpreted_molecule": "Mo2(O2CCH3)4",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 541372,
+            "formula": "C8H16Mo2O8"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.3807222843170166
+      },
+      "pubchempy_formula": {
+        "success": true,
+        "interpreted_molecule": "Mo2(O2CCH3)4",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 541372,
+            "formula": "C8H16Mo2O8"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.41234612464904785
+      },
+      "sourcetable": {
+        "success": true,
+        "interpreted_molecule": "Mo2(O2CCH3)4",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 541372,
+            "formula": "C8H16Mo2O8"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.3834381103515625
+      }
+    },
+    {
+      "topic": "Teach me about carboranes and their polyhedral cage structures",
+      "direct_rest_exact": {
+        "success": false,
+        "interpreted_molecule": "closo-B12H12-2",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 0.545557975769043
+      },
+      "direct_rest_fuzzy": {
+        "success": false,
+        "interpreted_molecule": "closo-B12H12-2",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 0.175628662109375
+      },
+      "pubchempy_name": {
+        "success": false,
+        "interpreted_molecule": "closo-B12H12-2",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 0.5443918704986572
+      },
+      "pubchempy_formula": {
+        "success": false,
+        "interpreted_molecule": "closo-B12H12-2",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 0.17258501052856445
+      },
+      "sourcetable": {
+        "success": false,
+        "interpreted_molecule": "closo-B12H12-2",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 0.5403649806976318
+      }
+    },
+    {
+      "topic": "Teach me about rotaxanes and their mechanically interlocked architecture",
+      "direct_rest_exact": {
+        "success": false,
+        "interpreted_molecule": "[2]rotaxane",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 1.7273378372192383
+      },
+      "direct_rest_fuzzy": {
+        "success": false,
+        "interpreted_molecule": "[2]rotaxane",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 0.5108809471130371
+      },
+      "pubchempy_name": {
+        "success": false,
+        "interpreted_molecule": "[2]rotaxane",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 1.6407151222229004
+      },
+      "pubchempy_formula": {
+        "success": false,
+        "interpreted_molecule": "[2]rotaxane",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 0.5255908966064453
+      },
+      "sourcetable": {
+        "success": false,
+        "interpreted_molecule": "[2]rotaxane",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 1.6333820819854736
+      }
+    },
+    {
+      "topic": "Teach me about dendrimers and their hyperbranched growth patterns",
+      "direct_rest_exact": {
+        "success": false,
+        "interpreted_molecule": "PAMAM",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 0.5578980445861816
+      },
+      "direct_rest_fuzzy": {
+        "success": false,
+        "interpreted_molecule": "PAMAM",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 0.17291593551635742
+      },
+      "pubchempy_name": {
+        "success": false,
+        "interpreted_molecule": "PAMAM",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 0.6049742698669434
+      },
+      "pubchempy_formula": {
+        "success": false,
+        "interpreted_molecule": "PAMAM",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 0.18015122413635254
+      },
+      "sourcetable": {
+        "success": false,
+        "interpreted_molecule": "PAMAM",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 0.5659732818603516
+      }
+    },
+    {
+      "topic": "Teach me about alkali-doped fullerenes and superconductivity",
+      "direct_rest_exact": {
+        "success": false,
+        "interpreted_molecule": "K3C60",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 0.5243961811065674
+      },
+      "direct_rest_fuzzy": {
+        "success": false,
+        "interpreted_molecule": "K3C60",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 0.16940903663635254
+      },
+      "pubchempy_name": {
+        "success": false,
+        "interpreted_molecule": "K3C60",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 0.5329599380493164
+      },
+      "pubchempy_formula": {
+        "success": false,
+        "interpreted_molecule": "K3C60",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 0.17160391807556152
+      },
+      "sourcetable": {
+        "success": false,
+        "interpreted_molecule": "K3C60",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 0.5438637733459473
+      }
+    },
+    {
+      "topic": "Teach me about the DNA double helix and base-pair stacking",
+      "direct_rest_exact": {
+        "success": true,
+        "interpreted_molecule": "adenine",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 190,
+            "formula": "C5H5N5"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.3942248821258545
+      },
+      "direct_rest_fuzzy": {
+        "success": true,
+        "interpreted_molecule": "adenine",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 190,
+            "formula": "C5H5N5"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.38695502281188965
+      },
+      "pubchempy_name": {
+        "success": true,
+        "interpreted_molecule": "adenine",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 190,
+            "formula": "C5H5N5"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.3864302635192871
+      },
+      "pubchempy_formula": {
+        "success": true,
+        "interpreted_molecule": "adenine",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 190,
+            "formula": "C5H5N5"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.3897368907928467
+      },
+      "sourcetable": {
+        "success": true,
+        "interpreted_molecule": "adenine",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 190,
+            "formula": "C5H5N5"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.38544487953186035
+      }
+    },
+    {
+      "topic": "Teach me about metallophthalocyanines and their planar macrocycles",
+      "direct_rest_exact": {
+        "success": true,
+        "interpreted_molecule": "copper phthalocyanine",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 6531516,
+            "formula": "C32H16CuN8"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.4452331066131592
+      },
+      "direct_rest_fuzzy": {
+        "success": true,
+        "interpreted_molecule": "copper phthalocyanine",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 6531516,
+            "formula": "C32H16CuN8"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.40506815910339355
+      },
+      "pubchempy_name": {
+        "success": true,
+        "interpreted_molecule": "copper phthalocyanine",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 6531516,
+            "formula": "C32H16CuN8"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.3908097743988037
+      },
+      "pubchempy_formula": {
+        "success": true,
+        "interpreted_molecule": "copper phthalocyanine",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 6531516,
+            "formula": "C32H16CuN8"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.40418100357055664
+      },
+      "sourcetable": {
+        "success": true,
+        "interpreted_molecule": "copper phthalocyanine",
+        "num_molecules_found": 1,
+        "molecules": [
+          {
+            "name": "",
+            "cid": 6531516,
+            "formula": "C32H16CuN8"
+          }
+        ],
+        "error": null,
+        "processing_time": 0.3919069766998291
+      }
+    },
+    {
+      "topic": "Teach me about polyoxometalates and their metal-oxygen clusters",
+      "direct_rest_exact": {
+        "success": false,
+        "interpreted_molecule": "phosphotungstate",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 0.5764899253845215
+      },
+      "direct_rest_fuzzy": {
+        "success": false,
+        "interpreted_molecule": "phosphotungstate",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 0.17290520668029785
+      },
+      "pubchempy_name": {
+        "success": false,
+        "interpreted_molecule": "phosphotungstate",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 0.5658531188964844
+      },
+      "pubchempy_formula": {
+        "success": false,
+        "interpreted_molecule": "phosphotungstate",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 0.18567919731140137
+      },
+      "sourcetable": {
+        "success": false,
+        "interpreted_molecule": "phosphotungstate",
+        "num_molecules_found": 0,
+        "molecules": [],
+        "error": null,
+        "processing_time": 0.5626399517059326
+      }
+    }
+  ],
+  "statistics": {
+    "direct_rest_exact_success_rate": 50.0,
+    "direct_rest_exact_avg_time": 0.5977259159088135,
+    "direct_rest_exact_unique_successes": 0,
+    "direct_rest_fuzzy_success_rate": 50.0,
+    "direct_rest_fuzzy_avg_time": 0.316754412651062,
+    "direct_rest_fuzzy_unique_successes": 0,
+    "pubchempy_name_success_rate": 50.0,
+    "pubchempy_name_avg_time": 0.5847250699996949,
+    "pubchempy_name_unique_successes": 0,
+    "pubchempy_formula_success_rate": 50.0,
+    "pubchempy_formula_avg_time": 0.3426093339920044,
+    "pubchempy_formula_unique_successes": 0,
+    "sourcetable_success_rate": 50.0,
+    "sourcetable_avg_time": 0.5850650787353515,
+    "sourcetable_unique_successes": 0,
+    "direct_rest_exact_direct_rest_fuzzy_combined_success_rate": 50.0,
+    "direct_rest_exact_pubchempy_name_combined_success_rate": 50.0,
+    "direct_rest_exact_pubchempy_formula_combined_success_rate": 50.0,
+    "direct_rest_exact_sourcetable_combined_success_rate": 50.0,
+    "direct_rest_fuzzy_pubchempy_name_combined_success_rate": 50.0,
+    "direct_rest_fuzzy_pubchempy_formula_combined_success_rate": 50.0,
+    "direct_rest_fuzzy_sourcetable_combined_success_rate": 50.0,
+    "pubchempy_name_pubchempy_formula_combined_success_rate": 50.0,
+    "pubchempy_name_sourcetable_combined_success_rate": 50.0,
+    "pubchempy_formula_sourcetable_combined_success_rate": 50.0,
+    "direct_rest_exact_direct_rest_fuzzy_pubchempy_name_combined_success_rate": 50.0,
+    "direct_rest_exact_direct_rest_fuzzy_pubchempy_formula_combined_success_rate": 50.0,
+    "direct_rest_exact_direct_rest_fuzzy_sourcetable_combined_success_rate": 50.0,
+    "direct_rest_exact_pubchempy_name_pubchempy_formula_combined_success_rate": 50.0,
+    "direct_rest_exact_pubchempy_name_sourcetable_combined_success_rate": 50.0,
+    "direct_rest_exact_pubchempy_formula_sourcetable_combined_success_rate": 50.0,
+    "direct_rest_fuzzy_pubchempy_name_pubchempy_formula_combined_success_rate": 50.0,
+    "direct_rest_fuzzy_pubchempy_name_sourcetable_combined_success_rate": 50.0,
+    "direct_rest_fuzzy_pubchempy_formula_sourcetable_combined_success_rate": 50.0,
+    "pubchempy_name_pubchempy_formula_sourcetable_combined_success_rate": 50.0,
+    "direct_rest_exact_direct_rest_fuzzy_pubchempy_name_pubchempy_formula_combined_success_rate": 50.0,
+    "direct_rest_exact_direct_rest_fuzzy_pubchempy_name_sourcetable_combined_success_rate": 50.0,
+    "direct_rest_exact_direct_rest_fuzzy_pubchempy_formula_sourcetable_combined_success_rate": 50.0,
+    "direct_rest_exact_pubchempy_name_pubchempy_formula_sourcetable_combined_success_rate": 50.0,
+    "direct_rest_fuzzy_pubchempy_name_pubchempy_formula_sourcetable_combined_success_rate": 50.0,
+    "direct_rest_exact_direct_rest_fuzzy_pubchempy_name_pubchempy_formula_sourcetable_combined_success_rate": 50.0
+  }
+}

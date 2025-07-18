@@ -22,214 +22,53 @@ class ModelInfo(BaseModel):
     provider: ProviderType = Field(description="The LLM provider")
     categories: List[ModelCategory] = Field(description="Model capabilities")
     context_length: int = Field(description="Maximum context length in tokens")
-    is_default: bool = Field(default=False, description="Whether this is a default model")
-    default_for: List[str] = Field(default_factory=list, description="List of use cases for which this model is default (e.g. 'geometry', 'molecular')")
-    api_params: Dict[str, Any] = Field(default_factory=dict, description="Provider-specific API parameters")
+    is_default: bool = Field(description="Whether this is a default model")
+    default_for: List[str] = Field(description="List of tasks this model is default for")
+    api_params: Dict[str, Any] = Field(description="Additional API parameters")
 
-# Register LLM models
 def register_models():
     """Register all supported LLM models with the registry"""
     
-    ModelRegistry.register(
-        "o1",
-        ModelInfo,
-        lambda *args, **kwargs: ModelInfo(
-            name=kwargs.get("name", "o1"),
-            display_name=kwargs.get("display_name", "o1"),
-            provider=kwargs.get("provider", ProviderType.OPENAI),
-            categories=kwargs.get("categories", [ModelCategory.GENERAL, ModelCategory.REASONING]),
-            context_length=kwargs.get("context_length", 128000),
-            is_default=kwargs.get("is_default", False),
-            api_params=kwargs.get("api_params", {})
-        )
-    )
+    # Clear existing registry
+    ModelRegistry._registry.clear()
 
-    ModelRegistry.register(
-        "o3-mini",
-        ModelInfo,
-        lambda *args, **kwargs: ModelInfo(
-            name=kwargs.get("name", "o3-mini"),
-            display_name=kwargs.get("display_name", "o3-mini"),
-            provider=kwargs.get("provider", ProviderType.OPENAI),
-            categories=kwargs.get("categories", [ModelCategory.GENERAL, ModelCategory.REASONING]),
-            context_length=kwargs.get("context_length", 128000),
-            is_default=kwargs.get("is_default", False),
-            api_params=kwargs.get("api_params", {})
-        )
-    )
+    # Register OpenAI models
+    def create_model_factory(model_data):
+        def factory(*args, **kwargs):
+            data = model_data.copy()
+            data.update(kwargs)
+            return ModelInfo(**data)
+        return factory
 
-    ModelRegistry.register(
-        "gpt-4.5-preview",
-        ModelInfo,
-        lambda *args, **kwargs: ModelInfo(
-            name=kwargs.get("name", "gpt-4.5-preview"),
-            display_name=kwargs.get("display_name", "GPT-4.5 Preview"),
-            provider=kwargs.get("provider", ProviderType.OPENAI),
-            categories=kwargs.get("categories", [ModelCategory.GENERAL, ModelCategory.REASONING, ModelCategory.CODE]),
-            context_length=kwargs.get("context_length", 128000),
-            is_default=kwargs.get("is_default", False),
-            api_params=kwargs.get("api_params", {})
+    models = [
+        {
+            "name": "o3-mini",
+            "display_name": "OpenAI GPT-3.5 Mini",
+            "provider": ProviderType.OPENAI,
+            "categories": [ModelCategory.GENERAL, ModelCategory.REASONING],
+            "context_length": 16385,
+            "is_default": True,
+            "default_for": ["general", "molecular"],
+            "api_params": {}
+        },
+        {
+            "name": "gpt-4",
+            "display_name": "OpenAI GPT-4",
+            "provider": ProviderType.OPENAI,
+            "categories": [ModelCategory.GENERAL, ModelCategory.REASONING],
+            "context_length": 8192,
+            "is_default": False,
+            "default_for": [],
+            "api_params": {}
+        }
+    ]
+
+    for model_data in models:
+        ModelRegistry.register(
+            model_data["name"],
+            ModelInfo,
+            create_model_factory(model_data)
         )
-    )
-    
-    
-    ModelRegistry.register(
-        "gpt-4o",
-        ModelInfo,
-        lambda *args, **kwargs: ModelInfo(
-            name=kwargs.get("name", "gpt-4o"),
-            display_name=kwargs.get("display_name", "GPT-4o"),
-            provider=kwargs.get("provider", ProviderType.OPENAI),
-            categories=kwargs.get("categories", [ModelCategory.GENERAL, ModelCategory.REASONING, ModelCategory.VISION]),
-            context_length=kwargs.get("context_length", 128000),
-            is_default=kwargs.get("is_default", False),
-            api_params=kwargs.get("api_params", {})
-        )
-    )
-    
-    # Anthropic models
-    ModelRegistry.register(
-        "claude-3-7-sonnet-latest",
-        ModelInfo,
-        lambda *args, **kwargs: ModelInfo(
-            name=kwargs.get("name", "claude-3-7-sonnet-latest"),
-            display_name=kwargs.get("display_name", "Claude 3.7 Sonnet"),
-            provider=kwargs.get("provider", ProviderType.ANTHROPIC),
-            categories=kwargs.get("categories", [ModelCategory.GENERAL, ModelCategory.REASONING, ModelCategory.CODE]),
-            context_length=kwargs.get("context_length", 200000),
-            is_default=kwargs.get("is_default", False),
-            api_params=kwargs.get("api_params", {})
-        )
-    )
-    
-    ModelRegistry.register(
-        "claude-3-5-sonnet-latest",
-        ModelInfo,
-        lambda *args, **kwargs: ModelInfo(
-            name=kwargs.get("name", "claude-3-5-sonnet-latest"),
-            display_name=kwargs.get("display_name", "Claude 3.5 Sonnet"),
-            provider=kwargs.get("provider", ProviderType.ANTHROPIC),
-            categories=kwargs.get("categories", [ModelCategory.GENERAL, ModelCategory.REASONING]),
-            context_length=kwargs.get("context_length", 8192),
-            is_default=kwargs.get("is_default", False),
-            api_params=kwargs.get("api_params", {})
-        )
-    )
-    
-    # Groq models - Use the correct model names as shown in Groq API docs
-    ModelRegistry.register(
-        "llama3-70b-8192",
-        ModelInfo,
-        lambda *args, **kwargs: ModelInfo(
-            name=kwargs.get("name", "llama3-70b-8192"),
-            display_name=kwargs.get("display_name", "Llama 3 70B"),
-            provider=kwargs.get("provider", ProviderType.GROQ),
-            categories=kwargs.get("categories", [ModelCategory.GENERAL]),
-            context_length=kwargs.get("context_length", 8192),
-            is_default=kwargs.get("is_default", False),
-            api_params=kwargs.get("api_params", {})
-        )
-    )
-    
-    ModelRegistry.register(
-        "llama3-8b-8192",
-        ModelInfo,
-        lambda *args, **kwargs: ModelInfo(
-            name=kwargs.get("name", "llama3-8b-8192"),
-            display_name=kwargs.get("display_name", "Llama 3 8B"),
-            provider=kwargs.get("provider", ProviderType.GROQ),
-            categories=kwargs.get("categories", [ModelCategory.GENERAL]),
-            context_length=kwargs.get("context_length", 8192),
-            is_default=kwargs.get("is_default", False),
-            api_params=kwargs.get("api_params", {})
-        )
-    )
-    
-    ModelRegistry.register(
-        "mixtral-8x7b-32768",
-        ModelInfo,
-        lambda *args, **kwargs: ModelInfo(
-            name=kwargs.get("name", "mixtral-8x7b-32768"),
-            display_name=kwargs.get("display_name", "Mixtral 8x7B"),
-            provider=kwargs.get("provider", ProviderType.GROQ),
-            categories=kwargs.get("categories", [ModelCategory.GENERAL]),
-            context_length=kwargs.get("context_length", 32768),
-            is_default=kwargs.get("is_default", False),
-            api_params=kwargs.get("api_params", {})
-        )
-    )
-    
-    ModelRegistry.register(
-        "gemma-7b-it",
-        ModelInfo,
-        lambda *args, **kwargs: ModelInfo(
-            name=kwargs.get("name", "gemma-7b-it"),
-            display_name=kwargs.get("display_name", "Gemma 7B-IT"),
-            provider=kwargs.get("provider", ProviderType.GROQ),
-            categories=kwargs.get("categories", [ModelCategory.GENERAL]),
-            context_length=kwargs.get("context_length", 8192),
-            is_default=kwargs.get("is_default", False),
-            api_params=kwargs.get("api_params", {})
-        )
-    )
-    
-    # New Groq models
-    ModelRegistry.register(
-        "deepseek-r1-distill-llama-70b",
-        ModelInfo,
-        lambda *args, **kwargs: ModelInfo(
-            name=kwargs.get("name", "deepseek-r1-distill-llama-70b"),
-            display_name=kwargs.get("display_name", "DeepSeek R1 Distill Llama 70B"),
-            provider=kwargs.get("provider", ProviderType.GROQ),
-            categories=kwargs.get("categories", [ModelCategory.GENERAL, ModelCategory.REASONING, ModelCategory.CODE]),
-            context_length=kwargs.get("context_length", 128000),
-            is_default=kwargs.get("is_default", False),
-            default_for=kwargs.get("default_for", ["geometry"]),
-            api_params=kwargs.get("api_params", {})
-        )
-    )
-    
-    ModelRegistry.register(
-        "llama-3.2-90b-vision-preview",
-        ModelInfo,
-        lambda *args, **kwargs: ModelInfo(
-            name=kwargs.get("name", "llama-3.2-90b-vision-preview"),
-            display_name=kwargs.get("display_name", "Llama 3.2 90B Vision"),
-            provider=kwargs.get("provider", ProviderType.GROQ),
-            categories=kwargs.get("categories", [ModelCategory.GENERAL, ModelCategory.VISION]),
-            context_length=kwargs.get("context_length", 128000),
-            is_default=kwargs.get("is_default", False),
-            api_params=kwargs.get("api_params", {})
-        )
-    )
-    
-    ModelRegistry.register(
-        "qwen-2.5-32b",
-        ModelInfo,
-        lambda *args, **kwargs: ModelInfo(
-            name=kwargs.get("name", "qwen-2.5-32b"),
-            display_name=kwargs.get("display_name", "Qwen 2.5 32B"),
-            provider=kwargs.get("provider", ProviderType.GROQ),
-            categories=kwargs.get("categories", [ModelCategory.GENERAL, ModelCategory.CODE]),
-            context_length=kwargs.get("context_length", 128000),
-            is_default=kwargs.get("is_default", False),
-            api_params=kwargs.get("api_params", {})
-        )
-    )
-    
-    ModelRegistry.register(
-        "llama-3.3-70b-specdec",
-        ModelInfo,
-        lambda *args, **kwargs: ModelInfo(
-            name=kwargs.get("name", "llama-3.3-70b-specdec"),
-            display_name=kwargs.get("display_name", "Llama 3.3 70B SpecDec"),
-            provider=kwargs.get("provider", ProviderType.GROQ),
-            categories=kwargs.get("categories", [ModelCategory.GENERAL, ModelCategory.REASONING]),
-            context_length=kwargs.get("context_length", 8192),
-            is_default=kwargs.get("is_default", False),
-            api_params=kwargs.get("api_params", {})
-        )
-    )
 
 # Helper functions for working with models
 def get_llm_service(model_name: str) -> LLMService:

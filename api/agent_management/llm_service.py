@@ -1,5 +1,5 @@
 """
-LLM Service Module - Handles interactions with various LLM providers (OpenAI, Anthropic, Groq).
+LLM Service Module - Handles interactions with LLM provider OpenAI
 """
 
 from abc import ABC, abstractmethod
@@ -17,6 +17,10 @@ load_dotenv()
 # Type for the response model
 T = TypeVar('T', bound=BaseModel)
 
+class ProviderType(str, Enum):
+    """Supported LLM providers"""
+    OPENAI = "openai"
+
 class MessageRole(str, Enum):
     """Standardized message roles across providers"""
     SYSTEM = "system"
@@ -28,15 +32,9 @@ class Message(BaseModel):
     role: MessageRole
     content: str
 
-class ProviderType(str, Enum):
-    """Supported LLM providers"""
-    OPENAI = "openai"
-    ANTHROPIC = "anthropic"
-    GROQ = "groq"
-
 class LLMModelConfig(BaseModel):
     """Configuration for an LLM model"""
-    provider: ProviderType
+    provider: ProviderType = ProviderType.OPENAI
     model_name: str
     api_key: Optional[str] = None
     
@@ -89,7 +87,11 @@ class LLMProvider(ABC):
 class LLMService:
     """Main service class for interacting with LLM providers"""
     
-    def __init__(self, config: LLMModelConfig):
+    def __init__(self, config: Optional[LLMModelConfig] = None):
+        # Provide a sensible default configuration so callers (including tests)
+        # can simply instantiate `LLMService()` without arguments.
+        if config is None:
+            config = LLMModelConfig(provider=ProviderType.OPENAI, model_name="o3-mini")
         self.config = config
         self._provider = self._create_provider(config)
 
@@ -98,12 +100,6 @@ class LLMService:
         if config.provider == ProviderType.OPENAI:
             from .providers.openai_provider import OpenAIProvider
             return OpenAIProvider(api_key=config.api_key)
-        elif config.provider == ProviderType.ANTHROPIC:
-            from .providers.anthropic_provider import AnthropicProvider
-            return AnthropicProvider(api_key=config.api_key)
-        elif config.provider == ProviderType.GROQ:
-            from .providers.groq_provider import GroqProvider
-            return GroqProvider(api_key=config.api_key)
         else:
             raise ValueError(f"Unsupported provider type: {config.provider}")
 
@@ -178,3 +174,12 @@ You must return a valid ThreeGroup structure with all required fields. The respo
     )
 
     return service.generate_structured(request)
+
+
+# Similarly expose OpenAIProvider directly for extensions that expect it
+try:
+    from .providers.openai_provider import OpenAIProvider  # noqa: F401
+except Exception:
+    class OpenAIProvider:  # type: ignore
+        def __init__(self, *args, **kwargs):
+            raise ImportError("OpenAIProvider requires the `openai` package, which is not installed.")

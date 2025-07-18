@@ -1,5 +1,7 @@
+import math
 import svgwrite # type: ignore
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple, Optional
+from .models import DiagramPlan
 
 # CPK colors dictionary (common elements)
 CPK_COLORS = {
@@ -123,52 +125,76 @@ def _render_single_molecule(dwg: svgwrite.Drawing, data: Dict[str, Any]):
             
         dwg.add(dwg.text(label, insert=(x, y), text_anchor=anchor, font_size=f"{label_font_size}px"))
 
-def render_diagram(molecules: List[Dict[str, Any]], arrows: List[Dict[str, Any]], width: int, height: int) -> str:
-    dwg = svgwrite.Drawing(size=(f"{width}px", f"{height}px"), profile='full') # Added units and profile
-    # Optional: Add a background color for clarity, or make it transparent
-    # dwg.add(dwg.rect(insert=(0, 0), size=('100%', '100%'), fill='lightgrey'))
+def render_diagram(
+    plan: DiagramPlan,
+    molecule_data: Dict[str, List[Dict[str, Any]]],
+    canvas_width: Optional[int] = None,
+    canvas_height: Optional[int] = None
+) -> str:
+    """
+    Render a molecular diagram as SVG.
 
-    for mol_data in molecules:
-        _render_single_molecule(dwg, mol_data)
+    Args:
+        plan: The diagram plan containing molecule positions and arrows
+        molecule_data: Dictionary mapping molecule names to their 2D structure data
+        canvas_width: Optional canvas width (default from plan)
+        canvas_height: Optional canvas height (default from plan)
 
-    for arrow_data in arrows or []:
-        start = arrow_data.get("start")
-        end = arrow_data.get("end")
-        if start and end and len(start) == 2 and len(end) == 2:
+    Returns:
+        SVG string representation of the diagram
+    """
+    # Use provided dimensions or fall back to plan defaults
+    width = canvas_width or plan.canvas_width
+    height = canvas_height or plan.canvas_height
+
+    # Create SVG drawing
+    dwg = svgwrite.Drawing(size=(width, height))
+    
+    # Add molecules
+    for molecule in plan.molecule_list:
+        name = molecule.molecule
+        if name in molecule_data:
+            data = molecule_data[name]
+            data["box"] = {"x": molecule.x, "y": molecule.y}
+            _render_single_molecule(dwg, data)
+
+    # Add arrows
+    for arrow in plan.arrows:
+        start = arrow.start
+        end = arrow.end
+        
+        # Calculate arrow direction
+        dx = end[0] - start[0]
+        dy = end[1] - start[1]
+        length = math.sqrt(dx * dx + dy * dy)
+        
+        if length > 0:
+            # Unit direction vector
+            udx = dx / length
+            udy = dy / length
+            
+            # Arrow head parameters
+            arrow_size = 10
+            angle = math.pi / 6  # 30 degrees
+            
+            # Calculate arrow head points
+            p1x = end[0] - arrow_size * (udx * math.cos(angle) - udy * math.sin(angle))
+            p1y = end[1] - arrow_size * (udx * math.sin(angle) + udy * math.cos(angle))
+            p2x = end[0] - arrow_size * (udx * math.cos(angle) + udy * math.sin(angle))
+            p2y = end[1] - arrow_size * (-udx * math.sin(angle) + udy * math.cos(angle))
+            
             # Draw arrow line
-            line = dwg.line(start=start, end=end, stroke="black", stroke_width=1.5)
-            # Add arrowhead - simple triangle
-            # Calculate direction vector
-            dir_x = end[0] - start[0]
-            dir_y = end[1] - start[1]
-            length = (dir_x**2 + dir_y**2)**0.5
-            if length == 0: continue # Avoid division by zero for zero-length arrows
+            dwg.add(dwg.line(
+                start=start,
+                end=end,
+                stroke="black",
+                stroke_width=2
+            ))
             
-            # Normalize direction vector
-            udx, udy = dir_x / length, dir_y / length
-            
-            arrow_size = 8 # Size of arrowhead lines
-            angle = 0.5 # radians, about 30 degrees
-            
-            # Point 1 for arrowhead
-            p1x = end[0] - arrow_size * (udx * svgwrite.utils.cos(angle) - udy * svgwrite.utils.sin(angle))
-            p1y = end[1] - arrow_size * (udy * svgwrite.utils.cos(angle) + udx * svgwrite.utils.sin(angle))
-            
-            # Point 2 for arrowhead
-            p2x = end[0] - arrow_size * (udx * svgwrite.utils.cos(-angle) - udy * svgwrite.utils.sin(-angle))
-            p2y = end[1] - arrow_size * (udy * svgwrite.utils.cos(-angle) + udx * svgwrite.utils.sin(-angle))
-            
-            dwg.add(line)
-            dwg.add(dwg.polyline(points=[(p1x,p1y), end, (p2x,p2y)], stroke="black", fill="none", stroke_width=1.5))
-            
-            if arrow_data.get("text"):
-                # Position text near the middle of the arrow, slightly offset perpendicular to the arrow
-                mid_x = (start[0] + end[0]) / 2
-                mid_y = (start[1] + end[1]) / 2
-                # Offset perpendicular to the arrow direction
-                offset_val = 10
-                text_x = mid_x + offset_val * -udy # Perpendicular x
-                text_y = mid_y + offset_val * udx  # Perpendicular y
-                dwg.add(dwg.text(arrow_data["text"], insert=(text_x, text_y), text_anchor="middle", font_size="12px"))
+            # Draw arrow head
+            dwg.add(dwg.polygon(
+                points=[end, (p1x, p1y), (p2x, p2y)],
+                fill="black"
+            ))
 
     return dwg.tostring()
