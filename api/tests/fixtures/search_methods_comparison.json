@@ -14,7 +14,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.3827955722808838
+        "processing_time": 0.40532588958740234
       },
       "direct_rest_fuzzy": {
         "success": true,
@@ -28,7 +28,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.39188098907470703
+        "processing_time": 0.38923120498657227
       },
       "pubchempy_name": {
         "success": true,
@@ -42,7 +42,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.4440016746520996
+        "processing_time": 0.39997220039367676
       },
       "pubchempy_formula": {
         "success": true,
@@ -56,7 +56,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.44155120849609375
+        "processing_time": 0.39319801330566406
       },
       "sourcetable": {
         "success": true,
@@ -70,7 +70,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.376039981842041
+        "processing_time": 0.395313024520874
       }
     },
     {
@@ -87,7 +87,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.4029402732849121
+        "processing_time": 0.4115321636199951
       },
       "direct_rest_fuzzy": {
         "success": true,
@@ -101,7 +101,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.667078971862793
+        "processing_time": 0.4014930725097656
       },
       "pubchempy_name": {
         "success": true,
@@ -115,7 +115,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.5498490333557129
+        "processing_time": 0.4004218578338623
       },
       "pubchempy_formula": {
         "success": true,
@@ -129,7 +129,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.5629849433898926
+        "processing_time": 0.5910210609436035
       },
       "sourcetable": {
         "success": true,
@@ -143,7 +143,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.40851306915283203
+        "processing_time": 0.44832372665405273
       }
     },
     {
@@ -160,7 +160,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.3852858543395996
+        "processing_time": 0.3892631530761719
       },
       "direct_rest_fuzzy": {
         "success": true,
@@ -174,7 +174,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.3763549327850342
+        "processing_time": 0.3830568790435791
       },
       "pubchempy_name": {
         "success": true,
@@ -188,7 +188,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.4682178497314453
+        "processing_time": 0.3807222843170166
       },
       "pubchempy_formula": {
         "success": true,
@@ -202,7 +202,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.432858943939209
+        "processing_time": 0.41234612464904785
       },
       "sourcetable": {
         "success": true,
@@ -216,7 +216,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.3858492374420166
+        "processing_time": 0.3834381103515625
       }
     },
     {
@@ -227,7 +227,7 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 0.5523059368133545
+        "processing_time": 0.545557975769043
       },
       "direct_rest_fuzzy": {
         "success": false,
@@ -235,7 +235,7 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 0.17403388023376465
+        "processing_time": 0.175628662109375
       },
       "pubchempy_name": {
         "success": false,
@@ -243,7 +243,7 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 0.5306999683380127
+        "processing_time": 0.5443918704986572
       },
       "pubchempy_formula": {
         "success": false,
@@ -251,7 +251,7 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 0.17183780670166016
+        "processing_time": 0.17258501052856445
       },
       "sourcetable": {
         "success": false,
@@ -259,7 +259,7 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 0.5281727313995361
+        "processing_time": 0.5403649806976318
       }
     },
     {
@@ -270,7 +270,7 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 1.6138839721679688
+        "processing_time": 1.7273378372192383
       },
       "direct_rest_fuzzy": {
         "success": false,
@@ -278,7 +278,7 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 0.5181620121002197
+        "processing_time": 0.5108809471130371
       },
       "pubchempy_name": {
         "success": false,
@@ -286,7 +286,7 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 1.6102259159088135
+        "processing_time": 1.6407151222229004
       },
       "pubchempy_formula": {
         "success": false,
@@ -294,7 +294,7 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 0.5170459747314453
+        "processing_time": 0.5255908966064453
       },
       "sourcetable": {
         "success": false,
@@ -302,7 +302,7 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 1.604046106338501
+        "processing_time": 1.6333820819854736
       }
     },
     {
@@ -313,7 +313,7 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 0.5753228664398193
+        "processing_time": 0.5578980445861816
       },
       "direct_rest_fuzzy": {
         "success": false,
@@ -321,7 +321,7 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 0.1727449893951416
+        "processing_time": 0.17291593551635742
       },
       "pubchempy_name": {
         "success": false,
@@ -329,7 +329,7 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 0.5755949020385742
+        "processing_time": 0.6049742698669434
       },
       "pubchempy_formula": {
         "success": false,
@@ -337,7 +337,7 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 0.16811203956604004
+        "processing_time": 0.18015122413635254
       },
       "sourcetable": {
         "success": false,
@@ -345,7 +345,7 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 0.5701198577880859
+        "processing_time": 0.5659732818603516
       }
     },
     {
@@ -356,7 +356,7 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 0.6042571067810059
+        "processing_time": 0.5243961811065674
       },
       "direct_rest_fuzzy": {
         "success": false,
@@ -364,7 +364,7 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 0.17027688026428223
+        "processing_time": 0.16940903663635254
       },
       "pubchempy_name": {
         "success": false,
@@ -372,7 +372,7 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 0.7767927646636963
+        "processing_time": 0.5329599380493164
       },
       "pubchempy_formula": {
         "success": false,
@@ -380,7 +380,7 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 0.23050713539123535
+        "processing_time": 0.17160391807556152
       },
       "sourcetable": {
         "success": false,
@@ -388,7 +388,7 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 0.8991763591766357
+        "processing_time": 0.5438637733459473
       }
     },
     {
@@ -405,7 +405,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.405472993850708
+        "processing_time": 0.3942248821258545
       },
       "direct_rest_fuzzy": {
         "success": true,
@@ -419,7 +419,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.3768160343170166
+        "processing_time": 0.38695502281188965
       },
       "pubchempy_name": {
         "success": true,
@@ -433,7 +433,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.3814537525177002
+        "processing_time": 0.3864302635192871
       },
       "pubchempy_formula": {
         "success": true,
@@ -447,7 +447,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.3728609085083008
+        "processing_time": 0.3897368907928467
       },
       "sourcetable": {
         "success": true,
@@ -461,7 +461,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.38868212699890137
+        "processing_time": 0.38544487953186035
       }
     },
     {
@@ -478,7 +478,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.4083678722381592
+        "processing_time": 0.4452331066131592
       },
       "direct_rest_fuzzy": {
         "success": true,
@@ -492,7 +492,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.4108250141143799
+        "processing_time": 0.40506815910339355
       },
       "pubchempy_name": {
         "success": true,
@@ -506,7 +506,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.40343403816223145
+        "processing_time": 0.3908097743988037
       },
       "pubchempy_formula": {
         "success": true,
@@ -520,7 +520,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.4368419647216797
+        "processing_time": 0.40418100357055664
       },
       "sourcetable": {
         "success": true,
@@ -534,7 +534,7 @@
           }
         ],
         "error": null,
-        "processing_time": 0.3967709541320801
+        "processing_time": 0.3919069766998291
       }
     },
     {
@@ -545,7 +545,7 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 0.5698168277740479
+        "processing_time": 0.5764899253845215
       },
       "direct_rest_fuzzy": {
         "success": false,
@@ -553,7 +553,7 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 0.17928385734558105
+        "processing_time": 0.17290520668029785
       },
       "pubchempy_name": {
         "success": false,
@@ -561,7 +561,7 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 0.5663230419158936
+        "processing_time": 0.5658531188964844
       },
       "pubchempy_formula": {
         "success": false,
@@ -569,7 +569,7 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 0.17356395721435547
+        "processing_time": 0.18567919731140137
       },
       "sourcetable": {
         "success": false,
@@ -577,25 +577,25 @@
         "num_molecules_found": 0,
         "molecules": [],
         "error": null,
-        "processing_time": 0.5732390880584717
+        "processing_time": 0.5626399517059326
       }
     }
   ],
   "statistics": {
     "direct_rest_exact_success_rate": 50.0,
-    "direct_rest_exact_avg_time": 0.5900449275970459,
+    "direct_rest_exact_avg_time": 0.5977259159088135,
     "direct_rest_exact_unique_successes": 0,
     "direct_rest_fuzzy_success_rate": 50.0,
-    "direct_rest_fuzzy_avg_time": 0.343745756149292,
+    "direct_rest_fuzzy_avg_time": 0.316754412651062,
     "direct_rest_fuzzy_unique_successes": 0,
     "pubchempy_name_success_rate": 50.0,
-    "pubchempy_name_avg_time": 0.6306592941284179,
+    "pubchempy_name_avg_time": 0.5847250699996949,
     "pubchempy_name_unique_successes": 0,
     "pubchempy_formula_success_rate": 50.0,
-    "pubchempy_formula_avg_time": 0.3508164882659912,
+    "pubchempy_formula_avg_time": 0.3426093339920044,
     "pubchempy_formula_unique_successes": 0,
     "sourcetable_success_rate": 50.0,
-    "sourcetable_avg_time": 0.6130609512329102,
+    "sourcetable_avg_time": 0.5850650787353515,
     "sourcetable_unique_successes": 0,
     "direct_rest_exact_direct_rest_fuzzy_combined_success_rate": 50.0,
     "direct_rest_exact_pubchempy_name_combined_success_rate": 50.0,

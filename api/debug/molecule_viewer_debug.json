@@ -1,8 +1,0 @@
-{
-  "molecule_name": "Test Molecule",
-  "pdb_data_length": 418,
-  "tsx_code_length": 13085,
-  "enable_annotations": true,
-  "template_path": "/Users/jakekinchen/Documents/sci-vis-ai-server/api/agent_management/molecule-viewer.template.tsx",
-  "timestamp": "2025-03-05T18:38:20.736601"
-}

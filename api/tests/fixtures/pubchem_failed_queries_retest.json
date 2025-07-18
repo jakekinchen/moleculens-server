@@ -1,13 +1,13 @@
 {
   "summary": {
-    "success_rate": 0.0,
-    "total_topics": 28,
-    "successful_queries": 0,
-    "failed_queries": 28,
-    "timestamp": "2025-07-17T18:33:45.705840"
+    "original_failures": 28,
+    "now_successful": 0,
+    "still_failing": 28,
+    "improvement_rate": 0.0,
+    "timestamp": "2025-07-17T18:34:30.415017"
   },
-  "successful_results": [],
-  "failed_results": [
+  "now_successful": [],
+  "still_failing": [
     {
       "topic": "Teach me about cryptands and 3D host-guest complexation",
       "success": false,
