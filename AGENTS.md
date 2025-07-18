@@ -70,4 +70,12 @@ The ability to deliver immersive molecular experiences differentiates the platfo
 
 Conclusion
 
-The Moleculens server already leverages PyMOL and RDKit to render molecular images, but it lacks integration with modern RCSB tools and does not support interactive or XR‑ready outputs.  Recent improvements to RCSB’s Mol* viewer—improved rendering, glTF export and user‑upload functionality ￼ ￼—provide an opportunity to build a powerful on‑demand graphics service.  By systematically adding data retrieval layers, modular rendering templates, Mol* integration and XR/VR export capabilities, the platform can evolve into a full‑fledged molecular visualization pipeline.  The most lucrative path involves investing in XR/VR outputs via glTF and USDZ export, enabling immersive experiences for education, research and corporate clients.
+The Moleculens server already leverages PyMOL and RDKit to render molecular images, but it lacks integration with modern RCSB tools and does not support interactive or XR‑ready outputs.  Recent improvements to RCSB’s Mol* viewer—improved rendering, glTF export and user‑upload functionality—provide an opportunity to build a powerful on‑demand graphics service.  By systematically adding data retrieval layers, modular rendering templates, Mol* integration and XR/VR export capabilities, the platform can evolve into a full‑fledged molecular visualization pipeline.  The most lucrative path involves investing in XR/VR outputs via glTF and USDZ export, enabling immersive experiences for education, research and corporate clients.
+
+### July 2025 Progress: Initial RCSB Integration
+
+* Implemented a simple `RCSBAgent` that downloads PDB or mmCIF files from the RCSB repository.
+* Added a `/rcsb/fetch-structure/` endpoint returning the raw structure data.
+* Registered this agent in `AgentFactory` and extended `AgentType` with a `RCSB` option.
+* Created tests that stub heavy dependencies (RDKit, OpenAI) and validate both geometry and RCSB routes.
+* Pinned `httpx` to a compatible version so Starlette's `TestClient` works correctly during testing.
