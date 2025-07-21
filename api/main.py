@@ -1,6 +1,8 @@
 import datetime
 import os
+import sys
 import threading
+import types
 from pathlib import Path
 from typing import Any, Dict
 
@@ -109,3 +111,65 @@ app.include_router(routers.prompt.router)
 app.include_router(routers.geometry.router)
 app.include_router(routers.render.router)
 app.include_router(routers.rcsb.router)
+
+# ---------------------------------------------------------------------------
+# Optional heavy dependencies
+# ---------------------------------------------------------------------------
+# These libraries are large binary wheels that may be absent in sandboxed or CI
+# environments (e.g., Codex, Cloud runners).  Import failures would normally
+# crash the process and trigger an infinite restart loop.  To prevent that we
+# create minimal stub modules exposing just the attributes referenced by the
+# rest of the codebase.  When the real packages are available locally, the
+# `try` imports succeed and the stubs are not used.
+
+# ----- PyMOL ---------------------------------------------------------------
+try:
+    import pymol  # type: ignore
+except ModuleNotFoundError:
+    pymol = types.ModuleType("pymol")
+
+    def _noop(*args, **kwargs):
+        """No-op replacement for PyMOL functions when library is missing."""
+        pass
+
+    pymol.finish_launching = _noop  # type: ignore
+
+    class _CmdStub:  # noqa: D401
+        def reinitialize(self, *args, **kwargs):
+            pass
+
+    pymol.cmd = _CmdStub()  # type: ignore
+    sys.modules["pymol"] = pymol
+
+# ----- Redis --------------------------------------------------------------
+try:
+    import redis  # type: ignore
+except ModuleNotFoundError:
+    redis = types.ModuleType("redis")
+
+    class _DummyRedis:  # noqa: D401
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def ping(self):
+            return True
+
+    redis.Redis = _DummyRedis  # type: ignore
+    sys.modules["redis"] = redis
+
+# ----- PubChemPy ----------------------------------------------------------
+try:
+    import pubchempy  # type: ignore
+except ModuleNotFoundError:
+    pubchempy = types.ModuleType("pubchempy")
+
+    class _DummyCompound:  # noqa: D401
+        def __getattr__(self, name):
+            return None
+
+    def _unavailable(*args, **kwargs):
+        raise ImportError("pubchempy is not installed in this environment.")
+
+    pubchempy.Compound = _DummyCompound  # type: ignore
+    pubchempy.get_compounds = _unavailable  # type: ignore
+    sys.modules["pubchempy"] = pubchempy
