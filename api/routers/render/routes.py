@@ -122,7 +122,8 @@ async def render(req: RenderRequest):
 
 
 def _build_response(path: str, fmt: str, meta: Dict[str, Any]):
-    """Return a FileResponse or, for large payloads, a JSON pointer to static storage."""
+    """Return a FileResponse or, for large payloads, a JSON pointer to static
+    storage."""
     media_types = {
         "image": "image/png",
         "model": "chemical/x-pdb",

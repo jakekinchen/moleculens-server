@@ -3,14 +3,13 @@
 import os
 import sys
 import types
-from typing import Any, Dict, Generator, Generic, Optional, Type, TypeVar
 from enum import Enum
-
-from pydantic import BaseModel
+from typing import Any, Dict, Generator, Generic, Optional, Type, TypeVar
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from pydantic import BaseModel
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
@@ -18,20 +17,31 @@ import importlib.util
 from pathlib import Path
 
 # Load the RCSB agent module directly and expose it under the expected package path
-_agent_path = Path(__file__).resolve().parents[1] / "agent_management" / "agents" / "rcsb_agent.py"
-spec_agent = importlib.util.spec_from_file_location("agent_management.agents.rcsb_agent", _agent_path)
+_agent_path = (
+    Path(__file__).resolve().parents[1]
+    / "agent_management"
+    / "agents"
+    / "rcsb_agent.py"
+)
+spec_agent = importlib.util.spec_from_file_location(
+    "agent_management.agents.rcsb_agent", _agent_path
+)
 rcsb_agent_mod = importlib.util.module_from_spec(spec_agent)
 assert spec_agent and spec_agent.loader
 spec_agent.loader.exec_module(rcsb_agent_mod)
 
 # Minimal model_config stub required by models and llm_service
 model_config_stub = types.ModuleType("api.agent_management.model_config")
+
+
 class _ProviderType(str, Enum):
     OPENAI = "openai"
+
 
 class _LLMModelConfig(BaseModel):  # type: ignore[misc]
     provider: _ProviderType
     model_name: str
+
 
 model_config_stub.ProviderType = _ProviderType
 model_config_stub.LLMModelConfig = _LLMModelConfig
@@ -54,6 +64,7 @@ sys.modules["api.agent_management.agents.rcsb_agent"] = rcsb_agent_mod
 # Provide lightweight stubs for models and the LLM service used in unit tests
 models_stub = types.ModuleType("agent_management.models")
 
+
 class LLMResponse(BaseModel):
     content: str = ""
     model: str = ""
@@ -61,6 +72,7 @@ class LLMResponse(BaseModel):
 
 
 T = TypeVar("T")
+
 
 class StructuredLLMRequest(BaseModel, Generic[T]):
     user_prompt: str
@@ -76,6 +88,7 @@ sys.modules["api.agent_management.models"] = models_stub
 
 
 llm_stub = types.ModuleType("agent_management.llm_service")
+
 
 class _DummyProvider:
     def generate(self, request: Any) -> LLMResponse:

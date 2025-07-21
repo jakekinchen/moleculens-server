@@ -1,7 +1,5 @@
 """Integration tests for API endpoints."""
 
-from typing import Generator
-
 import pytest
 from fastapi.testclient import TestClient
 

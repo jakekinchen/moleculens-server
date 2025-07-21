@@ -4,20 +4,10 @@ Orchestration Agent - Breaks down scene scripts into discrete objects for visual
 
 import asyncio
 import json
-from typing import Dict, List, Optional
+from typing import Dict
 
-from agent_management.llm_service import (
-    LLMModelConfig,
-    LLMService,
-    ProviderType,
-    StructuredLLMRequest,
-)
-from agent_management.models import (
-    OrchestrationPlan,
-    SceneObject,
-    SceneScript,
-    ThreeGroup,
-)
+from agent_management.llm_service import LLMService, StructuredLLMRequest
+from agent_management.models import OrchestrationPlan, SceneObject, SceneScript
 
 
 class OrchestrationAgent:
@@ -27,8 +17,8 @@ class OrchestrationAgent:
         self._geometry_agent = None
 
     def generate_orchestration_plan(self, script: SceneScript) -> OrchestrationPlan:
-        """
-        Generate an orchestration plan that identifies all discrete objects needed for the scene.
+        """Generate an orchestration plan that identifies all discrete objects
+        needed for the scene.
 
         Args:
             script: The scene script to analyze
@@ -142,9 +132,8 @@ Always return properly structured JSON objects matching the requested schema exa
     async def generate_geometry_from_plan(
         self, plan: OrchestrationPlan
     ) -> Dict[str, Dict]:
-        """
-        Generate Three.js geometry for each object in the orchestration plan.
-        Processes objects in parallel for improved performance.
+        """Generate Three.js geometry for each object in the orchestration
+        plan. Processes objects in parallel for improved performance.
 
         Args:
             plan: The orchestration plan containing objects to generate
@@ -166,7 +155,7 @@ Always return properly structured JSON objects matching the requested schema exa
         )
 
         async def process_object(i, obj):
-            """Process a single object and return its result"""
+            """Process a single object and return its result."""
             try:
                 print(
                     f"Generating geometry for object {i+1}/{len(plan.objects)}: {obj.name}"
@@ -218,8 +207,8 @@ Always return properly structured JSON objects matching the requested schema exa
         return results
 
     def _format_object_prompt(self, obj: SceneObject, scene_title: str) -> str:
-        """
-        Format a descriptive prompt for the geometry agent based on a scene object.
+        """Format a descriptive prompt for the geometry agent based on a scene
+        object.
 
         Args:
             obj: The scene object to generate
@@ -259,8 +248,8 @@ Focus on capturing the key visual characteristics and ensuring it fits with the 
         return prompt
 
     def generate_test_questions(self, script: SceneScript):
-        """
-        Generate multiple choice test questions based on the scene script content.
+        """Generate multiple choice test questions based on the scene script
+        content.
 
         Args:
             script: The scene script to analyze

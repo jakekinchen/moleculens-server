@@ -1,10 +1,7 @@
-"""
-Pydantic models for Three.js structured output generation.
-"""
+"""Pydantic models for Three.js structured output generation."""
 
 from typing import (
     Any,
-    Callable,
     Dict,
     Generic,
     List,
@@ -23,7 +20,7 @@ from api.agent_management.model_config import LLMModelConfig
 
 # Global Pydantic model config to avoid the "model_name" warning
 class BaseModelWithConfig(BaseModel):
-    """Base model with config that disables protected namespaces"""
+    """Base model with config that disables protected namespaces."""
 
     model_config = {
         "protected_namespaces": ()  # Remove protection for the 'model_' namespace
@@ -52,7 +49,7 @@ class StructuredLLMRequest(BaseModel, Generic[T]):
 
 
 class Vector3(BaseModel):
-    """Three.js Vector3 representation"""
+    """Three.js Vector3 representation."""
 
     x: float = Field(default=0.0, description="X coordinate")
     y: float = Field(default=0.0, description="Y coordinate")
@@ -60,7 +57,7 @@ class Vector3(BaseModel):
 
 
 class Material(BaseModel):
-    """Three.js Material properties"""
+    """Three.js Material properties."""
 
     type: str = Field(
         description="Material type (MeshBasic, MeshPhong, etc.)",
@@ -77,7 +74,7 @@ class Material(BaseModel):
 
 
 class Geometry(BaseModel):
-    """Three.js Geometry definition"""
+    """Three.js Geometry definition."""
 
     type: str = Field(
         description="Geometry type (Sphere, Cylinder, etc.)",
@@ -89,7 +86,7 @@ class Geometry(BaseModel):
 
 
 class Mesh(BaseModel):
-    """Three.js Mesh combining geometry and material"""
+    """Three.js Mesh combining geometry and material."""
 
     name: str = Field(description="Unique identifier for the mesh")
     geometry: Geometry
@@ -100,7 +97,7 @@ class Mesh(BaseModel):
 
 
 class ThreeGroup(BaseModel):
-    """Three.js Group containing multiple meshes"""
+    """Three.js Group containing multiple meshes."""
 
     name: str = Field(description="Unique identifier for the group")
     position: Vector3 = Field(default_factory=Vector3)
@@ -112,19 +109,19 @@ class ThreeGroup(BaseModel):
 
 
 class BooleanResponse(BaseModel):
-    """Model for boolean validation responses"""
+    """Model for boolean validation responses."""
 
     is_true: bool = Field(description="Whether the statement is true")
 
 
 class MolecularStructure(BaseModel):
-    """Model for molecular validation responses"""
+    """Model for molecular validation responses."""
 
     molecular_structure: str = Field(description="Molecular structure in SMILES format")
 
 
 class ScriptTimePoint(BaseModel):
-    """Model for a single time point in an animation script"""
+    """Model for a single time point in an animation script."""
 
     timecode: str = Field(description="Timecode in MM:SS format (e.g., '00:15')")
     atoms: List[str] = Field(description="List of atoms to highlight in the scene")
@@ -154,7 +151,7 @@ class SceneScript(BaseModel):
 
 
 class SceneObject(BaseModel):
-    """Model for a discrete 3D object needed in the scene"""
+    """Model for a discrete 3D object needed in the scene."""
 
     name: str = Field(description="Unique identifier for the object")
     description: Union[str, List[str]] = Field(
@@ -170,7 +167,8 @@ class SceneObject(BaseModel):
 
 
 class OrchestrationPlan(BaseModel):
-    """Model for the complete orchestration plan of objects needed for the scene"""
+    """Model for the complete orchestration plan of objects needed for the
+    scene."""
 
     scene_title: str = Field(description="Title of the scene")
     objects: List[SceneObject] = Field(
@@ -182,7 +180,7 @@ class OrchestrationPlan(BaseModel):
 
 
 class AnimationKeyframe(BaseModel):
-    """Model for an animation keyframe"""
+    """Model for an animation keyframe."""
 
     timecode: str = Field(
         description="Timecode in MM:SS format when this keyframe occurs"
@@ -193,7 +191,7 @@ class AnimationKeyframe(BaseModel):
 
 
 class AnimationCode(BaseModelWithConfig):
-    """Model for the complete animation code output"""
+    """Model for the complete animation code output."""
 
     code: str = Field(
         description="Animation code for the scene (content of the animate function)"
@@ -204,7 +202,7 @@ class AnimationCode(BaseModelWithConfig):
 
 
 class FinalScenePackage(BaseModelWithConfig):
-    """Model for the complete packaged Three.js scene"""
+    """Model for the complete packaged Three.js scene."""
 
     html: str = Field(description="Complete HTML with embedded JavaScript")
     js: str = Field(description="Complete JavaScript code for the scene (standalone)")
@@ -219,7 +217,7 @@ class FinalScenePackage(BaseModelWithConfig):
 
 
 class PubChemCompound(BaseModel):
-    """Model representing a PubChem compound with its properties"""
+    """Model representing a PubChem compound with its properties."""
 
     name: str = Field(description="The name used to query the compound")
     cid: int = Field(description="PubChem Compound ID")
@@ -251,7 +249,7 @@ class PubChemCompound(BaseModel):
 
 
 class PubChemSearchResult(BaseModel):
-    """Model representing the results of a PubChem search"""
+    """Model representing the results of a PubChem search."""
 
     query: str = Field(description="Original user query")
     interpreted_query: str = Field(description="Query interpreted by LLM")
@@ -283,7 +281,7 @@ class MoleculeLayoutRequest(BaseModel):
 
 
 class MoleculePosition(BaseModel):
-    """Position and name of a molecule in a diagram"""
+    """Position and name of a molecule in a diagram."""
 
     name: str = Field(description="Name of the molecule")
     position: Tuple[float, float] = Field(
@@ -292,7 +290,7 @@ class MoleculePosition(BaseModel):
 
 
 class Arrow(BaseModel):
-    """Arrow connecting two points in a diagram"""
+    """Arrow connecting two points in a diagram."""
 
     start: Tuple[float, float] = Field(description="Starting coordinates")
     end: Tuple[float, float] = Field(description="Ending coordinates")
@@ -300,7 +298,7 @@ class Arrow(BaseModel):
 
 
 class DiagramPlan(BaseModel):
-    """Plan for rendering a molecular diagram"""
+    """Plan for rendering a molecular diagram."""
 
     plan: str = Field(description="Description of the diagram plan")
     molecule_list: List[MoleculePosition] = Field(

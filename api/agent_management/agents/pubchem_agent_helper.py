@@ -1,16 +1,15 @@
-"""
-Helper functions for the PubChem Agent to handle molecule data validation and conversion.
-"""
+"""Helper functions for the PubChem Agent to handle molecule data validation
+and conversion."""
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional
 
 from rdkit import Chem
 
 
 def generate_atom_label_mapping(molecule_data: Dict[str, Any]) -> Dict[int, str]:
-    """
-    Generate a mapping from atom indices to element-based labels (e.g., C1, C2, O1).
-    Uses PDB data as primary source, falls back to SMILES or element arrays.
+    """Generate a mapping from atom indices to element-based labels (e.g., C1,
+    C2, O1). Uses PDB data as primary source, falls back to SMILES or element
+    arrays.
 
     Args:
         molecule_data: Dictionary containing molecule information
@@ -97,8 +96,8 @@ def generate_atom_label_mapping(molecule_data: Dict[str, Any]) -> Dict[int, str]
 
 
 def reverse_atom_label_mapping(atom_label_mapping: Dict[int, str]) -> Dict[str, int]:
-    """
-    Create a reverse mapping from element-based labels back to numeric indices.
+    """Create a reverse mapping from element-based labels back to numeric
+    indices.
 
     Args:
         atom_label_mapping: Dictionary mapping atom indices to element-based labels
@@ -115,9 +114,8 @@ def validate_and_convert_script(
     use_element_labels: bool = False,
     convert_back_to_indices: bool = False,
 ) -> Dict[str, Any]:
-    """
-    Validates the script structure and ensures all atoms are strings.
-    Can convert between numeric indices and element-based labels.
+    """Validates the script structure and ensures all atoms are strings. Can
+    convert between numeric indices and element-based labels.
 
     Args:
         script (Dict[str, Any]): The script data to validate

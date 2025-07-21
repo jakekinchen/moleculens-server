@@ -2,15 +2,13 @@
 LLM Service Module - Handles interactions with LLM provider OpenAI
 """
 
-import json
-import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, Generic, List, Literal, Optional, Type, TypeVar, Union
+from typing import Any, Dict, Generic, Literal, Optional, Type, TypeVar, Union
 
 from dotenv import load_dotenv
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 # Load environment variables from .env file
 load_dotenv()
@@ -20,13 +18,13 @@ T = TypeVar("T", bound=BaseModel)
 
 
 class ProviderType(str, Enum):
-    """Supported LLM providers"""
+    """Supported LLM providers."""
 
     OPENAI = "openai"
 
 
 class MessageRole(str, Enum):
-    """Standardized message roles across providers"""
+    """Standardized message roles across providers."""
 
     SYSTEM = "system"
     USER = "user"
@@ -34,14 +32,14 @@ class MessageRole(str, Enum):
 
 
 class Message(BaseModel):
-    """Standardized message format"""
+    """Standardized message format."""
 
     role: MessageRole
     content: str
 
 
 class LLMModelConfig(BaseModel):
-    """Configuration for an LLM model"""
+    """Configuration for an LLM model."""
 
     provider: ProviderType = ProviderType.OPENAI
     model_name: str
@@ -120,13 +118,13 @@ class LLMRequest(BaseModel):
 
 
 class ResponseFormat(BaseModel):
-    """Response format configuration"""
+    """Response format configuration."""
 
     type: Literal["text", "json_object"] = "text"
 
 
 class StructuredLLMRequest(LLMRequest, Generic[T]):
-    """Request structure for structured output"""
+    """Request structure for structured output."""
 
     response_model: Type[T]
     response_format: ResponseFormat = ResponseFormat(type="json_object")
@@ -134,7 +132,7 @@ class StructuredLLMRequest(LLMRequest, Generic[T]):
 
 @dataclass
 class LLMResponse:
-    """Standardized response from any LLM provider"""
+    """Standardized response from any LLM provider."""
 
     content: str
     model: str
@@ -142,21 +140,19 @@ class LLMResponse:
 
 
 class LLMProvider(ABC):
-    """Abstract base class for LLM providers"""
+    """Abstract base class for LLM providers."""
 
     @abstractmethod
     def generate(self, request: LLMRequest) -> LLMResponse:
-        """Generate a response from the LLM"""
-        pass
+        """Generate a response from the LLM."""
 
     @abstractmethod
     def generate_structured(self, request: StructuredLLMRequest[T]) -> T:
-        """Generate a structured response from the LLM"""
-        pass
+        """Generate a structured response from the LLM."""
 
 
 class LLMService:
-    """Main service class for interacting with LLM providers"""
+    """Main service class for interacting with LLM providers."""
 
     def __init__(self, config: Optional[LLMModelConfig] = None):
         # Provide a sensible default configuration so callers (including tests)
@@ -169,7 +165,7 @@ class LLMService:
         self._provider = self._create_provider(config)
 
     def _create_provider(self, config: LLMModelConfig) -> "LLMProvider":
-        """Create the appropriate provider based on configuration"""
+        """Create the appropriate provider based on configuration."""
         if config.provider == ProviderType.OPENAI:
             from .providers.openai_provider import OpenAIProvider
 
@@ -178,7 +174,7 @@ class LLMService:
             raise ValueError(f"Unsupported provider type: {config.provider}")
 
     def generate(self, request: Union[str, "LLMRequest"]) -> LLMResponse:
-        """Generate a response from the LLM"""
+        """Generate a response from the LLM."""
         if isinstance(request, str):
             request = LLMRequest(user_prompt=request, llm_config=self.config)
         elif request.llm_config is None:
@@ -187,7 +183,7 @@ class LLMService:
         return self._provider.generate(request)
 
     def generate_structured(self, request: StructuredLLMRequest[T]) -> T:
-        """Generate a structured response from the LLM"""
+        """Generate a structured response from the LLM."""
         if request.llm_config is None:
             request.llm_config = self.config
         return self._provider.generate_structured(request)

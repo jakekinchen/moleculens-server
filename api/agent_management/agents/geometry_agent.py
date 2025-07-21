@@ -2,8 +2,6 @@
 Geometry Agent - Provides static geometry code snippets for the visualization.
 """
 
-import json
-
 from agent_management.llm_service import LLMRequest, LLMService
 from agent_management.utils.code_extraction import extract_code_block
 
@@ -13,9 +11,7 @@ class GeometryAgent:
         self.llm_service = llm_service
 
     def get_geometry_snippet(self, user_prompt: str) -> str:
-        """
-        Generate Three.js geometry code using LLM.
-        """
+        """Generate Three.js geometry code using LLM."""
         prompt_for_llm = f"""You are a helpful assistant generating Three.js geometry code. The user wants geometry for a scene with the following prompt: '{user_prompt}'
 
 Requirements:

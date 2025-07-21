@@ -16,9 +16,8 @@ from .routes import router  # existing APIRouter instance
     summary="Residue‑level Cartesian coordinates for a structure",
 )
 def get_sequence_coordinates(identifier: str):
-    """
-    Fetch residue‑to‑coordinate mapping from the RCSB Sequence Coordinates Service.
-    """
+    """Fetch residue‑to‑coordinate mapping from the RCSB
+    Sequence Coordinates Service."""
     agent = AgentFactory.create_rcsb_agent()
     try:
         return agent.fetch_sequence_coordinates(identifier)

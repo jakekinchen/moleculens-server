@@ -4,9 +4,9 @@ Specialized for scientific visualizations including molecular structures.
 """
 
 import re
-from typing import Any, Dict, List, Optional
+from typing import Dict, List
 
-from agent_management.llm_service import LLMRequest, LLMService, StructuredLLMRequest
+from agent_management.llm_service import LLMRequest, LLMService
 from agent_management.models import (
     AnimationCode,
     AnimationKeyframe,
@@ -26,8 +26,8 @@ class AnimationAgent:
         object_geometries: Dict[str, Dict],
         orchestration_plan: OrchestrationPlan,
     ) -> AnimationCode:
-        """
-        Generate Three.js animation code based on the scene script and generated geometries.
+        """Generate Three.js animation code based on the scene script and
+        generated geometries.
 
         Args:
             script: The scene script with timecodes and descriptions
@@ -358,9 +358,8 @@ REMEMBER:
         return AnimationCode(code=animation_code, keyframes=keyframes)
 
     def _extract_keyframes(self, code: str) -> List[AnimationKeyframe]:
-        """
-        Extract keyframes from animation code by parsing comments with timecodes.
-        """
+        """Extract keyframes from animation code by parsing comments with
+        timecodes."""
         keyframes = []
         # Look for comments with timecodes in MM:SS format
         pattern = r"//.*?(\d{2}:\d{2}).*?\n(.*?)(?=//|\n\n|$)"
@@ -383,9 +382,7 @@ REMEMBER:
         return keyframes
 
     def get_animation_snippet(self, user_prompt: str) -> str:
-        """
-        Generate Three.js animation code using LLM.
-        """
+        """Generate Three.js animation code using LLM."""
         prompt_for_llm = (
             f"You are an expert Three.js animator specializing in scientific visualizations, particularly molecular structures and chemical reactions. The user wants to animate a scene with the following prompt: '{user_prompt}'\n\n"
             + r"""

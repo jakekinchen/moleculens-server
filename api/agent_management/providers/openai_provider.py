@@ -1,34 +1,18 @@
-"""
-OpenAI provider implementation for LLM service.
-"""
+"""OpenAI provider implementation for LLM service."""
 
-import json
 import os
-from typing import Any, Dict, List, Literal, Optional, Type, TypeVar, Union, cast
+from typing import Any, Dict, List, Optional, cast
 
-from openai.types import Completion
-from openai.types.chat import (
-    ChatCompletion,
-    ChatCompletionMessage,
-    ChatCompletionMessageParam,
-)
-from openai.types.chat.chat_completion import Choice
+from openai.types.chat import ChatCompletion, ChatCompletionMessageParam
 
-from ..llm_service import (
-    LLMProvider,
-    LLMRequest,
-    LLMResponse,
-    MessageRole,
-    StructuredLLMRequest,
-    T,
-)
+from ..llm_service import LLMProvider, LLMRequest, LLMResponse, StructuredLLMRequest, T
 
 
 class OpenAIProvider(LLMProvider):
-    """OpenAI-specific implementation"""
+    """OpenAI-specific implementation."""
 
     def __init__(self, api_key: Optional[str] = None):
-        """Initialize the OpenAI provider with API key"""
+        """Initialize the OpenAI provider with API key."""
         import openai
 
         self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
@@ -40,7 +24,7 @@ class OpenAIProvider(LLMProvider):
     def _convert_messages(
         self, request: LLMRequest
     ) -> List[ChatCompletionMessageParam]:
-        """Convert our message format to OpenAI's format"""
+        """Convert our message format to OpenAI's format."""
         messages: List[ChatCompletionMessageParam] = []
         if request.system_prompt:
             messages.append({"role": "system", "content": request.system_prompt})
@@ -48,7 +32,7 @@ class OpenAIProvider(LLMProvider):
         return messages
 
     def generate(self, request: LLMRequest) -> LLMResponse:
-        """Generate a response using OpenAI's API"""
+        """Generate a response using OpenAI's API."""
         try:
             if not request.llm_config:
                 raise ValueError("LLM configuration is required")
@@ -101,7 +85,8 @@ class OpenAIProvider(LLMProvider):
             raise Exception(f"OpenAI API error: {str(e)}")
 
     def generate_structured(self, request: StructuredLLMRequest[T]) -> T:
-        """Generate a structured response using OpenAI's API with client.beta.chat.completions.parse."""
+        """Generate a structured response using OpenAI's API with
+        client.beta.chat.completions.parse."""
         try:
             if not request.llm_config:
                 raise ValueError("LLM configuration is required")

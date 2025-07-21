@@ -17,8 +17,7 @@ class ModelRegistry:
         model_cls: Type[BaseModel],
         factory_func: Callable[..., Any],
     ) -> None:
-        """
-        Register a model class and its factory function.
+        """Register a model class and its factory function.
 
         Args:
             model_name: Name to register the model under
@@ -29,8 +28,7 @@ class ModelRegistry:
 
     @classmethod
     def get_model(cls, model_name: str) -> Type[BaseModel]:
-        """
-        Get the registered model class.
+        """Get the registered model class.
 
         Args:
             model_name: Name of the registered model
@@ -47,8 +45,7 @@ class ModelRegistry:
 
     @classmethod
     def create_instance(cls, model_name: str, *args: Any, **kwargs: Any) -> Any:
-        """
-        Create an instance of a registered model.
+        """Create an instance of a registered model.
 
         Args:
             model_name: Name of the registered model

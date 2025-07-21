@@ -10,9 +10,8 @@ class AggregatorAgent:
     def combine_into_html(
         self, geometry_code: str, animation_code: str, caption_code: str
     ) -> str:
-        """
-        Creates a single HTML string with placeholders for geometry, animation, and caption code.
-        """
+        """Creates a single HTML string with placeholders for geometry,
+        animation, and caption code."""
         base_html = r"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -113,7 +112,5 @@ class AggregatorAgent:
     def aggregate(
         self, geometry_code: str, animation_code: str, caption_code: str
     ) -> str:
-        """
-        Combine them into a single final HTML.
-        """
+        """Combine them into a single final HTML."""
         return self.combine_into_html(geometry_code, animation_code, caption_code)

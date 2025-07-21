@@ -1,14 +1,10 @@
-"""
-Utility functions for handling DeepSeek model responses.
-"""
+"""Utility functions for handling DeepSeek model responses."""
 
 import re
-from typing import Optional
 
 
 def is_deepseek_model(model_name: str) -> bool:
-    """
-    Check if a model is a DeepSeek model based on its name.
+    """Check if a model is a DeepSeek model based on its name.
 
     Args:
         model_name: The name of the model to check
@@ -20,8 +16,7 @@ def is_deepseek_model(model_name: str) -> bool:
 
 
 def extract_javascript_from_deepseek_response(response: str) -> str:
-    """
-    Extract JavaScript code from a DeepSeek model response.
+    """Extract JavaScript code from a DeepSeek model response.
 
     DeepSeek models typically return responses with a <thinking> XML tag block first,
     followed by the actual JavaScript code in a ```javascript code ``` block.
@@ -54,8 +49,8 @@ def extract_javascript_from_deepseek_response(response: str) -> str:
 def extract_structured_output_from_deepseek(
     response: str, output_type: str = "javascript"
 ) -> str:
-    """
-    Extract structured output from a DeepSeek model response based on the output type.
+    """Extract structured output from a DeepSeek model response based on the
+    output type.
 
     Args:
         response: The raw response from the DeepSeek model

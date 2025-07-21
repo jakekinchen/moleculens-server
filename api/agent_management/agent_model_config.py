@@ -1,8 +1,8 @@
-"""
-Agent-Model Configuration Module.
+"""Agent-Model Configuration Module.
 
-This module defines which models should be used by different agents in the pipeline,
-allowing for centralized control over model selection for different tasks.
+This module defines which models should be used by different agents in
+the pipeline, allowing for centralized control over model selection for
+different tasks.
 """
 
 from enum import Enum
@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 
 class AgentType(str, Enum):
-    """Types of agents in the visualization pipeline"""
+    """Types of agents in the visualization pipeline."""
 
     DOMAIN_VALIDATOR = "domain_validator"
     SCRIPT = "script"
@@ -28,7 +28,7 @@ class AgentType(str, Enum):
 
 
 class AgentModelConfig(BaseModel):
-    """Configuration for which model an agent should use"""
+    """Configuration for which model an agent should use."""
 
     agent_type: AgentType
     preferred_model: str
@@ -112,8 +112,7 @@ AGENT_MODEL_MAP: Dict[AgentType, AgentModelConfig] = {
 
 
 def get_model_for_agent(agent_type: AgentType) -> str:
-    """
-    Get the preferred model name for a specific agent type.
+    """Get the preferred model name for a specific agent type.
 
     Args:
         agent_type: The type of agent
@@ -131,8 +130,7 @@ def get_model_for_agent(agent_type: AgentType) -> str:
 
 
 def get_agent_config(agent_type: AgentType) -> AgentModelConfig:
-    """
-    Get the full model configuration for a specific agent type.
+    """Get the full model configuration for a specific agent type.
 
     Args:
         agent_type: The type of agent
@@ -152,8 +150,7 @@ def get_agent_config(agent_type: AgentType) -> AgentModelConfig:
 def create_agent_llm_service(
     agent_type: AgentType, override_model: Optional[str] = None
 ) -> "LLMService":
-    """
-    Create an LLMService configured for a specific agent.
+    """Create an LLMService configured for a specific agent.
 
     Args:
         agent_type: The type of agent
@@ -165,7 +162,7 @@ def create_agent_llm_service(
     Raises:
         ValueError: If the agent type is not configured or if model is not found
     """
-    from agent_management.model_config import ModelRegistry, get_llm_service
+    from agent_management.model_config import get_llm_service
 
     # Get the agent's model configuration
     config = get_agent_config(agent_type)

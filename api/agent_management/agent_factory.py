@@ -17,13 +17,14 @@ from agent_management.agents.script_agent import ScriptAgent
 
 
 class AgentFactory:
-    """Factory for creating agent instances with appropriate model configurations."""
+    """Factory for creating agent instances with appropriate model
+    configurations."""
 
     @staticmethod
     def create_domain_validator(
         override_model: Optional[str] = None,
     ) -> DomainValidator:
-        """Create a domain validator agent"""
+        """Create a domain validator agent."""
         llm_service = create_agent_llm_service(
             AgentType.DOMAIN_VALIDATOR, override_model
         )
@@ -31,7 +32,7 @@ class AgentFactory:
 
     @staticmethod
     def create_script_agent(override_model: Optional[str] = None) -> ScriptAgent:
-        """Create a script generation agent"""
+        """Create a script generation agent."""
         llm_service = create_agent_llm_service(AgentType.SCRIPT, override_model)
         return ScriptAgent(llm_service)
 
@@ -39,25 +40,25 @@ class AgentFactory:
     def create_orchestration_agent(
         override_model: Optional[str] = None,
     ) -> OrchestrationAgent:
-        """Create an orchestration agent"""
+        """Create an orchestration agent."""
         llm_service = create_agent_llm_service(AgentType.ORCHESTRATION, override_model)
         return OrchestrationAgent(llm_service)
 
     @staticmethod
     def create_geometry_agent(override_model: Optional[str] = None) -> GeometryAgent:
-        """Create a geometry agent"""
+        """Create a geometry agent."""
         llm_service = create_agent_llm_service(AgentType.GEOMETRY, override_model)
         return GeometryAgent(llm_service)
 
     @staticmethod
     def create_animation_agent(override_model: Optional[str] = None) -> AnimationAgent:
-        """Create an animation agent"""
+        """Create an animation agent."""
         llm_service = create_agent_llm_service(AgentType.ANIMATION, override_model)
         return AnimationAgent(llm_service)
 
     @staticmethod
     def create_caption_agent(override_model: Optional[str] = None) -> CaptionAgent:
-        """Create a caption agent"""
+        """Create a caption agent."""
         llm_service = create_agent_llm_service(AgentType.CAPTION, override_model)
         return CaptionAgent(llm_service)
 
@@ -65,7 +66,7 @@ class AgentFactory:
     def create_aggregator_agent(
         override_model: Optional[str] = None,
     ) -> AggregatorAgent:
-        """Create an aggregator agent"""
+        """Create an aggregator agent."""
         llm_service = create_agent_llm_service(AgentType.AGGREGATOR, override_model)
         return AggregatorAgent(llm_service)
 
@@ -76,8 +77,7 @@ class AgentFactory:
         convert_back_to_indices: bool = False,
         script_model: Optional[str] = None,
     ) -> PubChemAgent:
-        """
-        Create a PubChem agent
+        """Create a PubChem agent.
 
         Args:
             override_model: Optional model name to override the default
@@ -102,8 +102,7 @@ class AgentFactory:
     def create_all_agents(
         global_override_model: Optional[str] = None,
     ) -> Dict[AgentType, Any]:
-        """
-        Create all agents with appropriate model configurations.
+        """Create all agents with appropriate model configurations.
 
         Args:
             global_override_model: Optional model name to override all agents

@@ -1,8 +1,8 @@
-"""
-Moleculens Server API Package
+"""Moleculens Server API Package.
 
-This package provides the FastAPI-based server implementation for molecular visualization
-and analysis, featuring AI-powered molecule rendering and diagram generation.
+This package provides the FastAPI-based server implementation for
+molecular visualization and analysis, featuring AI-powered molecule
+rendering and diagram generation.
 """
 
 __version__ = "0.0.1"

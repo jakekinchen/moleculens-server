@@ -38,7 +38,8 @@ CACHE_DIR = _DEFAULT_CACHE_DIR
 
 
 def get(key: str) -> Optional[Tuple[str, Dict[str, Any]]]:
-    """Retrieve cached (file_path, metadata) tuple if it exists and the file is still present."""
+    """Retrieve cached (file_path, metadata) tuple if it exists and the file is
+    still present."""
     raw = redis_client.get(key)
     if not raw:
         return None

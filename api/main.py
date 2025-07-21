@@ -8,7 +8,7 @@ from typing import Any, Dict
 
 import pymol
 import redis
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -130,7 +130,6 @@ except ModuleNotFoundError:
 
     def _noop(*args, **kwargs):
         """No-op replacement for PyMOL functions when library is missing."""
-        pass
 
     pymol.finish_launching = _noop  # type: ignore
 

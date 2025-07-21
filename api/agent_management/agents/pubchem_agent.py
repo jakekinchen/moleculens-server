@@ -7,7 +7,6 @@ import json
 import logging
 import os
 import re
-import tempfile
 import urllib.parse
 from typing import Any, Dict, List, NamedTuple, Optional
 
@@ -16,22 +15,15 @@ import requests
 from agent_management.agents.pubchem_agent_helper import validate_and_convert_script
 from agent_management.agents.script_agent import ScriptAgent
 from agent_management.debug_utils import DEBUG_PUBCHEM, write_debug_file
-from agent_management.llm_service import (
-    LLMModelConfig,
-    LLMRequest,
-    LLMService,
-    ProviderType,
-    StructuredLLMRequest,
-)
-from agent_management.models import PubChemCompound, PubChemSearchResult
+from agent_management.llm_service import LLMRequest, LLMService
+from agent_management.models import PubChemCompound
 from agent_management.molecule_visualizer import MoleculeVisualizer
 from rdkit import Chem
-from rdkit.Chem import AllChem, Descriptors, Fragments
+from rdkit.Chem import AllChem
 
 
 def _sdf_to_pdb_block(sdf_data: str) -> str:
-    """
-    Convert SDF data (string) to a single PDB block using RDKit in-memory.
+    """Convert SDF data (string) to a single PDB block using RDKit in-memory.
 
     Returns an empty string if conversion fails.
     """
@@ -49,7 +41,7 @@ def _sdf_to_pdb_block(sdf_data: str) -> str:
 
 
 class MoleculePackage(NamedTuple):
-    """Container for molecule visualization package data"""
+    """Container for molecule visualization package data."""
 
     pdb_data: str
     html: str
@@ -57,7 +49,7 @@ class MoleculePackage(NamedTuple):
 
 
 class PubChemAgent:
-    """Agent for retrieving and processing molecular data from PubChem"""
+    """Agent for retrieving and processing molecular data from PubChem."""
 
     FORMULA_EXTRACTION_PROMPT = """Given a chemical compound name, provide its molecular formula.
 Only respond with the formula, nothing else. If you're not certain, respond with 'unknown'.
@@ -82,8 +74,7 @@ Output:"""
         convert_back_to_indices: bool = False,
         script_model: Optional[str] = None,
     ):
-        """
-        Initialize the PubChem agent
+        """Initialize the PubChem agent.
 
         Args:
             llm_service: LLM service for generating interpretations and scripts
@@ -98,8 +89,7 @@ Output:"""
         self.logger = logging.getLogger(__name__)
 
     def _normalize_query(self, query: str) -> List[str]:
-        """
-        Normalize a chemical query string to improve search results.
+        """Normalize a chemical query string to improve search results.
 
         Args:
             query: Raw query string
@@ -171,8 +161,7 @@ Output:"""
     def _search_pubchem_rest(
         self, query: str, max_results: int = 5
     ) -> List[Dict[str, Any]]:
-        """
-        Search PubChem using the REST API directly.
+        """Search PubChem using the REST API directly.
 
         Args:
             query: Search query
@@ -228,8 +217,8 @@ Output:"""
             return []
 
     def _search_pubchem_direct(self, query: str) -> List[Dict[str, Any]]:
-        """
-        Search PubChem using direct compound search that matches the web interface.
+        """Search PubChem using direct compound search that matches the web
+        interface.
 
         Args:
             query: Search query (e.g. 'cryptand[2.2.2]')
@@ -277,8 +266,7 @@ Output:"""
             return []
 
     def interpret_user_query(self, user_input: str) -> str:
-        """
-        Use LLM to interpret user input into a molecule name or identifier.
+        """Use LLM to interpret user input into a molecule name or identifier.
         Handles provider failures gracefully with fallback behavior.
 
         Args:
@@ -333,8 +321,9 @@ Only respond with the molecule name or 'N/A', no other text.""",
             return "water"
 
     def fetch_sdf_for_cid(self, cid: int) -> Optional[str]:
-        """
-        Fetches the SDF string for a given PubChem CID using a direct REST call.
+        """Fetches the SDF string for a given PubChem CID using a direct REST
+        call.
+
         Returns SDF as text, or None if something fails.
         """
         url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{cid}/SDF"
@@ -344,8 +333,7 @@ Only respond with the molecule name or 'N/A', no other text.""",
         return None
 
     def _get_molecular_formula(self, compound_name: str) -> Optional[str]:
-        """
-        Use LLM to get the molecular formula for a compound name.
+        """Use LLM to get the molecular formula for a compound name.
 
         Args:
             compound_name: Name of the chemical compound
@@ -373,8 +361,7 @@ Only respond with the molecule name or 'N/A', no other text.""",
             return None
 
     def _search_with_fallbacks(self, query: str) -> List[Dict[str, Any]]:
-        """
-        Search for a compound using multiple methods with fallbacks.
+        """Search for a compound using multiple methods with fallbacks.
 
         Args:
             query: The compound name or identifier to search for
@@ -430,8 +417,7 @@ Only respond with the molecule name or 'N/A', no other text.""",
         return []
 
     def get_molecule_sdfs(self, user_input: str) -> List[Dict[str, Any]]:
-        """
-        Get SDF data for molecules based on user input.
+        """Get SDF data for molecules based on user input.
 
         Args:
             user_input: User's query about a molecule
@@ -526,9 +512,7 @@ Only respond with the molecule name or 'N/A', no other text.""",
         return results
 
     def get_compound_details(self, cid: int) -> Optional[PubChemCompound]:
-        """
-        Get detailed information for a specific compound by CID.
-        """
+        """Get detailed information for a specific compound by CID."""
         try:
             compound = pcp.Compound.from_cid(cid)
             sdf_str = self.fetch_sdf_for_cid(cid)
@@ -555,8 +539,8 @@ Only respond with the molecule name or 'N/A', no other text.""",
     def save_compound_details_to_json(
         self, cid: int, base_dir: str = "compound_data"
     ) -> str:
-        """
-        Save all available compound details to a JSON file in a subdirectory.
+        """Save all available compound details to a JSON file in a
+        subdirectory.
 
         Args:
             cid: PubChem Compound ID
@@ -944,8 +928,7 @@ Only respond with the molecule name or 'N/A', no other text.""",
             raise ValueError(f"Could not generate HTML visualization: {str(e)}")
 
     def get_molecule_package(self, user_query: str) -> MoleculePackage:
-        """
-        Get a complete molecule visualization package from a user query.
+        """Get a complete molecule visualization package from a user query.
 
         # Write a debug file to confirm this method is being called
         if DEBUG_PUBCHEM:
@@ -1279,8 +1262,7 @@ Only respond with the molecule name or 'N/A', no other text.""",
             raise
 
     def visualize_molecule(self, user_query: str) -> MoleculePackage:
-        """
-        Create a visualization package for a molecule based on user query.
+        """Create a visualization package for a molecule based on user query.
 
         Args:
             user_query: User's query about a molecule
@@ -1459,4 +1441,3 @@ Only respond with the molecule name or 'N/A', no other text.""",
 
     def render_layout_placeholder(self, layout: List[Dict[str, Any]]) -> None:
         """Placeholder for future 2-D rendering implementation."""
-        pass

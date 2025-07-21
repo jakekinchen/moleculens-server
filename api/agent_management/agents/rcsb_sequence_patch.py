@@ -1,6 +1,5 @@
-"""
-Monkey‑patch supplying ``RCSBAgent.fetch_sequence_coordinates`` without altering the
-original *rcsb_agent.py* file.
+"""Monkey‑patch supplying ``RCSBAgent.fetch_sequence_coordinates`` without
+altering the original *rcsb_agent.py* file.
 
 The RCSB Sequence Coordinates Service returns JSON of the form:
 
@@ -29,8 +28,7 @@ from .rcsb_agent import RCSBAgent
 def _fetch_sequence_coordinates(
     self: "RCSBAgent", identifier: str
 ) -> Dict[str, List[float]]:
-    """
-    Retrieve residue‑level Cartesian coordinates.
+    """Retrieve residue‑level Cartesian coordinates.
 
     Parameters
     ----------

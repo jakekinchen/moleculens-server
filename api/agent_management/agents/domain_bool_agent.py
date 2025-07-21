@@ -2,14 +2,7 @@
 Domain Validator Agent - Validates whether a prompt is scientific in nature.
 """
 
-import os
-
-from agent_management.llm_service import (
-    LLMModelConfig,
-    LLMService,
-    ProviderType,
-    StructuredLLMRequest,
-)
+from agent_management.llm_service import LLMService, StructuredLLMRequest
 from agent_management.models import BooleanResponse, MolecularStructure
 
 
@@ -18,9 +11,7 @@ class DomainValidator:
         self.llm_service = llm_service
 
     def is_macromolecule(self, prompt: str) -> BooleanResponse:
-        """
-        Determine if a prompt is about a macromolecule.
-        """
+        """Determine if a prompt is about a macromolecule."""
         request = StructuredLLMRequest[BooleanResponse](
             user_prompt=f"""Does the following prompt contain something that can be built as a macromolecule? We are not talking about proteins in general, for instance, we would not consider the 20 standard amino acids as macromolecules, but we would consider DNA or RNA as macromolecules. '{prompt}'
             """,
@@ -29,9 +20,7 @@ class DomainValidator:
         return self.llm_service.generate_structured(request)
 
     def molecular_structure(self, prompt: str) -> MolecularStructure:
-        """
-        Determine if a prompt can be built as molecular structure.
-        """
+        """Determine if a prompt can be built as molecular structure."""
         request = StructuredLLMRequest[MolecularStructure](
             user_prompt=f"""Only respond with a molecular structure in SMILES format. For instance: user prompt: 'Draw a molecule of aspirin' -> response: 'CC(=O)OC1=CC=CC=C1C(=O)O'
             The user prompt is: '{prompt}'
@@ -41,8 +30,7 @@ class DomainValidator:
         return self.llm_service.generate_structured(request)
 
     def is_molecular(self, prompt: str) -> BooleanResponse:
-        """
-        Determine if a prompt can be built as molecular structure.
+        """Determine if a prompt can be built as molecular structure.
 
         Args:
             prompt: The user prompt to validate

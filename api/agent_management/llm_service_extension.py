@@ -1,6 +1,4 @@
-"""
-Extension module for LLM service to add image processing capabilities
-"""
+"""Extension module for LLM service to add image processing capabilities."""
 
 from typing import Optional
 
@@ -8,7 +6,7 @@ from pydantic import BaseModel
 
 
 class ImageToTextRequest(BaseModel):
-    """Request structure for image-to-text processing"""
+    """Request structure for image-to-text processing."""
 
     image_data: str  # Base64 encoded image data
     prompt: Optional[str] = None
@@ -16,7 +14,7 @@ class ImageToTextRequest(BaseModel):
 
 
 def extend_llm_service(module):
-    """Extend the LLM service module with image processing capabilities"""
+    """Extend the LLM service module with image processing capabilities."""
     # Add ImageToTextRequest to the module
     module.ImageToTextRequest = ImageToTextRequest
 
@@ -24,10 +22,10 @@ def extend_llm_service(module):
     original_llm_service = module.LLMService
 
     class ExtendedLLMService(original_llm_service):
-        """Extended LLM service with image processing capabilities"""
+        """Extended LLM service with image processing capabilities."""
 
         def process_image(self, request: ImageToTextRequest) -> str:
-            """Process an image and return a text description"""
+            """Process an image and return a text description."""
             # For now, we only support OpenAI's GPT-4 Vision model
             if self.config.provider != module.ProviderType.OPENAI:
                 raise ValueError(

@@ -1,7 +1,5 @@
-import os
 from typing import Optional
 
-from agent_management.llm_service import LLMService
 from agent_management.model_config import (
     ModelCategory,
     ModelRegistry,
@@ -9,8 +7,7 @@ from agent_management.model_config import (
     get_llm_service,
     get_models_by_category,
 )
-from fastapi import Depends, HTTPException, Query, Request
-from pydantic import BaseModel
+from fastapi import HTTPException, Query, Request
 
 
 async def use_llm(
@@ -21,9 +18,9 @@ async def use_llm(
         description="The use case to get the default model for (e.g. 'geometry', 'molecular')",
     ),
 ):
-    """
-    Dependency that initializes LLMService based on the model query parameter.
-    Uses the ModelRegistry to validate and create the appropriate LLM service.
+    """Dependency that initializes LLMService based on the model query
+    parameter. Uses the ModelRegistry to validate and create the appropriate
+    LLM service.
 
     Features:
     - Can specify model directly via query parameter

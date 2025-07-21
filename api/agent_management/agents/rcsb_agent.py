@@ -2,7 +2,8 @@ import requests
 
 
 class RCSBAgent:
-    """Retrieve experimental and computed structures plus metadata from RCSB and AlphaFold."""
+    """Retrieve experimental and computed structures plus metadata from RCSB
+    and AlphaFold."""
 
     BASE_URL = "https://files.rcsb.org/download/"
     AF_BASE_URL = "https://alphafold.ebi.ac.uk/files/"
@@ -40,8 +41,8 @@ class RCSBAgent:
         return resp.text
 
     def fetch_alphafold_model(self, uniprot_id: str, file_format: str = "pdb") -> str:
-        """
-        Retrieve a predicted structure from AlphaFold DB.
+        """Retrieve a predicted structure from AlphaFold DB.
+
         uniprot_id: UniProt accession, e.g. P68871.
         file_format: 'pdb' or 'cif'.
         Returns the contents of the model file.
@@ -54,8 +55,8 @@ class RCSBAgent:
         return resp.text
 
     def fetch_entry_metadata(self, identifier: str) -> dict:
-        """
-        Retrieve JSON metadata for an entry via the RCSB Data API.
+        """Retrieve JSON metadata for an entry via the RCSB Data API.
+
         identifier: PDB ID.
         Returns a dict with metadata.
         """
@@ -64,7 +65,8 @@ class RCSBAgent:
         return resp.json()
 
     def fetch_sequence_annotations(self, identifier: str) -> dict:
-        """Retrieve residue-level annotations from the Sequence Coordinates Service."""
+        """Retrieve residue-level annotations from the Sequence Coordinates
+        Service."""
         url = self.SEQ_COORD_URL.format(identifier=identifier)
         resp = requests.get(url, timeout=30)
         resp.raise_for_status()

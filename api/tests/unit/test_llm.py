@@ -1,10 +1,9 @@
 # mypy: ignore-errors
-
 """Unit tests for LLM service."""
 import os
 import sys
-from typing import Any, Dict
-from unittest.mock import MagicMock, patch
+from typing import Dict
+from unittest.mock import MagicMock
 
 sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -41,7 +40,8 @@ class TestLLMService:
         assert response.content == "ok"
 
     def test_generate_structured(self, llm_service: LLMService) -> None:
-        """Test generate_structured method with provider mocked via attribute."""
+        """Test generate_structured method with provider mocked via
+        attribute."""
         expected_result = {"key": "value"}
 
         # Mock the provider's generate_structured directly

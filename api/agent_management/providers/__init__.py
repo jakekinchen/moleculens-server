@@ -1,6 +1,4 @@
-"""
-LLM Provider implementations package
-"""
+"""LLM Provider implementations package."""
 
 from .openai_provider import OpenAIProvider
 

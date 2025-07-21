@@ -1,12 +1,9 @@
 import asyncio
 import base64
-import json
 import os
 import subprocess
 import tempfile
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
-
-import dotenv
+from typing import Dict, List, Literal, Optional
 
 # External libraries
 import openai
@@ -28,8 +25,7 @@ class CodeQualityTool:
         visual_outcome: str,
         timecodes: Optional[List[int]] = None,
     ) -> Dict:
-        """
-        Main entry point for the code quality tool.
+        """Main entry point for the code quality tool.
 
         Args:
             code: The source code to evaluate
@@ -77,8 +73,7 @@ class CodeQualityTool:
         visual_outcome: str,
         timecodes: Optional[List[int]] = None,
     ) -> Dict:
-        """
-        Apply XML diff to code and rerun the check process.
+        """Apply XML diff to code and rerun the check process.
 
         Args:
             original_code: Original code with errors
@@ -106,8 +101,8 @@ class CodeQualityTool:
         code_type: Literal["standalone", "component"],
         timecodes: Optional[List[int]] = None,
     ) -> Dict:
-        """
-        Check if the code builds/runs correctly and capture screenshots if specified.
+        """Check if the code builds/runs correctly and capture screenshots if
+        specified.
 
         Returns:
             Dict with success flag, error message (if any), and screenshot paths
@@ -184,8 +179,7 @@ class CodeQualityTool:
     async def _run_html_in_playwright(
         self, html_code: str, timecodes: Optional[List[int]] = None
     ) -> Dict:
-        """
-        Run HTML code in Playwright and capture screenshots.
+        """Run HTML code in Playwright and capture screenshots.
 
         Returns:
             Dict with success flag, error message (if any), and screenshot paths
@@ -232,8 +226,7 @@ class CodeQualityTool:
     async def _run_python_code(
         self, code: str, code_type: str, timecodes: Optional[List[int]] = None
     ) -> Dict:
-        """
-        Run Python code (either standalone or component).
+        """Run Python code (either standalone or component).
 
         Returns:
             Dict with success flag, error message (if any), and screenshot paths
@@ -278,8 +271,8 @@ class CodeQualityTool:
     async def _check_visual_outcome(
         self, screenshot_paths: List[str], expected_outcome: str
     ) -> Dict:
-        """
-        Use GPT-4o to verify if screenshots match the expected visual outcome.
+        """Use GPT-4o to verify if screenshots match the expected visual
+        outcome.
 
         Args:
             screenshot_paths: List of paths to screenshots
@@ -321,8 +314,8 @@ class CodeQualityTool:
         return {"feedback": feedback}
 
     def _generate_diff_prompt(self, code: str, error_message: str) -> str:
-        """
-        Generate a prompt instructing the agent to return an XML diff to fix the code.
+        """Generate a prompt instructing the agent to return an XML diff to fix
+        the code.
 
         Args:
             code: The original code with errors
@@ -353,8 +346,7 @@ class CodeQualityTool:
         """
 
     def _apply_xml_diff(self, original_code: str, diff: str) -> str:
-        """
-        Apply an XML diff to the original code.
+        """Apply an XML diff to the original code.
 
         Args:
             original_code: The original code
@@ -393,8 +385,7 @@ class CodeQualityTool:
         return "\n".join(lines)
 
     def _encode_image_for_gpt(self, image_path: str) -> Dict:
-        """
-        Encode an image for use in GPT-4o API calls.
+        """Encode an image for use in GPT-4o API calls.
 
         Args:
             image_path: Path to the image file

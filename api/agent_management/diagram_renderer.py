@@ -1,5 +1,5 @@
 import math
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 import svgwrite  # type: ignore
 
@@ -158,8 +158,7 @@ def render_diagram(
     canvas_width: Optional[int] = None,
     canvas_height: Optional[int] = None,
 ) -> str:
-    """
-    Render a molecular diagram as SVG.
+    """Render a molecular diagram as SVG.
 
     Args:
         plan: The diagram plan containing molecule positions and arrows

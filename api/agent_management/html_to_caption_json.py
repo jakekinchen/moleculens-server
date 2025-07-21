@@ -1,6 +1,6 @@
 import json
 import re
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 from bs4 import BeautifulSoup
 
@@ -8,8 +8,8 @@ from bs4 import BeautifulSoup
 
 
 def extract_captions_from_html(html_content):
-    """
-    Extract captions and their timecodes from HTML content.
+    """Extract captions and their timecodes from HTML content.
+
     Returns a JSON structure with title and content array.
     """
     # Parse HTML content
@@ -65,10 +65,11 @@ def extract_captions_from_html(html_content):
 
 
 def convert_html_to_json(input_data, output_file_path=None):
-    """
-    Convert HTML content to JSON caption format.
+    """Convert HTML content to JSON caption format.
+
     Input can be either a file path or a JSON object with an 'html' key.
-    If output_file_path is provided, saves to file; otherwise returns JSON string.
+    If output_file_path is provided, saves to file; otherwise returns
+    JSON string.
     """
     try:
         # Check if input is a JSON object with HTML content

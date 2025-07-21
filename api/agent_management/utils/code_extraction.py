@@ -1,14 +1,12 @@
-"""
-Code extraction utilities for handling LLM responses.
-"""
+"""Code extraction utilities for handling LLM responses."""
 
 import re
 from typing import Optional
 
 
 def extract_code_block(content: str, language: Optional[str] = None) -> str:
-    """
-    Extract code from a response, removing code block markers and thinking sections.
+    """Extract code from a response, removing code block markers and thinking
+    sections.
 
     Args:
         content: The response content to extract code from

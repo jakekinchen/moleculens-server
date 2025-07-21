@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Molecule Visualizer Module
+"""Molecule Visualizer Module.
 
 Refactored to:
 - Convert SDF data (as a string) into PDB data in-memory
@@ -9,14 +8,8 @@ Refactored to:
 - Add toggleable atomic annotations that face the camera
 """
 
-import datetime
-import json
 import os
-import re
-import traceback
 from typing import Any, Dict, Optional
-
-from agent_management.debug_utils import DEBUG_PUBCHEM, write_debug_file
 
 
 class MoleculeVisualizer:
@@ -32,15 +25,14 @@ class MoleculeVisualizer:
 
     @staticmethod
     def _escape_js_string(text: str) -> str:
-        """
-        Safely escape backslashes, backticks, and dollar signs for embedding in JS strings.
-        """
+        """Safely escape backslashes, backticks, and dollar signs for embedding
+        in JS strings."""
         return text.replace("\\", "\\\\").replace("`", "\\`").replace("$", "\\$")
 
     @staticmethod
     def _get_molecule_label_style() -> str:
-        """
-        Returns the CSS styling for the molecule label.
+        """Returns the CSS styling for the molecule label.
+
         Used by both standalone HTML and embedded JS versions.
         """
         return """
@@ -79,8 +71,8 @@ class MoleculeVisualizer:
 
     @staticmethod
     def _get_molecule_label_html(name: str) -> str:
-        """
-        Returns the HTML for the molecule label.
+        """Returns the HTML for the molecule label.
+
         Used by both standalone HTML and embedded JS versions.
         """
         return f'<div id="molecule-label">{name}</div>'
@@ -732,9 +724,8 @@ function animate() {{
         script_data: Optional[Dict[str, Any]] = None,
         output_path: Optional[str] = None,
     ) -> str:
-        """
-        Generate an interactive HTML visualization by injecting PDB data and optional script data
-        into the output.html template file.
+        """Generate an interactive HTML visualization by injecting PDB data and
+        optional script data into the output.html template file.
 
         Args:
             pdb_data (str): PDB data to inject into the template
@@ -748,7 +739,6 @@ function animate() {{
         """
         import json
         import re
-        from pathlib import Path
 
         # Get the path to the template file (output.html in the same directory as this script)
         template_path = os.path.join(

@@ -6,12 +6,7 @@ This is separate from the animation agent that will handle actual animation gene
 import json
 from typing import Any, Dict
 
-from agent_management.llm_service import (
-    LLMModelConfig,
-    LLMService,
-    ProviderType,
-    StructuredLLMRequest,
-)
+from agent_management.llm_service import LLMService, StructuredLLMRequest
 from agent_management.models import SceneScript
 
 
@@ -20,8 +15,7 @@ class ScriptAgent:
         self.llm_service = llm_service
 
     def generate_script(self, topic: str) -> SceneScript:
-        """
-        Generate a structured scene script for a scientific topic.
+        """Generate a structured scene script for a scientific topic.
 
         Args:
             topic: The scientific topic to explain in the scene
@@ -110,8 +104,7 @@ Always return complete, properly formatted JSON objects matching the requested s
     def generate_script_from_molecule(
         self, molecule_name: str, user_query: str, molecule_data: Dict[str, Any]
     ) -> SceneScript:
-        """
-        Generate a structured scene script for a molecule.
+        """Generate a structured scene script for a molecule.
 
         Returns:
             SceneScript: A Pydantic model instance of the structured script

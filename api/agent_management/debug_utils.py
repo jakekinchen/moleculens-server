@@ -1,6 +1,4 @@
-"""
-Debug utilities for the agent management system.
-"""
+"""Debug utilities for the agent management system."""
 
 import os
 

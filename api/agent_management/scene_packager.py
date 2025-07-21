@@ -2,8 +2,7 @@
 Scene Packager - Utility to package geometry and animation into a complete Three.js scene.
 """
 
-import re
-from typing import Any, Dict, List
+from typing import Dict
 
 from agent_management.models import (
     AnimationCode,
@@ -14,9 +13,8 @@ from agent_management.models import (
 
 
 class ScenePackager:
-    """
-    Takes the output from the geometry and animation agents and packages it into a complete Three.js scene.
-    """
+    """Takes the output from the geometry and animation agents and packages it
+    into a complete Three.js scene."""
 
     @staticmethod
     def create_scene_package(
@@ -25,8 +23,7 @@ class ScenePackager:
         object_geometries: Dict[str, Dict],
         animation_code: AnimationCode,
     ) -> FinalScenePackage:
-        """
-        Create a complete Three.js scene from the generated components.
+        """Create a complete Three.js scene from the generated components.
 
         Args:
             script: The scene script with timecodes, descriptions, and captions
@@ -81,8 +78,7 @@ class ScenePackager:
 
     @staticmethod
     def _create_html(title: str, script: SceneScript, js_code: str = None) -> str:
-        """
-        Create the complete HTML file with the Three.js scene.
+        """Create the complete HTML file with the Three.js scene.
 
         Args:
             title (str): Scene title
@@ -222,8 +218,7 @@ class ScenePackager:
 
     @staticmethod
     def _create_js(title: str, geometry_code: str, animation_code: str) -> str:
-        """
-        Create the complete JavaScript file with the Three.js scene.
+        """Create the complete JavaScript file with the Three.js scene.
 
         Args:
             title: Scene title
@@ -496,8 +491,8 @@ animate();
 
     @staticmethod
     def _create_minimal_js(geometry_code: str, animation_code: str) -> str:
-        """
-        Create minimal JavaScript code without boilerplate, for embedding in existing Three.js scenes.
+        """Create minimal JavaScript code without boilerplate, for embedding in
+        existing Three.js scenes.
 
         Args:
             geometry_code: Combined geometry code from the geometry agent

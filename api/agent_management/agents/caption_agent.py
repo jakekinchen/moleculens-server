@@ -17,10 +17,8 @@ class CaptionAgent:
         self.llm_service = llm_service
 
     def get_caption_snippet(self, user_prompt: str) -> str:
-        """
-        Call the LLM to generate an array of { time, text } captions,
-        then return a code snippet that updates a #caption <div> accordingly.
-        """
+        """Call the LLM to generate an array of { time, text } captions, then
+        return a code snippet that updates a #caption <div> accordingly."""
         # Prompt the LLM for some short creative captions
         llm_prompt = f"""
         Generate a JSON array of simple 'timestamped' captions (time in seconds, text string)

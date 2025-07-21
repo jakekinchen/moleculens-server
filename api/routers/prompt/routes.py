@@ -1,42 +1,28 @@
 """Routes for handling prompts and generating visualizations."""
 
-import asyncio
 import logging
 import os
 import traceback
 from datetime import datetime
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
 
 from api.agent_management.agent_factory import AgentFactory
-from api.agent_management.agent_model_config import AgentType
-from api.agent_management.agents.animation_agent import AnimationAgent
-from api.agent_management.agents.domain_bool_agent import DomainValidator
-from api.agent_management.agents.geometry_agent import GeometryAgent
-from api.agent_management.agents.orchestration_agent import OrchestrationAgent
 from api.agent_management.agents.pubchem_agent import PubChemAgent, _sdf_to_pdb_block
-from api.agent_management.agents.script_agent import ScriptAgent
 from api.agent_management.diagram_renderer import render_diagram
 from api.agent_management.llm_service import (
     LLMModelConfig,
     LLMService,
-    ProviderType,
     StructuredLLMRequest,
 )
-from api.agent_management.model_config import (
-    ModelCategory,
-    get_default_model,
-    get_models_by_category,
-)
+from api.agent_management.model_config import ModelCategory, get_default_model
 from api.agent_management.model_registry import ModelRegistry
 from api.agent_management.models import (
     AnimationCode,
-    Arrow,
     BaseModelWithConfig,
     DiagramPlan,
-    MoleculePlacement,
     OrchestrationPlan,
     SceneScript,
 )
@@ -58,7 +44,7 @@ logger = logging.getLogger(__name__)
 
 # Other Pydantic models used by other endpoints can be defined here or remain in their original positions
 class PromptRequest(BaseModel):
-    """Request model for prompts, optionally with preferred model type"""
+    """Request model for prompts, optionally with preferred model type."""
 
     prompt: str
     model: Optional[str] = None
@@ -73,7 +59,7 @@ class PromptWorking(BaseModel):
 
 
 class CompletePipelineResponse(BaseModelWithConfig):
-    """Response model for the complete prompt-to-visualization pipeline"""
+    """Response model for the complete prompt-to-visualization pipeline."""
 
     html: str
     js: str
@@ -90,7 +76,8 @@ class GeometryResponse(BaseModel):
 
 
 class GeometryRequest(BaseModel):
-    """Request model for geometry generation, optionally with preferred model type"""
+    """Request model for geometry generation, optionally with preferred model
+    type."""
 
     prompt: str
     model: Optional[str] = None  # Model override for geometry agent
@@ -137,7 +124,7 @@ class JobResponse(BaseModel):
 
 
 # Import ModelRegistry and related functions
-from api.agent_management.model_config import get_default_model, get_llm_service
+from api.agent_management.model_config import get_default_model
 
 # Simple in-memory job stores
 # In a production app
@@ -149,9 +136,8 @@ pipeline_jobs: Dict[str, Dict[str, Any]] = {}
 async def process_prompt_pipeline_task(
     job_id: str, prompt: str, override_model: Optional[str] = None
 ):
-    """
-    Background task to process a prompt through the entire pipeline.
-    Updates the pipeline_jobs dictionary with the result when complete.
+    """Background task to process a prompt through the entire pipeline. Updates
+    the pipeline_jobs dictionary with the result when complete.
 
     Args:
         job_id: Unique identifier for this job
@@ -372,9 +358,9 @@ async def process_prompt_pipeline_task(
 async def submit_prompt_background(
     request: PromptRequest, background_tasks: BackgroundTasks
 ):
-    """
-    Starts the scientific visualization pipeline as a background task and returns immediately.
-    This endpoint begins processing the prompt through all pipeline steps but doesn't wait for completion.
+    """Starts the scientific visualization pipeline as a background task and
+    returns immediately. This endpoint begins processing the prompt through all
+    pipeline steps but doesn't wait for completion.
 
     Returns a job ID that can be used to check the status of processing.
 
@@ -415,9 +401,8 @@ async def submit_prompt_background(
 
 @router.get("/process/{job_id}")
 async def check_process_status(job_id: str):
-    """
-    Check the status of a background processing job.
-    Returns the current status and result if processing is complete.
+    """Check the status of a background processing job. Returns the current
+    status and result if processing is complete.
 
     Response format:
     - job_id: The unique job ID
@@ -485,8 +470,7 @@ async def check_process_status(job_id: str):
 
 @router.post("/generate-from-pubchem/", response_model=dict)
 async def generate_from_pubchem(request: PromptRequest):
-    """
-    Generate a 3D visualization from a query to PubChem.
+    """Generate a 3D visualization from a query to PubChem.
 
     Returns:
     - pdb_data: PDB data for the molecule
@@ -548,9 +532,9 @@ async def generate_from_pubchem(request: PromptRequest):
 
 @router.post("/", response_model=JobResponse)
 async def submit_prompt(request: PromptRequest, background_tasks: BackgroundTasks):
-    """
-    End-to-end endpoint to process a scientific prompt into a complete 3D visualization.
-    This endpoint now launches a background task and returns immediately with a job ID.
+    """End-to-end endpoint to process a scientific prompt into a complete 3D
+    visualization. This endpoint now launches a background task and returns
+    immediately with a job ID.
 
     The client should poll the /prompt/process/{job_id} endpoint to check the status
     and get the final result.
@@ -620,9 +604,7 @@ async def submit_prompt(request: PromptRequest, background_tasks: BackgroundTask
 
 @router.post("/validate-scientific/", response_model=ValidationResponse)
 async def validate_scientific(request: PromptRequest):
-    """
-    Endpoint to validate if a prompt is scientific in nature.
-    """
+    """Endpoint to validate if a prompt is scientific in nature."""
     try:
         if not os.getenv("OPENAI_API_KEY"):
             raise HTTPException(
@@ -708,8 +690,8 @@ def _create_pubchem_agent(model: Optional[str] = None) -> PubChemAgent:
 async def generate_molecule_diagram(
     request: DiagramPromptRequest, llm_service: LLMService = Depends(use_llm)
 ) -> DiagramResponse:
-    """
-    Generates a 2-D molecule diagram from a text prompt.
+    """Generates a 2-D molecule diagram from a text prompt.
+
     1. Uses an LLM to create a plan (molecules, positions, arrows).
     2. Fetches 2D molecule data from PubChem.
     3. Renders an SVG diagram.
@@ -845,9 +827,8 @@ async def generate_molecule_diagram(
 async def generate_geometry(
     request: GeometryRequest, llm_service: LLMService = Depends(use_llm)
 ):
-    """
-    Endpoint to generate Three.js geometry based on user prompt.
-    Only generates geometry for scientific content.
+    """Endpoint to generate Three.js geometry based on user prompt. Only
+    generates geometry for scientific content.
 
     This endpoint processes the request immediately and returns the result.
     For longer processing, use the /prompt/process/ endpoint.
@@ -898,8 +879,8 @@ async def generate_geometry(
 
 @router.get("/models/", response_model=List[Dict[str, Any]])
 async def get_models():
-    """
-    Endpoint to get information about all available models.
+    """Endpoint to get information about all available models.
+
     Returns a list of registered models with their capabilities.
     """
     models = []
@@ -921,8 +902,8 @@ async def get_models():
 
 @router.get("/agent-models/", response_model=List[Dict[str, Any]])
 async def get_agent_model_configs():
-    """
-    Endpoint to get information about all agent-model configurations.
+    """Endpoint to get information about all agent-model configurations.
+
     Returns a list of agents with their preferred models.
     """
     from api.agent_management.agent_model_config import AGENT_MODEL_MAP, AgentType
@@ -1000,9 +981,8 @@ async def generate_orchestration(
     request: ScriptRequest,
     model: Optional[str] = None,  # Add query parameter for model override
 ):
-    """
-    Endpoint to generate an orchestration plan from a scene script.
-    Breaks down the script into discrete objects needed for the visualization.
+    """Endpoint to generate an orchestration plan from a scene script. Breaks
+    down the script into discrete objects needed for the visualization.
 
     Query parameters:
     - model: Optional specific model to use for orchestration agent
@@ -1029,8 +1009,7 @@ async def generate_orchestration(
 async def generate_geometry_task(
     job_id: str, plan: OrchestrationPlan, override_model: Optional[str] = None
 ):
-    """
-    Background task to generate geometry for all objects in the plan
+    """Background task to generate geometry for all objects in the plan.
 
     Args:
         job_id: The unique job identifier
@@ -1069,9 +1048,9 @@ async def generate_geometry_for_plan(
     background_tasks: BackgroundTasks,
     model: Optional[str] = None,  # Add query parameter for model override
 ):
-    """
-    Endpoint to generate Three.js geometry for all objects in an orchestration plan.
-    This starts an asynchronous job that processes each object sequentially.
+    """Endpoint to generate Three.js geometry for all objects in an
+    orchestration plan. This starts an asynchronous job that processes each
+    object sequentially.
 
     Query parameters:
     - model: Optional specific model to use for geometry generation
@@ -1102,8 +1081,8 @@ async def generate_geometry_for_plan(
 
 @router.get("/geometry-job-status/{job_id}", response_model=GeometryResultResponse)
 async def get_geometry_job_status(job_id: str):
-    """
-    Check the status of a geometry generation job.
+    """Check the status of a geometry generation job.
+
     Returns the results if the job is completed.
     """
     if job_id not in geometry_jobs:
@@ -1125,9 +1104,9 @@ async def generate_animation(
     request: AnimationRequest,
     model: Optional[str] = None,  # Add query parameter for model override
 ):
-    """
-    Generate animation code for a scene based on the script, orchestration plan, and generated geometries.
-    This endpoint takes the outputs from previous steps in the pipeline.
+    """Generate animation code for a scene based on the script, orchestration
+    plan, and generated geometries. This endpoint takes the outputs from
+    previous steps in the pipeline.
 
     Query parameters:
     - model: Optional specific model to use for animation code generation
@@ -1284,9 +1263,11 @@ async def convert_sdf_to_pdb(request: SDFToPDBRequest):
 
 @router.post("/package-scene/", response_model=PackagedSceneResponse)
 async def package_scene(request: PackagedSceneRequest):
-    """
-    Create a complete, packaged Three.js scene from the generated components.
-    This endpoint combines all outputs from previous steps into a ready-to-use scene.
+    """Create a complete, packaged Three.js scene from the generated
+    components.
+
+    This endpoint combines all outputs from previous steps into a ready-
+    to-use scene.
     """
     try:
         # Use the ScenePackager to create a complete scene
