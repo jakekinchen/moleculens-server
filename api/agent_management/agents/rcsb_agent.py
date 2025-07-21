@@ -6,6 +6,10 @@ class RCSBAgent:
     BASE_URL = "https://files.rcsb.org/download/"
     AF_BASE_URL = "https://alphafold.ebi.ac.uk/files/"
     DATA_API_URL = "https://data.rcsb.org/rest/v1/core/"
+    SEQ_COORD_URL = "https://seq.rcsb.org/rest/v1/entry/{identifier}"
+    GRAPHQL_URL = "https://data.rcsb.org/graphql"
+    ESM_BASE_URL = "https://esmatlas.com/api/v1/prediction/"
+    UPLOAD_URL = "https://www.rcsb.org/api/v1/molstar/upload"
 
     def _check_format(self, fmt: str) -> str:
         fmt = fmt.lower()
@@ -56,3 +60,44 @@ class RCSBAgent:
         resp = requests.get(f"{self.DATA_API_URL}entry/{identifier}", timeout=30)
         resp.raise_for_status()
         return resp.json()
+
+    def fetch_sequence_annotations(self, identifier: str) -> dict:
+        """Retrieve residue-level annotations from the Sequence Coordinates Service."""
+        url = self.SEQ_COORD_URL.format(identifier=identifier)
+        resp = requests.get(url, timeout=30)
+        resp.raise_for_status()
+        return resp.json()
+
+    def fetch_graphql_model(self, identifier: str, model_id: str) -> dict:
+        """Call the GraphQL API to obtain a computed structure model."""
+        query = """
+        query($id: String!, $model: String!) {
+            entry(entry_id: $id) {
+                rcsb_id
+                struct {
+                    title
+                }
+            }
+        }
+        """
+        payload = {"query": query, "variables": {"id": identifier, "model": model_id}}
+        resp = requests.post(self.GRAPHQL_URL, json=payload, timeout=30)
+        resp.raise_for_status()
+        return resp.json()
+
+    def fetch_esmf_model(self, uniprot_id: str, file_format: str = "pdb") -> str:
+        """Retrieve a predicted structure from the ESMFold API."""
+        fmt = self._check_format(file_format)
+        ext = "cif" if fmt == "cif" else "pdb"
+        url = f"{self.ESM_BASE_URL}{uniprot_id}.{ext}"
+        resp = requests.get(url, timeout=30)
+        resp.raise_for_status()
+        return resp.text
+
+    def upload_structure(self, file_bytes: bytes, filename: str = "upload.pdb") -> str:
+        """Upload a user-provided structure and return the shareable ID."""
+        files = {"file": (filename, file_bytes)}
+        resp = requests.post(self.UPLOAD_URL, files=files, timeout=30)
+        resp.raise_for_status()
+        data = resp.json()
+        return data.get("id") or data.get("url")

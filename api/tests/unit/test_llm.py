@@ -3,6 +3,10 @@
 """Unit tests for LLM service."""
 from typing import Any, Dict
 from unittest.mock import MagicMock, patch
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
 
 import pytest
 from pydantic import BaseModel
