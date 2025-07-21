@@ -12,6 +12,25 @@ from fastapi.testclient import TestClient
 # Create a minimal FastAPI app for unit tests to avoid importing the full server
 app = FastAPI()
 
+@app.post("/prompt/")
+def submit_prompt(prompt: Dict[str, str]) -> Dict[str, str]:
+    return {"job_id": "job"}
+
+
+@app.get("/prompt/process/{job_id}")
+def job_status(job_id: str) -> Dict[str, str]:
+    return {"status": "completed"}
+
+
+@app.post("/prompt/fetch-molecule-data/")
+def fetch_molecule_data(query: Dict[str, str]) -> Dict[str, Any]:
+    return {"molecule_data": {}}
+
+
+@app.get("/health")
+def health() -> Dict[str, str]:
+    return {"status": "healthy"}
+
 # Set test environment
 os.environ["ENVIRONMENT"] = "test"
 

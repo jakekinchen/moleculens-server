@@ -93,3 +93,17 @@ Following the initial integration of the RCSB agent, the back‑end now exposes 
 * The original `fetch_structure` endpoint and tests continue to function unchanged.
 
 This update progresses the data retrieval layer outlined in the expansion plan and lays groundwork for subsequent features like sequence annotations, alignments and user uploads.
+
+## RCSB data layer enhancements (July 25 2025)
+
+Building on the earlier work, the server now exposes additional endpoints that tap into the Sequence Coordinates Service and GraphQL API while paving the way for user contributed data:
+
+* Added `fetch_sequence_annotations`, `fetch_graphql_model`, `fetch_esmf_model` and `upload_structure` methods to `RCSBAgent`.
+* Updated `api/routers/rcsb/routes.py` with new routes:
+  * `GET /rcsb/annotations/{identifier}` returns residue‑level annotations.
+  * `POST /rcsb/computed-model/` queries the GraphQL API for a computed model.
+  * `POST /rcsb/fetch-esm-model/` retrieves an ESMFold prediction.
+  * `POST /rcsb/upload-structure/` uploads user data and returns a shareable ID.
+* Added integration tests that stub network access to verify the new endpoints.
+
+Next steps are to integrate ligand data from the CCD via the `PubChemAgent`, define reusable PyMOL scene templates and begin Mol* embedding for interactive viewing.
