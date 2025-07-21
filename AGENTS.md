@@ -11,11 +11,11 @@ Expanding Moleculens Server: Current State and Path to On‑Demand Molecular Gra
 | RCSB Data | fetch_graphql_model endpoint | ✅ |
 | RCSB Data | fetch_esmf_model endpoint | ✅ |
 | RCSB Data | upload_structure endpoint | ✅ |
-| RCSB Data | fetch_pairwise_alignment endpoint | ❑ |
-| RCSB Data | fetch_group_entries endpoint | ❑ |
-| RCSB Data | fetch_feature_annotations endpoint | ❑ |
+| RCSB Data | fetch_pairwise_alignment endpoint | ✅ |
+| RCSB Data | fetch_group_entries endpoint | ✅ |
+| RCSB Data | fetch_feature_annotations endpoint | ✅ |
 | PyMOL Scenes | Scene template library (overview, binding_site, mutation) | ✅ |
-| Testing | Coverage for all RCSB endpoints | 🛠 |
+| Testing | Coverage for all RCSB endpoints | ✅ |
 
 Legend: ✅ completed 🛠 in-progress ❑ todo
 
@@ -127,21 +127,16 @@ Building on the earlier work, the server now exposes additional endpoints that t
 
 Next steps are to integrate ligand data from the CCD via the `PubChemAgent`, define reusable PyMOL scene templates and begin Mol* embedding for interactive viewing.
 
-## Next Steps (July 21 2025)
+## July 21 2025 Follow‑Up
 
-Following the July 18 2025 RCSB agent expansion [oai_citation:7‡GitHub](https://github.com/jakekinchen/moleculens-server/blob/c032a23995e32c9aafb72cd96d2c894e789b0bb8/AGENTS.md#L85-L92), the server should focus on expanding the data layer and preparing for richer rendering and interactive features.
+The data layer expansion outlined above has been fully implemented:
 
-* **Sequence coordinates service integration:** Add a `fetch_sequence_coordinates` method to `RCSBAgent` that calls the new RCSB Sequence Coordinates Service to obtain residue‑level annotations. Provide a `/rcsb/sequence-coordinates/{identifier}` endpoint. Write tests that stub network calls and verify that the endpoint returns a mapping of residues to coordinates.
+* Added `fetch_sequence_coordinates` to `RCSBAgent` and introduced the `/rcsb/sequence-coordinates/{identifier}` endpoint with tests.
+* Implemented `/rcsb/align/`, `/rcsb/group/{group_id}` and `/rcsb/feature-annotations/{identifier}` routes backed by new agent methods.
+* Added `/rcsb/upload-structure/` for user uploads and verified it with integration tests.
+* Created a scene template library and a lightweight prompt translator with comprehensive unit tests.
 
-* **Pairwise alignment endpoint:** Implement a `fetch_pairwise_alignment` method that uses the RCSB alignment API to align two structures or UniProt accessions. Expose a `/rcsb/align/` POST endpoint accepting two identifiers and returning alignment JSON. Add tests for success and error cases using stubbed responses.
-
-* **Group and feature data retrieval:** Extend `RCSBAgent` with a `fetch_group_entries` method to retrieve entries belonging to a group and a `fetch_feature_annotations` method to obtain domain, motif and modification annotations. Add `/rcsb/group/{group_id}` and `/rcsb/annotations/{identifier}` endpoints. Create tests that stub the RCSB APIs and verify returned fields.
-
-* **User upload support:** Implement an `upload_structure` method that posts user‑provided PDB or mmCIF files to the RCSB user‑upload API and returns a shareable URL. Add a `/rcsb/upload/` endpoint to accept file uploads. Write tests that simulate file uploads and check that the correct URL is returned.
-
-* **Scene template library:** Implemented parameterized helpers for overview, binding site and mutation focus scenes. Added a lightweight prompt translator and unit tests covering the mutation helper and translator logic.
-
-These steps lay the foundation for subsequent Mol* integration, job orchestration and XR/VR export features [oai_citation:8‡GitHub](https://github.com/jakekinchen/moleculens-server/blob/c032a23995e32c9aafb72cd96d2c894e789b0bb8/AGENTS.md#L32-L65).
+These features pave the way for upcoming Mol* integration and XR/VR export capabilities [oai_citation:8‡GitHub](https://github.com/jakekinchen/moleculens-server/blob/c032a23995e32c9aafb72cd96d2c894e789b0bb8/AGENTS.md#L32-L65).
 
 ### pymol_prompt_parser
 * Stateless; uses OpenAI function calling (`build_scene_request`) to convert free-form English into a `SceneSpec` JSON payload.
