@@ -25,6 +25,36 @@ Exactly one open item keeps all agents aligned:
 
 ## Future (backlog + next_steps)
 1. Tighten flake8/mypy rules; re-enable strict hook.
+2. Assess whether any of the following should be integrated or are already integrated "Backend to‑do list—keep it lean:
+	1.	Token mint & verify
+	•	utils/tokens.py – sign(payload, ttl) & verify(token) using HS256 + env secret.
+	•	Include scene fingerprint + plan flag.
+	2.	POST /scenes
+	•	Parse payload, run PyMOL render.
+	•	Free plan → skip Supabase upload; write bytes to TTLCache.
+	•	Pro plan → supabase.storage.from("scenes").upload(...); return signed URL.
+	3.	GET /viewer/asset
+	•	Query param token; verify.
+	•	If free → cache.get(fp) or regenerate(); stream StreamingResponse.
+	•	If pro  → 302 redirect to Supabase signed URL.
+	4.	Cache layer
+	•	Simple TTLCache(maxsize=500, ttl=6*3600) in module scope.
+	•	Wrap regeneration in asyncio.Lock keyed by fingerprint.
+	5.	Rate‑limit & auth
+	•	FastAPI dependency: limiter = Limiter(key_func=ip).
+	•	30 req/min IP cap on asset route.
+	•	Bearer JWT (user auth) only on /scenes; asset route solely token‑based.
+	6.	Headers
+	•	Cache‑Control: public,max-age=21600 on asset response.
+	•	Content‑Type dynamic: model/gltf+json or application/json (Mol*).
+	•	CSP/HSTS added in middleware/security.py.
+	7.	Supabase helper (if enabled)
+	•	supabase_client = create_client(url, service_key) in a singleton.
+	•	get_signed_url(path, 86400) for pro tier.
+	8.	Metrics & logs
+	•	Prometheus counters: scene_render_seconds, asset_requests_total, token_invalid_total.
+	•	Log structured JSON (fp, plan, ms, status) to stdout.
+"
 
 # AGENTS.md Instructions
 Once a task is completed, it needs to be moved from the "Present" section to the "Past" section below. If there are no remaining tasks in the "Present" section, then move one or more tasks from the "Future" section to the "Present" section. If there are no tasks in the "Future" section or in the "Present" section, then the document is considered complete and you should return it as is. If you notice that a step or tasks has already been completed in the "Present" or "Future" section, then you should change it to the "Past" section and update the date to the current date.
