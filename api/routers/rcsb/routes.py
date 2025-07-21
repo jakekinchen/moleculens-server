@@ -47,6 +47,11 @@ class UploadResponse(BaseModel):
     upload_id: str
 
 
+class AlignmentRequest(BaseModel):
+    identifier1: str
+    identifier2: str
+
+
 @router.post("/fetch-structure/", response_model=StructureResponse)
 def fetch_structure(request: StructureRequest) -> StructureResponse:
     try:
@@ -113,5 +118,35 @@ def upload_structure(request: UploadRequest) -> UploadResponse:
         agent = RCSBAgent()
         upload_id = agent.upload_structure(request.data.encode(), request.filename)
         return UploadResponse(upload_id=upload_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/align/", response_model=MetadataResponse)
+def pairwise_alignment(request: AlignmentRequest) -> MetadataResponse:
+    try:
+        agent = RCSBAgent()
+        data = agent.fetch_pairwise_alignment(request.identifier1, request.identifier2)
+        return MetadataResponse(metadata=data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/group/{group_id}", response_model=MetadataResponse)
+def group_entries(group_id: str) -> MetadataResponse:
+    try:
+        agent = RCSBAgent()
+        data = agent.fetch_group_entries(group_id)
+        return MetadataResponse(metadata=data)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/feature-annotations/{identifier}", response_model=AnnotationResponse)
+def feature_annotations(identifier: str) -> AnnotationResponse:
+    try:
+        agent = RCSBAgent()
+        data = agent.fetch_feature_annotations(identifier)
+        return AnnotationResponse(annotations=data)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

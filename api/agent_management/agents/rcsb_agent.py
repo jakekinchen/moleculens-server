@@ -11,6 +11,7 @@ class RCSBAgent:
     GRAPHQL_URL = "https://data.rcsb.org/graphql"
     ESM_BASE_URL = "https://esmatlas.com/api/v1/prediction/"
     UPLOAD_URL = "https://www.rcsb.org/api/v1/molstar/upload"
+    ALIGN_URL = "https://www.rcsb.org/api/v1/align"
 
     def _check_format(self, fmt: str) -> str:
         fmt = fmt.lower()
@@ -102,3 +103,24 @@ class RCSBAgent:
         resp.raise_for_status()
         data = resp.json()
         return data.get("id") or data.get("url")
+
+    def fetch_pairwise_alignment(self, id_one: str, id_two: str) -> dict:
+        """Align two structures or accessions using the RCSB alignment API."""
+        payload = {"id1": id_one, "id2": id_two}
+        resp = requests.post(self.ALIGN_URL, json=payload, timeout=30)
+        resp.raise_for_status()
+        return resp.json()
+
+    def fetch_group_entries(self, group_id: str) -> dict:
+        """Retrieve entries that belong to a specific RCSB group."""
+        url = f"{self.DATA_API_URL}group/{group_id}"
+        resp = requests.get(url, timeout=30)
+        resp.raise_for_status()
+        return resp.json()
+
+    def fetch_feature_annotations(self, identifier: str) -> dict:
+        """Get domain and motif annotations for a structure or accession."""
+        url = f"{self.DATA_API_URL}feature/{identifier}"
+        resp = requests.get(url, timeout=30)
+        resp.raise_for_status()
+        return resp.json()
