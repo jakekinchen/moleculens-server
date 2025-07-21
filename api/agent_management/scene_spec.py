@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 class SceneSpec(BaseModel):
     """Validated payload for every PyMOL request."""
 
-    op: Literal["overview", "binding_site", "mutation", "raw"]
+    op: Literal["overview", "binding_site", "mutation", "mutation_focus", "raw"]
     structure_id: str
     selection: Optional[str] = Field(
         default=None,

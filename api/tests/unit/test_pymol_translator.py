@@ -53,3 +53,19 @@ def test_translate_with_stub(monkeypatch):
     cmds = translate("any text here")
     assert cmds[0].startswith("fetch 1ubq")
     assert any("magenta" in c for c in cmds)
+
+
+def test_translate_mutation_focus(monkeypatch):
+    SceneSpec = _load_scene_spec()
+    module_t = _load_translator(monkeypatch)
+    translate = module_t.translate
+
+    stub_spec = SceneSpec(
+        op="mutation_focus",
+        structure_id="1abc",
+        selection="resi 10",
+    )
+    monkeypatch.setattr(module_t, "_spec_from_prompt", lambda _: stub_spec)
+
+    cmds = translate("focus")
+    assert any("zoom" in c for c in cmds)

@@ -111,3 +111,32 @@ def mutation_scene(
         "bg_color white",
     ]
     return cmds
+
+
+def mutation_focus_scene(structure_id: str, mutation_selection: str) -> List[str]:
+    """Close-up view of a mutation site without surface.
+
+    Parameters
+    ----------
+    structure_id : str
+        PDB ID or local object name to load.
+    mutation_selection : str
+        PyMOL selection string targeting the mutated residue(s).
+
+    Returns
+    -------
+    List[str]
+        Ordered PyMOL commands.
+    """
+
+    return [
+        f"fetch {structure_id}, async=0",
+        "hide everything",
+        "show cartoon",
+        "color grey80, all",
+        f"select mutation_site, ({mutation_selection})",
+        "show sticks, mutation_site",
+        "color magenta, mutation_site",
+        "zoom mutation_site, 8",
+        "bg_color white",
+    ]
