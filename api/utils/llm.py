@@ -1,19 +1,16 @@
 import json
 import os
 from typing import Optional
+
 from openai import OpenAI
 
-SYSTEM_PROMPT = (
-    "Translate the user description into a deterministic list of PyMOL cmd API calls only."
-)
+SYSTEM_PROMPT = "Translate the user description into a deterministic list of PyMOL cmd API calls only."
 
 FUNCTION_SCHEMA = {
     "name": "generate_pymol_script",
     "parameters": {
         "type": "object",
-        "properties": {
-            "commands": {"type": "array", "items": {"type": "string"}}
-        },
+        "properties": {"commands": {"type": "array", "items": {"type": "string"}}},
         "required": ["commands"],
     },
 }

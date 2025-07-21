@@ -3,8 +3,10 @@ Geometry Agent - Provides static geometry code snippets for the visualization.
 """
 
 import json
-from agent_management.llm_service import LLMService, LLMRequest
+
+from agent_management.llm_service import LLMRequest, LLMService
 from agent_management.utils.code_extraction import extract_code_block
+
 
 class GeometryAgent:
     def __init__(self, llm_service: LLMService):
@@ -78,17 +80,17 @@ hydrogen.position.set(
 function createBond(start, end) {{
     const direction = new THREE.Vector3().subVectors(end, start);
     const length = direction.length();
-    
+
     const bondGeometry = new THREE.CylinderGeometry(0.1, 0.1, length, 8);
     const bond = new THREE.Mesh(bondGeometry, bondMaterial);
-    
+
     bond.position.copy(start).lerp(end, 0.5);  // Method chaining with semicolon
-    
+
     bond.quaternion.setFromUnitVectors(
         new THREE.Vector3(0, 1, 0),
         direction.clone().normalize()
     );  // Multi-line method with semicolon
-    
+
     return bond;
 }}
 
@@ -121,16 +123,14 @@ Return your code as a single JavaScript snippet, with no JSON wrapper.
 """
 
         # Create a proper LLMRequest with higher max_tokens
-        request = LLMRequest(
-            user_prompt=prompt_for_llm
-        )
-        
+        request = LLMRequest(user_prompt=prompt_for_llm)
+
         # Get the response from the LLM service
         llm_response = self.llm_service.generate(request)
-        
+
         # Extract the content from the LLMResponse and clean it
         geometry_code = extract_code_block(llm_response.content, "javascript")
-        
+
         return f"""
 // GeometryAgent LLM-generated code
 {geometry_code}

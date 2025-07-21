@@ -1,10 +1,16 @@
 """
 Caption Agent - Uses an LLM to generate text captions, then returns JS snippet injecting those captions.
 """
+
 import json
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+
 from agent_management.llm_service import LLMService
-from agent_management.providers.deepseek_utils import is_deepseek_model, extract_structured_output_from_deepseek
+from agent_management.providers.deepseek_utils import (
+    extract_structured_output_from_deepseek,
+    is_deepseek_model,
+)
+
 
 class CaptionAgent:
     def __init__(self, llm_service: LLMService):
@@ -26,12 +32,12 @@ class CaptionAgent:
         ]
         """
         response = self.llm_service.generate(llm_prompt)
-        
+
         # Check if we're using a DeepSeek model and apply special extraction if needed
         content = response.content
         if is_deepseek_model(response.model):
             content = extract_structured_output_from_deepseek(content, "json")
-        
+
         try:
             # Ensure response is a string before passing to json.loads
             captions_data: List[Dict[str, Any]] = json.loads(str(content))
@@ -39,9 +45,9 @@ class CaptionAgent:
             # fallback if invalid
             captions_data = [
                 {"time": 0, "text": "Default start caption"},
-                {"time": 5, "text": "Default second caption"}
+                {"time": 5, "text": "Default second caption"},
             ]
-        
+
         # We'll convert the array into JS code.
         # We'll reference an HTML <div id="caption"></div> for display.
         return f"""

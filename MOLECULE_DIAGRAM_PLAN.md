@@ -50,17 +50,17 @@ class DiagramResponse(BaseModel):
 ```
 
 ### 3. Implementation Flow
-a. Parse request  
-b. Compose an LLM **Structured** prompt (via `LLMService` + `StructuredLLMRequest`) that instructs the model to return strictly-valid JSON in the above schema  
-c. Validate JSON → `DiagramPlan`  
-d. Build a list of `{query, box}` where box = `{x,y,width,height}` (fallback width/height if None)  
-e. Fetch 2-D atom/bond data via `PubChemAgent.get_molecules_2d_layout()`  
-f. Render SVG:  
-   - For each molecule, use RDKit's `Draw` module (`rdkit.Chem.Draw.MolToImage` or `MolDraw2DSVG`) scaled into the supplied box  
-   - Compose onto a single SVG canvas (`svgwrite`)  
-   - Draw arrows & labels  
-g. Convert SVG to base-64 PNG (optional) or just return the SVG string  
-h. Return `DiagramResponse`  
+a. Parse request
+b. Compose an LLM **Structured** prompt (via `LLMService` + `StructuredLLMRequest`) that instructs the model to return strictly-valid JSON in the above schema
+c. Validate JSON → `DiagramPlan`
+d. Build a list of `{query, box}` where box = `{x,y,width,height}` (fallback width/height if None)
+e. Fetch 2-D atom/bond data via `PubChemAgent.get_molecules_2d_layout()`
+f. Render SVG:
+   - For each molecule, use RDKit's `Draw` module (`rdkit.Chem.Draw.MolToImage` or `MolDraw2DSVG`) scaled into the supplied box
+   - Compose onto a single SVG canvas (`svgwrite`)
+   - Draw arrows & labels
+g. Convert SVG to base-64 PNG (optional) or just return the SVG string
+h. Return `DiagramResponse`
 i. If rendering proves slow, off-load to a background task and return `job_id` + `processing`, re-using the existing job/poll helpers
 
 ### 4. Unit Tests
@@ -104,8 +104,8 @@ export const generateMoleculeDiagram = async (
 
 ```
 SYSTEM:
-You are a chemistry teaching assistant.  
-Return ONLY valid JSON conforming to the schema below.  
+You are a chemistry teaching assistant.
+Return ONLY valid JSON conforming to the schema below.
 Do NOT wrap in markdown.
 
 USER_PROMPT: {user prompt}
@@ -132,4 +132,4 @@ JSON_SCHEMA:
 3. Diagram renderer (SVG placeholder first)
 4. Front-end page + API helper + components
 5. Wire up, local test
-6. Optional refinements: job polling, nicer SVG styling, header nav 
+6. Optional refinements: job polling, nicer SVG styling, header nav

@@ -2,11 +2,14 @@
 Aggregator Agent - merges geometry code, animation code, and caption code into a single embedded Three.js HTML.
 """
 
+
 class AggregatorAgent:
     def __init__(self):
         pass
 
-    def combine_into_html(self, geometry_code: str, animation_code: str, caption_code: str) -> str:
+    def combine_into_html(
+        self, geometry_code: str, animation_code: str, caption_code: str
+    ) -> str:
         """
         Creates a single HTML string with placeholders for geometry, animation, and caption code.
         """
@@ -17,13 +20,13 @@ class AggregatorAgent:
     <title>Multi-Agent Three.js Demo</title>
     <style>
         body, html {
-            margin: 0; 
-            padding: 0; 
+            margin: 0;
+            padding: 0;
             overflow: hidden;
             background: #000;
         }
         #sceneCanvas {
-            display: block; 
+            display: block;
         }
         #caption {
             position: absolute;
@@ -62,7 +65,7 @@ class AggregatorAgent:
         });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
-        
+
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x000000);
 
@@ -100,13 +103,16 @@ class AggregatorAgent:
 </html>
 """
         # Insert each snippet in place of placeholders
-        final_html = (base_html
-                      .replace("// [GEOMETRY_CODE]", geometry_code)
-                      .replace("// [ANIMATION_CODE]", animation_code)
-                      .replace("// [CAPTION_CODE]", caption_code))
+        final_html = (
+            base_html.replace("// [GEOMETRY_CODE]", geometry_code)
+            .replace("// [ANIMATION_CODE]", animation_code)
+            .replace("// [CAPTION_CODE]", caption_code)
+        )
         return final_html
 
-    def aggregate(self, geometry_code: str, animation_code: str, caption_code: str) -> str:
+    def aggregate(
+        self, geometry_code: str, animation_code: str, caption_code: str
+    ) -> str:
         """
         Combine them into a single final HTML.
         """

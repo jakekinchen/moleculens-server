@@ -1,11 +1,12 @@
-import os
 import json
+import os
 from pathlib import Path
-from typing import Optional, Tuple, Dict, Any
+from typing import Any, Dict, Optional, Tuple
 
 try:
     import redis  # type: ignore
 except ImportError:  # pragma: no cover – fallback stub for test environments
+
     class _DummyRedis:
         _store: dict = {}
 
@@ -57,4 +58,3 @@ def get(key: str) -> Optional[Tuple[str, Dict[str, Any]]]:
 def set(key: str, meta: Dict[str, Any]) -> None:
     """Cache metadata under the provided key."""
     redis_client.set(key, json.dumps(meta))
-

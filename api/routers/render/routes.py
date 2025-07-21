@@ -1,17 +1,17 @@
+import json
+import subprocess
+import tempfile
+import threading
+from hashlib import sha256
+from pathlib import Path
+from typing import Any, Dict, Literal
+
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
-from typing import Literal, Dict, Any
-from pathlib import Path
-from hashlib import sha256
-import tempfile
-import subprocess
-import json
-import threading
-
-from api.utils import llm, cache, security
-
 from pymol import cmd
+
+from api.utils import cache, llm, security
 
 router = APIRouter(prefix="/render", tags=["Render"])
 
@@ -137,4 +137,6 @@ def _build_response(path: str, fmt: str, meta: Dict[str, Any]):
         Path(path).rename(static_path)
         return JSONResponse({"url": f"/static/{static_path.name}", "metadata": meta})
 
-    return FileResponse(path, media_type=media_types[fmt], headers={"X-Metadata": json.dumps(meta)})
+    return FileResponse(
+        path, media_type=media_types[fmt], headers={"X-Metadata": json.dumps(meta)}
+    )

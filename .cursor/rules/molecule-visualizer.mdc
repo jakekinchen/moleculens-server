@@ -1,6 +1,6 @@
 ---
 description: when editing html or javascript code that is inside a string
-globs: 
+globs:
 alwaysApply: false
 ---
 

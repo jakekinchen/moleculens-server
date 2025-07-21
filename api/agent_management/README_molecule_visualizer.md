@@ -22,7 +22,7 @@ from molecule_visualizer import MoleculeVisualizer
 
 # Example 1: Generate HTML content as a string
 pdb_data = """COMPND    297
-HETATM    1  C1  UNL     1       0.000   0.000   0.000  1.00  0.00           C  
+HETATM    1  C1  UNL     1       0.000   0.000   0.000  1.00  0.00           C
 # ... more PDB data ...
 END"""
 
@@ -70,7 +70,7 @@ from molecule_visualizer import MoleculeVisualizer
 # Example SDF data
 sdf_data = """
   Molecule Name
-  
+
   10 10  0  0  0  0  0  0  0  0999 V2000
     0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
     # ... more SDF data ...
@@ -121,8 +121,8 @@ The PDB data should be in standard Protein Data Bank format:
 
 ```
 COMPND    MOLECULE_ID
-HETATM    1  ATOM_NAME  UNL     1       X_COORD  Y_COORD  Z_COORD  1.00  0.00           ELEMENT  
-HETATM    2  ATOM_NAME  UNL     1       X_COORD  Y_COORD  Z_COORD  1.00  0.00           ELEMENT  
+HETATM    1  ATOM_NAME  UNL     1       X_COORD  Y_COORD  Z_COORD  1.00  0.00           ELEMENT
+HETATM    2  ATOM_NAME  UNL     1       X_COORD  Y_COORD  Z_COORD  1.00  0.00           ELEMENT
 ...
 CONECT    1    2    3    4
 ...
@@ -137,4 +137,4 @@ END
 
 ## How It Works
 
-The `inject_data_into_template` method uses regular expressions to find and replace the `scriptData` and `pdbData` constants in the output.html template. This approach avoids having to store the entire HTML content as a Python string with escaped characters, making it easier to maintain and update the template. 
+The `inject_data_into_template` method uses regular expressions to find and replace the `scriptData` and `pdbData` constants in the output.html template. This approach avoids having to store the entire HTML content as a Python string with escaped characters, making it easier to maintain and update the template.

@@ -1,7 +1,8 @@
+from typing import Any, Dict, Literal
+
+from agent_management.agents.rcsb_agent import RCSBAgent
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import Literal, Dict, Any
-from agent_management.agents.rcsb_agent import RCSBAgent
 
 router = APIRouter(
     prefix="/rcsb",
@@ -9,16 +10,20 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
+
 class StructureRequest(BaseModel):
     identifier: str
     format: Literal["pdb", "cif"] = "pdb"
 
+
 class StructureResponse(BaseModel):
     data: str
+
 
 class ModelRequest(BaseModel):
     uniprot_id: str
     format: Literal["pdb", "cif"] = "pdb"
+
 
 class MetadataResponse(BaseModel):
     metadata: Dict[str, Any]
@@ -41,6 +46,7 @@ class UploadRequest(BaseModel):
 class UploadResponse(BaseModel):
     upload_id: str
 
+
 @router.post("/fetch-structure/", response_model=StructureResponse)
 def fetch_structure(request: StructureRequest) -> StructureResponse:
     try:
@@ -50,6 +56,7 @@ def fetch_structure(request: StructureRequest) -> StructureResponse:
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.post("/fetch-model/", response_model=StructureResponse)
 def fetch_model(request: ModelRequest) -> StructureResponse:
     try:
@@ -58,6 +65,7 @@ def fetch_model(request: ModelRequest) -> StructureResponse:
         return StructureResponse(data=content)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/entry/{identifier}", response_model=MetadataResponse)
 def entry_metadata(identifier: str) -> MetadataResponse:

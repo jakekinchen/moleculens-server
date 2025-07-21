@@ -2,30 +2,31 @@
 PubChem Agent - Handles interaction with PubChem database and molecular structure retrieval.
 """
 
-import os
-import tempfile
+import datetime
 import json
+import logging
+import os
+import re
+import tempfile
+import urllib.parse
+from typing import Any, Dict, List, NamedTuple, Optional
+
 import pubchempy as pcp
 import requests
-from typing import Optional, Dict, Any, NamedTuple, List
-from agent_management.molecule_visualizer import MoleculeVisualizer
-from agent_management.models import PubChemSearchResult, PubChemCompound
-from agent_management.agents.script_agent import ScriptAgent
 from agent_management.agents.pubchem_agent_helper import validate_and_convert_script
-from agent_management.llm_service import (
-    LLMService,
-    LLMRequest,
-    StructuredLLMRequest,
-    LLMModelConfig,
-    ProviderType,
-)
-from rdkit import Chem
-from rdkit.Chem import Fragments, Descriptors, AllChem
-import logging
+from agent_management.agents.script_agent import ScriptAgent
 from agent_management.debug_utils import DEBUG_PUBCHEM, write_debug_file
-import datetime
-import re
-import urllib.parse
+from agent_management.llm_service import (
+    LLMModelConfig,
+    LLMRequest,
+    LLMService,
+    ProviderType,
+    StructuredLLMRequest,
+)
+from agent_management.models import PubChemCompound, PubChemSearchResult
+from agent_management.molecule_visualizer import MoleculeVisualizer
+from rdkit import Chem
+from rdkit.Chem import AllChem, Descriptors, Fragments
 
 
 def _sdf_to_pdb_block(sdf_data: str) -> str:

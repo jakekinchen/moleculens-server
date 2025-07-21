@@ -9,13 +9,15 @@ Refactored to:
 - Add toggleable atomic annotations that face the camera
 """
 
-import re
-from typing import Optional, Dict, Any
-import os
-from agent_management.debug_utils import DEBUG_PUBCHEM, write_debug_file
-import json
 import datetime
+import json
+import os
+import re
 import traceback
+from typing import Any, Dict, Optional
+
+from agent_management.debug_utils import DEBUG_PUBCHEM, write_debug_file
+
 
 class MoleculeVisualizer:
     """
@@ -33,7 +35,7 @@ class MoleculeVisualizer:
         """
         Safely escape backslashes, backticks, and dollar signs for embedding in JS strings.
         """
-        return text.replace('\\', '\\\\').replace('`', '\\`').replace('$', '\\$')
+        return text.replace("\\", "\\\\").replace("`", "\\`").replace("$", "\\$")
 
     @staticmethod
     def _get_molecule_label_style() -> str:
@@ -83,8 +85,6 @@ class MoleculeVisualizer:
         """
         return f'<div id="molecule-label">{name}</div>'
 
-    
-
     @classmethod
     def generate_js_code_from_pdb(cls, pdb_data: str, name: str = "Molecule") -> str:
         """
@@ -96,7 +96,6 @@ class MoleculeVisualizer:
         - No custom cameras or lights; relies on the parent environment
         - Perfect for embedding in React or other Three.js setups
         """
-
 
         escaped_pdb = cls._escape_js_string(pdb_data)
         label_style = cls._escape_js_string(cls._get_molecule_label_style())
@@ -114,15 +113,15 @@ function createMoleculeVisualization(THREE, scene, options = {{}}) {{
         controls: null,         // Controls instance (optional)
         ...options
     }};
-    
+
     // Create a group for the molecule
     const root = new THREE.Group();
     scene.add(root);
-    
+
     // Store labels in a separate group for easier toggling
     const labelsGroup = new THREE.Group();
     root.add(labelsGroup);
-    
+
     // Set a public property to allow external toggling of annotations
     root.enableAnnotations = config.enableAnnotations;
 
@@ -164,7 +163,7 @@ function createMoleculeVisualization(THREE, scene, options = {{}}) {{
         }} else {{
             document.body.appendChild(window.labelRenderer.domElement);
         }}
-        
+
         // Add resize listener for labelRenderer if not already present
         if (!window.labelRendererResizeListener) {{
             window.labelRendererResizeListener = true;
@@ -174,7 +173,7 @@ function createMoleculeVisualization(THREE, scene, options = {{}}) {{
 
     // Convert SDF -> PDB in Python, embed it here
     const pdbData = `{escaped_pdb}`;
-    
+
     // Create and configure the PDB loader
     let loader;
     if (typeof THREE.PDBLoader !== 'undefined') {{
@@ -188,7 +187,7 @@ function createMoleculeVisualization(THREE, scene, options = {{}}) {{
         console.error('PDBLoader not found. Make sure it is loaded first.');
         return root;
     }}
-    
+
     const pdbBlob = new Blob([pdbData], {{ type: 'text/plain' }});
     const pdbUrl = URL.createObjectURL(pdbBlob);
 
@@ -230,24 +229,24 @@ function createMoleculeVisualization(THREE, scene, options = {{}}) {{
             object.position.multiplyScalar(1.5 * config.scaleFactor);
             object.scale.multiplyScalar(0.75 * config.scaleFactor);
             root.add(object);
-            
+
             // Create atom annotation using CSS2DObject if available
             if (config.enableAnnotations && typeof THREE.CSS2DObject !== 'undefined') {{
                 const atom = json.atoms[i];
                 const atomSymbol = atom ? (atom[4] || '') : '';
-                
+
                 if (atomSymbol) {{
                     const text = document.createElement('div');
                     text.className = 'atom-label';
                     text.textContent = atomSymbol;
                     text.style.color = `rgb(${{Math.round(color.r*255)}},${{Math.round(color.g*255)}},${{Math.round(color.b*255)}})`;
-                    
+
                     // Create CSS2DObject and attach it directly to the scene (not labelsGroup)
                     // This ensures it's not affected by group transformations
                     const label = new THREE.CSS2DObject(text);
                     label.position.copy(object.position);
                     scene.add(label);
-                    
+
                     // Add reference to the label in the labelsGroup array for toggling
                     if (!labelsGroup.labels) labelsGroup.labels = [];
                     labelsGroup.labels.push(label);
@@ -285,14 +284,14 @@ function createMoleculeVisualization(THREE, scene, options = {{}}) {{
 
         // Clean up
         URL.revokeObjectURL(pdbUrl);
-        
+
         // Set initial visibility based on config
         labelsGroup.visible = config.enableAnnotations;
 
         // Fit camera to the molecule after loading
         root.fitCameraToMolecule();
     }});
-    
+
     // Add a method to toggle annotations visibility
     root.toggleAnnotations = function(enable) {{
         if (typeof enable === 'boolean') {{
@@ -300,14 +299,14 @@ function createMoleculeVisualization(THREE, scene, options = {{}}) {{
         }} else {{
             root.enableAnnotations = !root.enableAnnotations;
         }}
-        
+
         // Toggle visibility of each label in the labels array
         if (labelsGroup.labels && Array.isArray(labelsGroup.labels)) {{
             labelsGroup.labels.forEach(label => {{
                 label.visible = root.enableAnnotations;
             }});
         }}
-        
+
         return root.enableAnnotations;
     }};
 
@@ -319,45 +318,45 @@ function createMoleculeVisualization(THREE, scene, options = {{}}) {{
                 box.expandByObject(child);
             }}
         }});
-        
+
         const size = box.getSize(new THREE.Vector3());
         const center = box.getCenter(new THREE.Vector3());
-        
+
         // Calculate distance based on diagonal
         const diagonal = Math.sqrt(
-            size.x * size.x + 
-            size.y * size.y + 
+            size.x * size.x +
+            size.y * size.y +
             size.z * size.z
         );
-        
+
         // Increase distance for larger molecules using log scale
         const scaleFactor = Math.max(1.2, Math.log10(diagonal) * 0.8);
         const distance = diagonal * scaleFactor;
-        
+
         // Position camera using spherical coordinates
         const theta = Math.PI / 4; // 45 degrees
         const phi = Math.PI / 6;   // 30 degrees
-        
+
         config.camera.position.set(
             center.x + distance * Math.sin(theta) * Math.cos(phi),
             center.y + distance * Math.sin(phi),
             center.z + distance * Math.cos(theta) * Math.cos(phi)
         );
-        
+
         config.camera.lookAt(center);
         config.controls.target.copy(center);
-        
+
         // Adjust near/far planes
         config.camera.near = distance * 0.01;
         config.camera.far = distance * 10;
         config.camera.updateProjectionMatrix();
-        
+
         // Update controls min/max distance
         config.controls.minDistance = distance * 0.1;
         config.controls.maxDistance = distance * 5;
         config.controls.update();
     }};
-    
+
     // Return the root group for external control
     return root;
 }}
@@ -384,7 +383,9 @@ createMoleculeVisualization(THREE, scene, {{
 """
 
     @classmethod
-    def generate_html_viewer_from_pdb(cls, pdb_data: str, name: str = "Molecule") -> str:
+    def generate_html_viewer_from_pdb(
+        cls, pdb_data: str, name: str = "Molecule"
+    ) -> str:
         """
         Generate a standalone HTML file that:
         - Embeds Three.js (ESM)
@@ -395,7 +396,6 @@ createMoleculeVisualization(THREE, scene, {{
         - Displays the molecule name
         - Includes toggleable atomic annotations
         """
-
 
         escaped_pdb = cls._escape_js_string(pdb_data)
 
@@ -410,7 +410,7 @@ createMoleculeVisualization(THREE, scene, {{
     <style>
         body {{ margin: 0; padding: 0; overflow: hidden; }}
         {cls._get_molecule_label_style()}
-        
+
         #controls {{
             position: absolute;
             top: 20px;
@@ -420,7 +420,7 @@ createMoleculeVisualization(THREE, scene, {{
             border-radius: 5px;
             z-index: 100;
         }}
-        
+
         #controls button {{
             background-color: #333;
             color: white;
@@ -430,7 +430,7 @@ createMoleculeVisualization(THREE, scene, {{
             border-radius: 3px;
             transition: background-color 0.3s;
         }}
-        
+
         #controls button:hover {{
             background-color: #555;
         }}
@@ -497,7 +497,7 @@ function init() {{
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
     container.appendChild(renderer.domElement);
-    
+
     // CSS2D Renderer for atom labels
     labelRenderer = new CSS2DRenderer();
     labelRenderer.setSize(window.innerWidth, window.innerHeight);
@@ -515,7 +515,7 @@ function init() {{
 
     // Handle resize
     window.addEventListener('resize', onWindowResize);
-    
+
     // Add labelRenderer resize tracking
     if (!window.labelRendererResizeListener) {{
         window.labelRendererResizeListener = true;
@@ -537,39 +537,39 @@ function init() {{
                 box.expandByObject(child);
             }}
         }});
-        
+
         const size = box.getSize(new THREE.Vector3());
         const center = box.getCenter(new THREE.Vector3());
-        
+
         // Calculate distance based on diagonal
         const diagonal = Math.sqrt(
-            size.x * size.x + 
-            size.y * size.y + 
+            size.x * size.x +
+            size.y * size.y +
             size.z * size.z
         );
-        
+
         // Increase distance for larger molecules using log scale
         const scaleFactor = Math.max(1.2, Math.log10(diagonal) * 0.8);
         const distance = diagonal * scaleFactor;
-        
+
         // Position camera using spherical coordinates
         const theta = Math.PI / 4; // 45 degrees
         const phi = Math.PI / 6;   // 30 degrees
-        
+
         camera.position.set(
             center.x + distance * Math.sin(theta) * Math.cos(phi),
             center.y + distance * Math.sin(phi),
             center.z + distance * Math.cos(theta) * Math.cos(phi)
         );
-        
+
         camera.lookAt(center);
         controls.target.copy(center);
-        
+
         // Adjust near/far planes
         camera.near = distance * 0.01;
         camera.far = distance * 10;
         camera.updateProjectionMatrix();
-        
+
         // Update controls min/max distance
         controls.minDistance = distance * 0.1;
         controls.maxDistance = distance * 5;
@@ -585,10 +585,10 @@ function init() {{
     window.PDBLoader = PDBLoader;
     const loader = new PDBLoader();
     const scaleFactor = .3;
-    
+
     // Array to track all labels
     const labels = [];
-    
+
     // Add toggle function to root
     root.toggleAnnotations = function(enable) {{
         if (typeof enable === 'boolean') {{
@@ -596,15 +596,15 @@ function init() {{
         }} else {{
             root.enableAnnotations = !root.enableAnnotations;
         }}
-        
+
         // Toggle visibility of each label
         labels.forEach(label => {{
             label.visible = root.enableAnnotations;
         }});
-        
+
         return root.enableAnnotations;
     }};
-    
+
     // Set initial annotation state
     root.enableAnnotations = config.enableAnnotations;
 
@@ -645,7 +645,7 @@ function init() {{
             atom.position.copy(position).multiplyScalar(120 * scaleFactor);
             atom.scale.setScalar(40 * scaleFactor);
             root.add(atom);
-            
+
             // Add atom labels using CSS2DObject
             if (config.enableAnnotations && json.atoms[i]) {{
                 const atomSymbol = json.atoms[i][4];
@@ -654,12 +654,12 @@ function init() {{
                     text.className = 'atom-label';
                     text.textContent = atomSymbol;
                     text.style.color = `rgb(${{Math.round(color.r*255)}},${{Math.round(color.g*255)}},${{Math.round(color.b*255)}})`;
-                    
+
                     // Create CSS2DObject and attach it directly to the scene
                     const label = new CSS2DObject(text);
                     label.position.copy(atom.position);
                     scene.add(label);
-                    
+
                     // Add reference to the label for toggling
                     labels.push(label);
                 }}
@@ -711,10 +711,10 @@ function onWindowResize() {{
 
 function animate() {{
     requestAnimationFrame(animate);
-    
+
     // Update controls
     controls.update();
-    
+
     // Render both the 3D scene and labels
     renderer.render(scene, camera);
     labelRenderer.render(scene, camera);
@@ -725,49 +725,49 @@ function animate() {{
 """
 
     @classmethod
-    def generate_interactive_html(cls, 
-                                 pdb_data: str, 
-                                 title: Optional[str] = None,
-                                 script_data: Optional[Dict[str, Any]] = None,
-                                 output_path: Optional[str] = None) -> str:
+    def generate_interactive_html(
+        cls,
+        pdb_data: str,
+        title: Optional[str] = None,
+        script_data: Optional[Dict[str, Any]] = None,
+        output_path: Optional[str] = None,
+    ) -> str:
         """
         Generate an interactive HTML visualization by injecting PDB data and optional script data
         into the output.html template file.
-        
+
         Args:
             pdb_data (str): PDB data to inject into the template
             title (str, optional): Title for the molecule visualization
             script_data (dict, optional): Script data for interactive animation
             output_path (str, optional): Path where the generated HTML file will be saved.
                                         If not provided, returns the HTML content as a string.
-        
+
         Returns:
             str: HTML content as a string if output_path is None, otherwise the path to the generated file
         """
-        import re
         import json
+        import re
         from pathlib import Path
-        
+
         # Get the path to the template file (output.html in the same directory as this script)
-        template_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'output.html')
-        
+        template_path = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "output.html"
+        )
+
         # Read the template file
-        with open(template_path, 'r') as f:
+        with open(template_path, "r") as f:
             template_content = f.read()
-        
+
         # Create default script data if none provided
         if script_data is None and title is not None:
             script_data = {
                 "title": title,
                 "content": [
-                    {
-                        "timecode": "00:00",
-                        "atoms": [],
-                        "caption": f"This is {title}."
-                    }
-                ]
+                    {"timecode": "00:00", "atoms": [], "caption": f"This is {title}."}
+                ],
             }
-        
+
         # Replace script data if provided
         if script_data:
             # Validate script data structure
@@ -793,38 +793,43 @@ function animate() {{
 
             # Convert script data to JSON string with proper formatting
             script_json = json.dumps(script_data, indent=2)
-            
+
             # Find the scriptData constant in the template
-            script_pattern = r'const\s+scriptData\s*=\s*\{[^}]*(?:}[^;]*)*\};'
+            script_pattern = r"const\s+scriptData\s*=\s*\{[^}]*(?:}[^;]*)*\};"
             script_match = re.search(script_pattern, template_content)
-            
+
             if script_match:
                 # Replace the scriptData constant
-                template_content = template_content[:script_match.start()] + \
-                                f'const scriptData = {script_json};' + \
-                                template_content[script_match.end():]
-        
+                template_content = (
+                    template_content[: script_match.start()]
+                    + f"const scriptData = {script_json};"
+                    + template_content[script_match.end() :]
+                )
+
         # Replace PDB data if provided
         if pdb_data:
             # Find the pdbData constant in the template
-            pdb_pattern = r'const pdbData = `[\s\S]*?`;'
+            pdb_pattern = r"const pdbData = `[\s\S]*?`;"
             pdb_match = re.search(pdb_pattern, template_content)
-            
+
             if pdb_match:
                 # Replace the pdbData constant
-                template_content = template_content[:pdb_match.start()] + \
-                                f'const pdbData = `{pdb_data}`;' + \
-                                template_content[pdb_match.end():]
-        
+                template_content = (
+                    template_content[: pdb_match.start()]
+                    + f"const pdbData = `{pdb_data}`;"
+                    + template_content[pdb_match.end() :]
+                )
+
         # Write the modified content to the output file if path provided
         if output_path:
-            with open(output_path, 'w') as f:
+            with open(output_path, "w") as f:
                 f.write(template_content)
             print(f"Interactive visualization generated successfully: {output_path}")
             return output_path
-        
+
         # Otherwise return the HTML content as a string
         return template_content
+
 
 def main():
     """
@@ -832,6 +837,7 @@ def main():
       python molecule_visualizer.py <input.sdf> [html|js]
     """
     import sys
+
     if len(sys.argv) < 2:
         print("Usage: python molecule_visualizer.py <input.sdf> [html|js]")
         sys.exit(1)
@@ -849,6 +855,7 @@ def main():
     else:
         html = MoleculeVisualizer.generate_html_viewer_from_pdb(pdb_data, name)
         print(html)
+
 
 if __name__ == "__main__":
     main()

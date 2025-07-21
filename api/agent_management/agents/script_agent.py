@@ -3,34 +3,36 @@ Script Agent - Generates structured scene scripts with timecodes, descriptions, 
 This is separate from the animation agent that will handle actual animation generation.
 """
 
-from agent_management.models import SceneScript
-from typing import Dict, Any
 import json
+from typing import Any, Dict
+
 from agent_management.llm_service import (
-    LLMService,
-    StructuredLLMRequest,
     LLMModelConfig,
-    ProviderType
+    LLMService,
+    ProviderType,
+    StructuredLLMRequest,
 )
+from agent_management.models import SceneScript
+
 
 class ScriptAgent:
     def __init__(self, llm_service: LLMService):
         self.llm_service = llm_service
-    
+
     def generate_script(self, topic: str) -> SceneScript:
         """
         Generate a structured scene script for a scientific topic.
-        
+
         Args:
             topic: The scientific topic to explain in the scene
-            
+
         Returns:
             SceneScript: A Pydantic model instance of the structured script
         """
         # Create a request for script generation
         request = StructuredLLMRequest(
             user_prompt=f"""Create a detailed script for a 3D scientific visualization about: {topic}
-            
+
 The script should cover a single coherent 3D scene that effectively explains the topic visually.
 Focus on creating a cohesive visual narrative with clear transition points.
 
@@ -40,7 +42,7 @@ Return a JSON object with:
    - timecode: Time marker in MM:SS format (starting at 00:00, ending around 02:00)
    - description: Detailed explanation of what should be happening in the 3D scene at this point
    - caption: An educational text caption that would appear on screen (50-100 characters)
-   
+
 CAPTION REQUIREMENTS:
 - Each caption must be self-contained and meaningful on its own
 - Directly relate to what is currently visible in the scene
@@ -56,7 +58,6 @@ Example of good captions:
 Make sure each time point builds logically on the previous ones to tell a complete story about the topic.
 Ensure descriptions are specific enough to guide the creation of 3D visuals (objects, movements, transitions).
 Keep the explanations scientific but accessible to a general audience.""",
-            
             system_prompt="""You are an expert in scientific communication and 3D visualization. Your task is to create structured scripts for educational scientific scenes.
 
 When creating scene scripts:
@@ -102,37 +103,41 @@ Always return complete, properly formatted JSON objects matching the requested s
             llm_config=self.llm_service.config,
             response_model=SceneScript,
         )
-        
+
         script = self.llm_service.generate_structured(request)
         return script
-    
-    def generate_script_from_molecule(self, molecule_name: str, user_query: str, molecule_data: Dict[str, Any]) -> SceneScript:
+
+    def generate_script_from_molecule(
+        self, molecule_name: str, user_query: str, molecule_data: Dict[str, Any]
+    ) -> SceneScript:
         """
         Generate a structured scene script for a molecule.
-        
+
         Returns:
             SceneScript: A Pydantic model instance of the structured script
         """
         # Check if we have atom labels in the molecule data
         atom_labels_info = ""
-        if 'atom_labels' in molecule_data:
+        if "atom_labels" in molecule_data:
             # Extract the atom labels mapping and format it for better LLM understanding
-            atom_labels = molecule_data['atom_labels']
-            atom_labels_formatted = "\n".join([f"{idx}: {label}" for idx, label in atom_labels.items()])
+            atom_labels = molecule_data["atom_labels"]
+            atom_labels_formatted = "\n".join(
+                [f"{idx}: {label}" for idx, label in atom_labels.items()]
+            )
             atom_labels_info = f"""
 ATOM LABELS MAPPING:
 The molecule has the following atom labels that you should use in your script:
 {atom_labels_formatted}
 
-When referring to atoms in your script, use these atom labels (like C1, H2, O1) 
+When referring to atoms in your script, use these atom labels (like C1, H2, O1)
 rather than numeric indices, as these labels are more chemically meaningful.
 """
-        
+
         # Convert molecule_data to string representation safely
         # Remove 'atom_labels' from the JSON to avoid redundancy
         molecule_data_copy = molecule_data.copy()
-        if 'atom_labels' in molecule_data_copy:
-            del molecule_data_copy['atom_labels']
+        if "atom_labels" in molecule_data_copy:
+            del molecule_data_copy["atom_labels"]
         molecule_json = json.dumps(molecule_data_copy, indent=2)
 
         system_prompt = f"""You are an expert in scientific communication and 3D visualization. Your task is to create structured, engaging scripts for educational scientific scenes.

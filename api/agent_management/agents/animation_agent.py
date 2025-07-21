@@ -3,93 +3,127 @@ Animation Agent - Generates animation code for Three.js scenes based on script a
 Specialized for scientific visualizations including molecular structures.
 """
 
-from typing import Dict, List, Optional, Any
 import re
-from agent_management.models import SceneScript, OrchestrationPlan, AnimationCode, AnimationKeyframe
-from agent_management.llm_service import LLMService, LLMRequest, StructuredLLMRequest
+from typing import Any, Dict, List, Optional
+
+from agent_management.llm_service import LLMRequest, LLMService, StructuredLLMRequest
+from agent_management.models import (
+    AnimationCode,
+    AnimationKeyframe,
+    OrchestrationPlan,
+    SceneScript,
+)
 from agent_management.utils.code_extraction import extract_code_block
+
 
 class AnimationAgent:
     def __init__(self, llm_service: LLMService):
         self.llm_service = llm_service
-        
-    def generate_animation_code(self, 
-                               script: SceneScript, 
-                               object_geometries: Dict[str, Dict],
-                               orchestration_plan: OrchestrationPlan) -> AnimationCode:
+
+    def generate_animation_code(
+        self,
+        script: SceneScript,
+        object_geometries: Dict[str, Dict],
+        orchestration_plan: OrchestrationPlan,
+    ) -> AnimationCode:
         """
         Generate Three.js animation code based on the scene script and generated geometries.
-        
+
         Args:
             script: The scene script with timecodes and descriptions
             object_geometries: Dictionary of object names to their geometry code and metadata
             orchestration_plan: The orchestration plan with object details
-            
+
         Returns:
             AnimationCode: Animation code with keyframes
         """
         # Format script timeline
-        script_timeline = "\n\n".join([
-            f"TIMECODE {point.timecode}:\nDESCRIPTION: {point.description}\nCAPTION: {point.caption}"
-            for point in script.content
-        ])
-        
+        script_timeline = "\n\n".join(
+            [
+                f"TIMECODE {point.timecode}:\nDESCRIPTION: {point.description}\nCAPTION: {point.caption}"
+                for point in script.content
+            ]
+        )
+
         # Prepare a list of available objects with their appearance times
-        object_list = "\n".join([
-            f"- {obj.name} (appears at {obj.appears_at}): {obj.description[:100]}..." 
-            if isinstance(obj.description, str) and len(obj.description) > 100 else
-            f"- {obj.name} (appears at {obj.appears_at}): {obj.description}"
-            for obj in orchestration_plan.objects
-        ])
-        
+        object_list = "\n".join(
+            [
+                (
+                    f"- {obj.name} (appears at {obj.appears_at}): {obj.description[:100]}..."
+                    if isinstance(obj.description, str) and len(obj.description) > 100
+                    else f"- {obj.name} (appears at {obj.appears_at}): {obj.description}"
+                )
+                for obj in orchestration_plan.objects
+            ]
+        )
+
         # Count available objects with geometries
-        geometry_count = sum(1 for obj_data in object_geometries.values() 
-                           if obj_data.get("status") == "success")
-        
+        geometry_count = sum(
+            1
+            for obj_data in object_geometries.values()
+            if obj_data.get("status") == "success"
+        )
+
         # Extract update function names and object references from geometry code
         geometry_functions = []
         object_references = []
-        
+
         for obj_name, obj_data in object_geometries.items():
             if obj_data.get("status") == "success" and obj_name != "_summary":
                 code = obj_data.get("code", "")
-                
+
                 # Extract function assignments to window
-                function_matches = re.findall(r'window\.(\w+)\s*=\s*function', code)
+                function_matches = re.findall(r"window\.(\w+)\s*=\s*function", code)
                 for func_name in function_matches:
                     geometry_functions.append(func_name)
-                
+
                 # Extract object assignments to window
-                obj_matches = re.findall(r'window\.(\w+)\s*=', code)
+                obj_matches = re.findall(r"window\.(\w+)\s*=", code)
                 for ref_name in obj_matches:
-                    if ref_name not in geometry_functions:  # Avoid duplicates with functions
+                    if (
+                        ref_name not in geometry_functions
+                    ):  # Avoid duplicates with functions
                         object_references.append(ref_name)
-        
+
         # Format the object availability info, including extracted functions and references
-        objects_with_geometries = "\n".join([
-            f"- {obj_name} (available and ready to animate)"
-            for obj_name, obj_data in object_geometries.items()
-            if obj_data.get("status") == "success" and obj_name != "_summary"
-        ])
-        
-        geometry_functions_str = "\n".join([
-            f"- {func_name} (animation function provided by geometry)"
-            for func_name in geometry_functions
-        ])
-        
-        object_references_str = "\n".join([
-            f"- {ref_name} (object reference provided by geometry)"
-            for ref_name in object_references
-        ])
-        
+        objects_with_geometries = "\n".join(
+            [
+                f"- {obj_name} (available and ready to animate)"
+                for obj_name, obj_data in object_geometries.items()
+                if obj_data.get("status") == "success" and obj_name != "_summary"
+            ]
+        )
+
+        geometry_functions_str = "\n".join(
+            [
+                f"- {func_name} (animation function provided by geometry)"
+                for func_name in geometry_functions
+            ]
+        )
+
+        object_references_str = "\n".join(
+            [
+                f"- {ref_name} (object reference provided by geometry)"
+                for ref_name in object_references
+            ]
+        )
+
         # Prepare the basic prompt components
         title_section = f"## SCENE TITLE\n{script.title}"
         timeline_section = f"## SCRIPT TIMELINE\n{script_timeline}"
         objects_section = f"## AVAILABLE OBJECTS ({geometry_count} objects with generated geometries)\n{objects_with_geometries}"
         complete_objects_section = f"## COMPLETE OBJECT LIST\n{object_list}"
-        geometry_functions_section = f"## GEOMETRY FUNCTIONS (use these if provided)\n{geometry_functions_str}" if geometry_functions else ""
-        object_references_section = f"## OBJECT REFERENCES (use these with scene.getObjectByName())\n{object_references_str}" if object_references else ""
-        
+        geometry_functions_section = (
+            f"## GEOMETRY FUNCTIONS (use these if provided)\n{geometry_functions_str}"
+            if geometry_functions
+            else ""
+        )
+        object_references_section = (
+            f"## OBJECT REFERENCES (use these with scene.getObjectByName())\n{object_references_str}"
+            if object_references
+            else ""
+        )
+
         # Use raw string for the example code to avoid f-string issues
         example_section = r"""
 IMPORTANT: Here's ONE high-quality example of self-contained animation code that also shows how to work with any custom functions or update methods provided by the geometry:
@@ -107,12 +141,12 @@ const energyDiagram = scene.getObjectByName("energy_diagram");
 // Helper function for fading objects in and out
 function fadeObject(object, fadeIn, duration = 1.0) {
   if (!object) return;
-  
+
   // Set all materials to transparent
   object.traverse(child => {
     if (child.isMesh && child.material) {
       child.material.transparent = true;
-      
+
       // Set target opacity based on fade direction
       if (fadeIn) {
         // Fade in: 0 to 1 over duration
@@ -146,16 +180,16 @@ if (elapsedTime < 15) {
       // Fallback to direct manipulation if no update function exists
       molecule.rotation.y += 0.2 * deltaTime;
     }
-    
+
     // Fade in the molecule using our helper function
     fadeObject(molecule, true, 2.0); // true = fade in, 2.0 = duration in seconds
   }
-  
+
   // Ensure energy diagram is hidden during this phase
   if (energyDiagram) {
     energyDiagram.visible = false;
   }
-  
+
   // Position camera for introduction
   if (camera) {
     const targetPosition = new THREE.Vector3(0, 0, 10);
@@ -178,12 +212,12 @@ else if (elapsedTime >= 15 && elapsedTime < 30) {
       molecule.rotation.y += 0.1 * deltaTime;
     }
   }
-  
+
   // Introduce the energy diagram with a fade-in effect
   if (energyDiagram) {
     // Calculate time relative to this section
     const sectionTime = elapsedTime - 15;
-    
+
     // Only start showing diagram after 2 seconds into this section
     if (sectionTime >= 2) {
       // Fade in energy diagram
@@ -200,7 +234,7 @@ else if (elapsedTime >= 30 && elapsedTime < 45) {
     // The false parameter means "fade out"
     fadeObject(molecule, false, 2.0);
   }
-  
+
   // Keep energy diagram fully visible
   if (energyDiagram) {
     // Move energy diagram to center focus
@@ -216,7 +250,7 @@ else if (elapsedTime >= 30 && elapsedTime < 45) {
 else if (elapsedTime >= 30 && elapsedTime < 60) {
   // Calculate section progress
   const sectionProgress = (elapsedTime - 30) / 30;
-  
+
   if (molecule) {
     // Keep using update function if available
     if (typeof window.updateMolecule === 'function') {
@@ -225,7 +259,7 @@ else if (elapsedTime >= 30 && elapsedTime < 60) {
       molecule.rotation.y += 0.05 * deltaTime;
     }
   }
-  
+
   if (energyDiagram) {
     // For the energy diagram, fade it in
     energyDiagram.traverse(child => {
@@ -234,7 +268,7 @@ else if (elapsedTime >= 30 && elapsedTime < 60) {
         child.material.transparent = child.material.opacity < 1;
       }
     });
-    
+
     // Position it properly
     energyDiagram.position.lerp(new THREE.Vector3(5, 0, 0), 0.05);
   }
@@ -247,7 +281,7 @@ Note how this example:
 3. Provides fallbacks for direct manipulation when no update functions exist
 4. Creates smooth time-based animations with clear section dividers
 """
-        
+
         # Combine everything into the final prompt
         prompt = f"""You are a Three.js animation expert. Your task is to create simple, self-contained, and foolproof animation code for a scientific visualization.
 
@@ -298,7 +332,7 @@ Include comments with timecodes to make the code clear and maintainable.
 
 REMEMBER:
 - Use clear timecode comments (// At MM:SS - Description) throughout the code
-- Don't include the animate function declaration 
+- Don't include the animate function declaration
 - Always check if objects exist before using them
 - Use deltaTime for smooth animations (multiply by deltaTime)
 - IMPORTANT: Objects that aren't actively used in a scene should not be visible until needed
@@ -311,51 +345,50 @@ REMEMBER:
         request = LLMRequest(
             user_prompt=prompt,
             system_prompt="You are an expert Three.js animator specializing in scientific visualizations. Create detailed, timeline-based animation code following the script exactly. Your code should be simple, self-contained, and foolproof, with proper handling of geometry-provided update functions.",
-            llm_config=self.llm_service.config
+            llm_config=self.llm_service.config,
         )
-        
+
         # Generate the animation code
         response = self.llm_service.generate(request)
         animation_code = response.content.strip()
-        
+
         # Extract keyframes from the code by parsing comments with timecodes
         keyframes = self._extract_keyframes(animation_code)
-        
-        return AnimationCode(
-            code=animation_code,
-            keyframes=keyframes
-        )
-    
+
+        return AnimationCode(code=animation_code, keyframes=keyframes)
+
     def _extract_keyframes(self, code: str) -> List[AnimationKeyframe]:
         """
         Extract keyframes from animation code by parsing comments with timecodes.
         """
         keyframes = []
         # Look for comments with timecodes in MM:SS format
-        pattern = r'//.*?(\d{2}:\d{2}).*?\n(.*?)(?=//|\n\n|$)'
+        pattern = r"//.*?(\d{2}:\d{2}).*?\n(.*?)(?=//|\n\n|$)"
         matches = re.findall(pattern, code, re.DOTALL)
-        
+
         for timecode, actions_block in matches:
             # Clean up the actions text and split into separate actions
-            actions = [line.strip() for line in actions_block.split('\n') 
-                      if line.strip() and not line.strip().startswith('//')]
-            
+            actions = [
+                line.strip()
+                for line in actions_block.split("\n")
+                if line.strip() and not line.strip().startswith("//")
+            ]
+
             if actions:
-                keyframes.append(AnimationKeyframe(
-                    timecode=timecode,
-                    actions=actions
-                ))
-        
+                keyframes.append(AnimationKeyframe(timecode=timecode, actions=actions))
+
         # Sort keyframes by timecode
         keyframes.sort(key=lambda k: k.timecode)
-        
+
         return keyframes
-        
+
     def get_animation_snippet(self, user_prompt: str) -> str:
         """
         Generate Three.js animation code using LLM.
         """
-        prompt_for_llm = f"You are an expert Three.js animator specializing in scientific visualizations, particularly molecular structures and chemical reactions. The user wants to animate a scene with the following prompt: '{user_prompt}'\n\n" + r"""
+        prompt_for_llm = (
+            f"You are an expert Three.js animator specializing in scientific visualizations, particularly molecular structures and chemical reactions. The user wants to animate a scene with the following prompt: '{user_prompt}'\n\n"
+            + r"""
 Requirements:
 - Generate JavaScript animation code for objects created by the GeometryAgent.
 - Your code will be injected into an existing Three.js scene with a standard animation loop.
@@ -404,7 +437,7 @@ if (elapsedTime < 5) {
     const introProgress = elapsedTime / 5;
     molecule.rotation.y += 0.5 * deltaTime;
     molecule.scale.setScalar(0.2 + introProgress * 0.8); // Scale from 0.2 to 1.0
-    
+
     // Fade in the molecule
     molecule.traverse(child => {
       if (child.isMesh && child.material) {
@@ -415,13 +448,13 @@ if (elapsedTime < 5) {
       }
     });
   }
-  
+
   // Position camera for a good view
   if (camera) {
     camera.position.lerp(new THREE.Vector3(0, 2, 10), 0.05);
     camera.lookAt(molecule.position);
   }
-} 
+}
 else if (elapsedTime < 15) {
   // Phase 2: Highlight atoms (5-15 seconds)
   if (hasUpdateFunction) {
@@ -430,16 +463,16 @@ else if (elapsedTime < 15) {
   } else {
     // Manual fallback animation
     molecule.rotation.y += 0.2 * deltaTime;
-    
+
     // Highlight atoms
     molecule.traverse(child => {
       if (!child.isMesh) return;
-      
+
       // Highlight logic...
       // (simplified for brevity)
     });
   }
-  
+
   // Move camera
   if (camera) {
     // Camera movement...
@@ -452,11 +485,11 @@ else {
   } else {
     // Manual fallback animation
     molecule.rotation.y += 0.3 * deltaTime;
-    
+
     // Vibration logic...
     // (simplified for brevity)
   }
-  
+
   // Move camera
   if (camera) {
     // Camera movement...
@@ -466,10 +499,11 @@ else {
 
 Return your code as a single JavaScript snippet tailored to the user's prompt, with no JSON wrapper or additional explanations.
 """
+        )
 
         llm_response = self.llm_service.generate(prompt_for_llm)
         animation_code = extract_code_block(llm_response.content, "javascript")
-        
+
         return f"""
 // AnimationAgent LLM-generated code
 {animation_code}

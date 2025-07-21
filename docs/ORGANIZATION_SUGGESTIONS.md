@@ -29,4 +29,3 @@ A `.gitignore` file would prevent generated files (e.g., `__pycache__`, temporar
 
 ## 5. Document the Deployment Workflow
 The GitHub Actions workflow in `.github/workflows/deploy.yml` references an SSH deployment script. Adding a short explanation in the root README about this deployment process would make it clearer for maintainers.
-

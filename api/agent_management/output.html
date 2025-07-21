@@ -412,7 +412,7 @@ function fitCameraToMolecule() {
 
     controls.target.copy(center);
     controls.update();
-    
+
     // Also update A-Frame camera position
     const aframeCamera = document.querySelector('a-entity[camera]');
     if (aframeCamera) {
@@ -466,11 +466,11 @@ function init() {
 
     // PDB data for norbornane
     const pdbData = `COMPND    297
-HETATM    1  C1  UNL     1       0.000   0.000   0.000  1.00  0.00           C  
-HETATM    2  H1  UNL     1       0.635   0.635   0.635  1.00  0.00           H  
-HETATM    3  H2  UNL     1      -0.635   0.635  -0.635  1.00  0.00           H  
-HETATM    4  H3  UNL     1      -0.635  -0.635   0.635  1.00  0.00           H  
-HETATM    5  H4  UNL     1       0.635  -0.635  -0.635  1.00  0.00           H  
+HETATM    1  C1  UNL     1       0.000   0.000   0.000  1.00  0.00           C
+HETATM    2  H1  UNL     1       0.635   0.635   0.635  1.00  0.00           H
+HETATM    3  H2  UNL     1      -0.635   0.635  -0.635  1.00  0.00           H
+HETATM    4  H3  UNL     1      -0.635  -0.635   0.635  1.00  0.00           H
+HETATM    5  H4  UNL     1       0.635  -0.635  -0.635  1.00  0.00           H
 CONECT    1    2    3    4    5
 END`;
     const pdbBlob = new Blob([pdbData], { type: 'text/plain' });
@@ -580,11 +580,11 @@ END`;
 
         // Initialize script steps
         initScript();
-        
+
         // Notify that molecule is ready for A-Frame injection
         document.dispatchEvent(new CustomEvent('molecule-ready'));
     });
-    
+
     // Set up A-Frame VR mode listeners
     setupVRListeners();
 }
@@ -598,13 +598,13 @@ function setupVRListeners() {
         document.getElementById('container').style.display = 'none'; // hide Three.js canvas
         aframeScene.style.display = 'block'; // show A-Frame
     });
-    
+
     aframeScene.addEventListener('exit-vr', () => {
         inVRMode = false;
         document.getElementById('container').style.display = 'block'; // show Three.js canvas
         aframeScene.style.display = 'none'; // hide A-Frame
     });
-    
+
     // Auto-enter VR if headset is connected
     aframeScene.addEventListener('loaded', () => {
         if (AFRAME.utils.device.checkHeadsetConnected()) {
@@ -688,7 +688,7 @@ function addVRButton() {
         <button id="vr-button">Enter VR</button>
     `;
     document.body.appendChild(controls);
-    
+
     const pauseRotationButton = document.getElementById('pause-rotation');
     const vrButton = document.getElementById('vr-button');
 
@@ -697,7 +697,7 @@ function addVRButton() {
         const isRotating = toggleAutoRotate();
         pauseRotationButton.textContent = isRotating ? 'Pause Rotation' : 'Resume Rotation';
     });
-    
+
     vrButton.addEventListener('click', () => {
         aframeScene.style.display = 'block';
         aframeScene.enterVR();

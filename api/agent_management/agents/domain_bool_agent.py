@@ -3,13 +3,15 @@ Domain Validator Agent - Validates whether a prompt is scientific in nature.
 """
 
 import os
-from agent_management.models import BooleanResponse, MolecularStructure
+
 from agent_management.llm_service import (
-    LLMService,
-    StructuredLLMRequest,
     LLMModelConfig,
-    ProviderType
+    LLMService,
+    ProviderType,
+    StructuredLLMRequest,
 )
+from agent_management.models import BooleanResponse, MolecularStructure
+
 
 class DomainValidator:
     def __init__(self, llm_service: LLMService):
@@ -22,7 +24,7 @@ class DomainValidator:
         request = StructuredLLMRequest[BooleanResponse](
             user_prompt=f"""Does the following prompt contain something that can be built as a macromolecule? We are not talking about proteins in general, for instance, we would not consider the 20 standard amino acids as macromolecules, but we would consider DNA or RNA as macromolecules. '{prompt}'
             """,
-            response_model=BooleanResponse
+            response_model=BooleanResponse,
         )
         return self.llm_service.generate_structured(request)
 
@@ -34,24 +36,24 @@ class DomainValidator:
             user_prompt=f"""Only respond with a molecular structure in SMILES format. For instance: user prompt: 'Draw a molecule of aspirin' -> response: 'CC(=O)OC1=CC=CC=C1C(=O)O'
             The user prompt is: '{prompt}'
             """,
-            response_model=MolecularStructure
+            response_model=MolecularStructure,
         )
         return self.llm_service.generate_structured(request)
-    
+
     def is_molecular(self, prompt: str) -> BooleanResponse:
         """
         Determine if a prompt can be built as molecular structure.
-        
+
         Args:
             prompt: The user prompt to validate
-            
+
         Returns:
             BooleanResponse with is_true=True if prompt is molecular, False otherwise
         """
         # Create a request for scientific content validation
         request = StructuredLLMRequest[BooleanResponse](
             user_prompt=f"""Does the following prompt contain something that can be built as a molecular structure? '{prompt}'
-            
+
 Respond with a JSON object that has this exact structure:
 {{
   "is_true": true,
@@ -94,6 +96,6 @@ Examples of non-molecular prompts:
 Always respond with JSON exactly matching the requested format.""",
             response_model=BooleanResponse,
         )
-        
+
         # Get the structured response
         return self.llm_service.generate_structured(request)

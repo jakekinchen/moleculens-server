@@ -1,5 +1,6 @@
 import requests
 
+
 class RCSBAgent:
     """Retrieve experimental and computed structures plus metadata from RCSB and AlphaFold."""
 
