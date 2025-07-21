@@ -14,7 +14,7 @@ Expanding Moleculens Server: Current State and Path to On‑Demand Molecular Gra
 | RCSB Data | fetch_pairwise_alignment endpoint | ❑ |
 | RCSB Data | fetch_group_entries endpoint | ❑ |
 | RCSB Data | fetch_feature_annotations endpoint | ❑ |
-| PyMOL Scenes | Scene template library (overview, binding_site, mutation) | ❑ |
+| PyMOL Scenes | Scene template library (overview, binding_site, mutation) | ✅ |
 | Testing | Coverage for all RCSB endpoints | 🛠 |
 
 Legend: ✅ completed 🛠 in-progress ❑ todo
@@ -139,6 +139,6 @@ Following the July 18 2025 RCSB agent expansion [oai_citation:7‡GitHub](https:
 
 * **User upload support:** Implement an `upload_structure` method that posts user‑provided PDB or mmCIF files to the RCSB user‑upload API and returns a shareable URL. Add a `/rcsb/upload/` endpoint to accept file uploads. Write tests that simulate file uploads and check that the correct URL is returned.
 
-* **Scene template library:** Begin refactoring the PyMOL renderer into a library of parameterized scene functions (overview, binding site, mutation focus) that accept structure IDs and styling options instead of free‑form text. Update the LLM translator to call these functions. Add unit tests ensuring that each scene function produces the expected PyMOL command sequence.
+* **Scene template library:** Implemented parameterized helpers for overview, binding site and mutation focus scenes. Added a lightweight prompt translator and unit tests covering the mutation helper and translator logic.
 
 These steps lay the foundation for subsequent Mol* integration, job orchestration and XR/VR export features [oai_citation:8‡GitHub](https://github.com/jakekinchen/moleculens-server/blob/c032a23995e32c9aafb72cd96d2c894e789b0bb8/AGENTS.md#L32-L65).
