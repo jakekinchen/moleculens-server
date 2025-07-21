@@ -142,3 +142,10 @@ Following the July 18 2025 RCSB agent expansion [oai_citation:7‡GitHub](https:
 * **Scene template library:** Implemented parameterized helpers for overview, binding site and mutation focus scenes. Added a lightweight prompt translator and unit tests covering the mutation helper and translator logic.
 
 These steps lay the foundation for subsequent Mol* integration, job orchestration and XR/VR export features [oai_citation:8‡GitHub](https://github.com/jakekinchen/moleculens-server/blob/c032a23995e32c9aafb72cd96d2c894e789b0bb8/AGENTS.md#L32-L65).
+
+### pymol_prompt_parser
+* Stateless; uses OpenAI function calling (`build_scene_request`) to convert free-form English into a `SceneSpec` JSON payload.
+
+### pymol_command_builder
+* Accepts `SceneSpec`, dispatches to template helpers (`overview_scene`, `binding_site_scene`, `mutation_scene`).
+* Raises `SceneValidationError` (Pydantic) on invalid specs.

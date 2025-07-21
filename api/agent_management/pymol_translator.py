@@ -1,35 +1,54 @@
-"""Deterministic prompt translator for PyMOL.
-
-This module converts very simple text prompts into pre-defined PyMOL command
-sequences provided by :mod:`pymol_templates`.  It serves as a lightweight
-alternative to the LLM-based translator used elsewhere.
-"""
 from __future__ import annotations
 
-from typing import List
+import json
+from typing import List, Any
 
-from .pymol_templates import binding_site_scene, overview_scene, mutation_scene
+import openai
+
+from .pymol_templates import overview_scene, binding_site_scene, mutation_scene
+from .scene_spec import SceneSpec
+
+_DISPATCH = {
+    "overview": overview_scene,
+    "binding_site": binding_site_scene,
+    "mutation": mutation_scene,
+}
+
+
+def _spec_from_prompt(prompt: str) -> SceneSpec:
+    """Convert free-form prompt to validated SceneSpec via OpenAI function calling."""
+    client = openai.OpenAI()
+    functions = [
+        {
+            "name": "build_scene_request",
+            "parameters": SceneSpec.model_json_schema(),
+            "description": "Return a SceneSpec describing the requested PyMOL operation.",
+        }
+    ]
+    resp = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}],
+        functions=functions,
+        function_call="auto",
+        temperature=0,
+    )
+    data = json.loads(resp.choices[0].message.function_call.arguments)
+    return SceneSpec(**data)
 
 
 def translate(prompt: str) -> List[str]:
-    """Translate a short text prompt into PyMOL commands."""
-    words = prompt.split()
-    if not words:
-        return []
+    """Return PyMOL command list for *prompt*."""
+    spec = _spec_from_prompt(prompt)
 
-    if words[0] == "overview" and len(words) >= 2:
-        struct_id = words[1]
-        return overview_scene(struct_id)
+    if spec.op == "raw":
+        return spec.raw_cmds or []
 
-    if words[0] == "binding" and len(words) >= 4 and words[1] == "site":
-        struct_id = words[2]
-        selection_str = " ".join(words[3:])
-        return binding_site_scene(struct_id, selection_str)
+    builder = _DISPATCH[spec.op]
+    kwargs: dict[str, Any] = {"structure_id": spec.structure_id}
 
-    # mutation-focus prompt, e.g. "mutation 1abc resi 123 and chain A"
-    if words[0] in {"mutation", "mutate"} and len(words) >= 4:
-        struct_id = words[1]
-        selection_str = " ".join(words[2:])
-        return mutation_scene(struct_id, selection_str)
+    if spec.selection:
+        key = "selection" if spec.op == "binding_site" else "mutation_selection"
+        kwargs[key] = spec.selection
 
-    return []
+    kwargs.update(spec.opts)
+    return builder(**kwargs)
