@@ -11,7 +11,8 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 from pymol import cmd
 
-from api.utils import cache, llm, security
+from api.utils import cache, security
+from api.agent_management import pymol_translator
 
 router = APIRouter(prefix="/render", tags=["Render"])
 
@@ -58,8 +59,11 @@ async def render(req: RenderRequest):
         meta["cached"] = True
         return _build_response(path, req.format, meta)
 
-    # Convert description to PyMOL commands
-    commands = llm.description_to_commands(req.description)
+    # Convert description to PyMOL commands via translator
+    try:
+        commands = pymol_translator.translate(req.description)
+    except Exception:
+        commands = []
     # Fallback: if LLM could not translate description (e.g. no API key),
     # render a simple alanine fragment so that the PNG is not blank.
     if not commands:

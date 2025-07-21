@@ -25,3 +25,8 @@ def test_scene_spec_validation():
     )
     assert spec.op == "mutation"
     assert spec.selection.startswith("resi")
+
+
+def test_scene_spec_mutation_focus():
+    spec = SceneSpec(op="mutation_focus", structure_id="1abc", selection="resi 12")
+    assert spec.op == "mutation_focus"

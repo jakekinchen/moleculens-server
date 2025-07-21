@@ -7,6 +7,8 @@
 * 2025-08-01  PyMOL template helpers (`overview_scene`, `binding_site_scene`) ✅
 * 2025-08-02  Celery + Redis skeleton & echo task ✅
 * 2025-08-03  Keyword prompt→template translator, lint baseline ✅
+* 2025-07-21  Translator wired into render flow ✅
+* 2025-07-21  Added `mutation_focus_scene` template ✅
 
 ---
 
@@ -15,16 +17,14 @@ Exactly one open item keeps all agents aligned:
 
 | Area | Task | Owner | Status |
 |------|------|-------|--------|
-| Backend | **Wire translator into render flow** | GeometryAgent | 🛠 |
-| PyMOL | Add `mutation_focus_scene` template | TemplateWG | 🛠 |
+| Backend | **Celery render_scene task → produce glTF/USDZ** | RenderWG | 🛠 |
 
 *CI fails if this table becomes empty.*
 
 ---
 
 ## Future (backlog + next_steps)
-1. Celery **render_scene** task → produce glTF/USDZ
-2. Tighten flake8/mypy rules; re-enable strict hook.
+1. Tighten flake8/mypy rules; re-enable strict hook.
 
 # AGENTS.md Instructions
 Once a task is completed, it needs to be moved from the "Present" section to the "Past" section below. If there are no remaining tasks in the "Present" section, then move one or more tasks from the "Future" section to the "Present" section. If there are no tasks in the "Future" section or in the "Present" section, then the document is considered complete and you should return it as is. If you notice that a step or tasks has already been completed in the "Present" or "Future" section, then you should change it to the "Past" section and update the date to the current date.

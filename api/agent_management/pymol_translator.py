@@ -5,13 +5,19 @@ from typing import List, Any
 
 import openai
 
-from .pymol_templates import overview_scene, binding_site_scene, mutation_scene
+from .pymol_templates import (
+    overview_scene,
+    binding_site_scene,
+    mutation_scene,
+    mutation_focus_scene,
+)
 from .scene_spec import SceneSpec
 
 _DISPATCH = {
     "overview": overview_scene,
     "binding_site": binding_site_scene,
     "mutation": mutation_scene,
+    "mutation_focus": mutation_focus_scene,
 }
 
 
