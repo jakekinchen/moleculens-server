@@ -59,7 +59,7 @@ def extend_llm_service(module):
                 max_tokens=request.max_tokens or 300,
             )
 
-            return response.choices[0].message.content
+            return response.choices[0].message.content or ""
 
     # Replace the original LLMService with the extended version
     module.LLMService = ExtendedLLMService

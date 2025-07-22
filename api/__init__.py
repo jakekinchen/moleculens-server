@@ -71,7 +71,16 @@ except ImportError:  # Fallback to a lightweight stub during CI / local dev
             def do(self, *args, **kwargs):
                 pass
 
-        _pymol.cmd = _CmdStub()
+            def orient(self, *args, **kwargs):
+                pass
+
+            def zoom(self, *args, **kwargs):
+                pass
+
+            def label(self, *args, **kwargs):
+                pass
+
+        _pymol.cmd = _CmdStub()  # type: ignore[attr-defined]
         sys.modules["pymol"] = _pymol
 
 # Provide a stub for the `redis` module (used by rate-limiting and caching)
@@ -115,7 +124,7 @@ if "redis" not in sys.modules:
         def Redis(self, *args, **kwargs):
             return _RedisStubClient()
 
-    sys.modules["redis"] = _RedisStubModule()
+    sys.modules["redis"] = _RedisStubModule()  # type: ignore[assignment]
 
 # Provide a stub for the `celery` module when not installed. This allows tests
 # to import the Celery app without requiring the real dependency.

@@ -16,14 +16,14 @@ try:
     from . import code_checker
 except ImportError:
     # code_checker requires playwright which may not be available in all environments
-    code_checker = None
+    code_checker = None  # type: ignore[assignment]
 from . import debug_utils, model_registry
 
 try:
     from . import html_to_caption_json
 except ImportError:
     # html_to_caption_json requires beautifulsoup4 which may not be available
-    html_to_caption_json = None
+    html_to_caption_json = None  # type: ignore[assignment]
 from . import diagram_renderer
 
 __all__ = [

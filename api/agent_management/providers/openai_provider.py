@@ -12,7 +12,7 @@ except ImportError:
     import sys
 
     sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
-    from utils.openai_client import get_client
+    from utils.openai_client import get_client  # type: ignore[no-redef]
 
 from ..llm_service import LLMProvider, LLMRequest, LLMResponse, StructuredLLMRequest, T
 
@@ -118,26 +118,26 @@ class OpenAIProvider(LLMProvider):
 
             # Handle different response statuses
             if response.status == "incomplete":
-                if response.incomplete_details.reason == "max_output_tokens":
+                if response.incomplete_details and response.incomplete_details.reason == "max_output_tokens":  # type: ignore[union-attr]
                     raise ValueError("Response was incomplete due to max tokens limit")
-                elif response.incomplete_details.reason == "content_filter":
+                elif response.incomplete_details and response.incomplete_details.reason == "content_filter":  # type: ignore[union-attr]
                     raise ValueError("Response was incomplete due to content filtering")
                 else:
-                    raise ValueError(
-                        f"Response was incomplete: {response.incomplete_details.reason}"
-                    )
+                    reason = response.incomplete_details.reason if response.incomplete_details else "unknown"  # type: ignore[union-attr]
+                    raise ValueError(f"Response was incomplete: {reason}")
 
             # Check for refusal
             if (
                 response.output
                 and len(response.output) > 0
-                and response.output[0].content
-                and len(response.output[0].content) > 0
-                and response.output[0].content[0].type == "refusal"
+                and hasattr(response.output[0], "content")  # type: ignore[union-attr]
+                and response.output[0].content  # type: ignore[union-attr]
+                and len(response.output[0].content) > 0  # type: ignore[union-attr]
+                and hasattr(response.output[0].content[0], "type")  # type: ignore[union-attr]
+                and response.output[0].content[0].type == "refusal"  # type: ignore[union-attr]
             ):
-                raise ValueError(
-                    f"Model refused to respond: {response.output[0].content[0].refusal}"
-                )
+                refusal_text = getattr(response.output[0].content[0], "refusal", "Unknown refusal")  # type: ignore[union-attr]
+                raise ValueError(f"Model refused to respond: {refusal_text}")
 
             # Return the parsed object
             if response.output_parsed:

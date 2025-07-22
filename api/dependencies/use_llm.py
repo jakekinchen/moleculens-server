@@ -4,6 +4,7 @@ from agent_management.model_config import (
     ModelCategory,
     ModelRegistry,
     get_default_model,
+    get_default_model_for_use_case,
     get_llm_service,
     get_models_by_category,
 )

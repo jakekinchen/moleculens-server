@@ -7,6 +7,8 @@ import pytest
 
 CELERY_PATH = Path(__file__).resolve().parents[2] / "celery_app.py"
 spec = importlib.util.spec_from_file_location("celery_app", CELERY_PATH)
+if spec is None:
+    raise ImportError("Could not create module spec")
 celery_module = importlib.util.module_from_spec(spec)
 assert spec and spec.loader
 
@@ -24,21 +26,21 @@ class _CmdStub:
         pass
 
 
-pymol_stub.cmd = _CmdStub()
+pymol_stub.cmd = _CmdStub()  # type: ignore[attr-defined]
 sys.modules["pymol"] = pymol_stub
 
 agent_mgmt_stub = types.ModuleType("api.agent_management")
 translator_stub = types.ModuleType("api.agent_management.pymol_translator")
-translator_stub.translate = lambda desc: ["cmd.save('demo.obj', format='obj')"]
-agent_mgmt_stub.pymol_translator = translator_stub
+translator_stub.translate = lambda desc: ["cmd.save('demo.obj', format='obj')"]  # type: ignore[attr-defined]
+agent_mgmt_stub.pymol_translator = translator_stub  # type: ignore[attr-defined]
 sys.modules["api.agent_management"] = agent_mgmt_stub
 sys.modules["api.agent_management.pymol_translator"] = translator_stub
 
 utils_stub = types.ModuleType("api.utils")
-utils_stub.cache = types.SimpleNamespace(
+utils_stub.cache = types.SimpleNamespace(  # type: ignore[attr-defined]
     CACHE_DIR=Path("/tmp"), get=lambda k: None, set=lambda k, m: None
 )
-utils_stub.security = types.SimpleNamespace(validate_commands=lambda c: None)
+utils_stub.security = types.SimpleNamespace(validate_commands=lambda c: None)  # type: ignore[attr-defined]
 sys.modules["api.utils"] = utils_stub
 
 spec.loader.exec_module(celery_module)

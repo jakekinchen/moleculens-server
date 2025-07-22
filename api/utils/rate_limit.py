@@ -17,7 +17,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self.global_limit = global_limit
 
     async def dispatch(self, request: Request, call_next):
-        ip = request.client.host
+        ip = request.client.host if request.client else "unknown"
         ip_key = f"rl:ip:{ip}"
         global_key = "rl:global"
         pipe = self.redis.pipeline()

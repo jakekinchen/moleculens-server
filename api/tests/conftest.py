@@ -26,6 +26,8 @@ _agent_path = (
 spec_agent = importlib.util.spec_from_file_location(
     "agent_management.agents.rcsb_agent", _agent_path
 )
+if spec_agent is None:
+    raise ImportError("Could not create module spec")
 rcsb_agent_mod = importlib.util.module_from_spec(spec_agent)
 assert spec_agent and spec_agent.loader
 spec_agent.loader.exec_module(rcsb_agent_mod)
@@ -43,19 +45,19 @@ class _LLMModelConfig(BaseModel):  # type: ignore[misc]
     model_name: str
 
 
-model_config_stub.ProviderType = _ProviderType
-model_config_stub.LLMModelConfig = _LLMModelConfig
+model_config_stub.ProviderType = _ProviderType  # type: ignore[attr-defined]
+model_config_stub.LLMModelConfig = _LLMModelConfig  # type: ignore[attr-defined]
 sys.modules["api.agent_management.model_config"] = model_config_stub
 
 agent_pkg = types.ModuleType("agent_management.agents")
-agent_pkg.rcsb_agent = rcsb_agent_mod
+agent_pkg.rcsb_agent = rcsb_agent_mod  # type: ignore[attr-defined]
 agent_root = types.ModuleType("agent_management")
-agent_root.agents = agent_pkg
+agent_root.agents = agent_pkg  # type: ignore[attr-defined]
 sys.modules["agent_management"] = agent_root
 sys.modules["agent_management.agents"] = agent_pkg
 sys.modules["agent_management.agents.rcsb_agent"] = rcsb_agent_mod
 api_mod = types.ModuleType("api")
-api_mod.agent_management = agent_root
+api_mod.agent_management = agent_root  # type: ignore[attr-defined]
 sys.modules["api"] = api_mod
 sys.modules["api.agent_management"] = agent_root
 sys.modules["api.agent_management.agents"] = agent_pkg
@@ -80,10 +82,10 @@ class StructuredLLMRequest(BaseModel, Generic[T]):
     llm_config: Optional[_LLMModelConfig] = None
 
 
-models_stub.LLMResponse = LLMResponse
-models_stub.StructuredLLMRequest = StructuredLLMRequest
+models_stub.LLMResponse = LLMResponse  # type: ignore[attr-defined]
+models_stub.StructuredLLMRequest = StructuredLLMRequest  # type: ignore[attr-defined]
 sys.modules["agent_management.models"] = models_stub
-agent_root.models = models_stub
+agent_root.models = models_stub  # type: ignore[attr-defined]
 sys.modules["api.agent_management.models"] = models_stub
 
 
@@ -114,25 +116,25 @@ class LLMRequest(BaseModel):
     user_prompt: str
 
 
-llm_stub.LLMService = LLMService
-llm_stub.LLMRequest = LLMRequest
-llm_stub.LLMResponse = LLMResponse
+llm_stub.LLMService = LLMService  # type: ignore[attr-defined]
+llm_stub.LLMRequest = LLMRequest  # type: ignore[attr-defined]
+llm_stub.LLMResponse = LLMResponse  # type: ignore[attr-defined]
 sys.modules["agent_management.llm_service"] = llm_stub
-agent_root.llm_service = llm_stub
+agent_root.llm_service = llm_stub  # type: ignore[attr-defined]
 sys.modules["api.agent_management.llm_service"] = llm_stub
 
 # Stub heavy optional dependencies before loading router module
 chem_mod = types.ModuleType("rdkit.Chem")
-chem_mod.Fragments = object
-chem_mod.Descriptors = object
-chem_mod.AllChem = object
+chem_mod.Fragments = object  # type: ignore[attr-defined]
+chem_mod.Descriptors = object  # type: ignore[attr-defined]
+chem_mod.AllChem = object  # type: ignore[attr-defined]
 rdkit_mod = types.ModuleType("rdkit")
-rdkit_mod.Chem = chem_mod
+rdkit_mod.Chem = chem_mod  # type: ignore[attr-defined]
 sys.modules["rdkit"] = rdkit_mod
 sys.modules["rdkit.Chem"] = chem_mod
 
 openai_mod = types.ModuleType("openai")
-openai_mod.OpenAI = object
+openai_mod.OpenAI = object  # type: ignore[attr-defined]
 types_mod = types.ModuleType("openai.types")
 chat_mod = types.ModuleType("openai.types.chat")
 chat_completion_mod = types.ModuleType("openai.types.chat.chat_completion")
@@ -151,6 +153,8 @@ from pathlib import Path
 
 _routes_path = Path(__file__).resolve().parents[1] / "routers" / "rcsb" / "routes.py"
 spec = importlib.util.spec_from_file_location("rcsb_routes", _routes_path)
+if spec is None:
+    raise ImportError("Could not create module spec")
 rcsb_module = importlib.util.module_from_spec(spec)
 assert spec and spec.loader
 spec.loader.exec_module(rcsb_module)

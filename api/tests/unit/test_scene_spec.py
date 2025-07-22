@@ -10,6 +10,8 @@ spec = importlib.util.spec_from_file_location(
     "api.agent_management.scene_spec",
     ROOT / "api" / "agent_management" / "scene_spec.py",
 )
+if spec is None:
+    raise ImportError("Could not create module spec")
 module = importlib.util.module_from_spec(spec)
 assert spec and spec.loader
 spec.loader.exec_module(module)

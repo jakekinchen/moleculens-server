@@ -2,9 +2,9 @@ import importlib.util
 import json
 import os
 import subprocess
+import sys
 import tempfile
 import threading
-import sys
 import types
 from hashlib import sha256
 from pathlib import Path
@@ -31,12 +31,14 @@ except Exception:  # pragma: no cover - fallback for test loaders
         "api.agent_management", types.ModuleType("api.agent_management")
     )
     agent_pkg.__path__ = [package_root]
-    api_pkg.agent_management = agent_pkg
+    api_pkg.agent_management = agent_pkg  # type: ignore[attr-defined]
 
     spec = importlib.util.spec_from_file_location(
         "api.agent_management.pymol_translator", translator_path
     )
+    assert spec is not None, "Could not create module spec for pymol_translator"
     pymol_translator = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None, "Module spec has no loader"
     spec.loader.exec_module(pymol_translator)
 
 from api.utils import cache, security
@@ -71,6 +73,24 @@ except Exception:  # pragma: no cover – fallback when PyMOL truly unavailable
     from types import SimpleNamespace
 
     pymol_cmd = SimpleNamespace()  # type: ignore
+
+    # Define stub methods for CI environments
+    STUB_METHODS = [
+        "reinitialize",
+        "do",
+        "png",
+        "save",
+        "get_view",
+        "centerofmass",
+        "get_extent",
+    ]
+
+    def noop(*args, **kwargs):
+        return None
+
+    # Set all stub methods
+    for method in STUB_METHODS:
+        setattr(pymol_cmd, method, noop)
 
 router = APIRouter(prefix="/render", tags=["Render"])
 
@@ -119,7 +139,7 @@ async def render(req: RenderRequest):
 
     # Convert description to PyMOL commands via translator
     try:
-        commands = pymol_translator.translate(req.description)
+        commands = pymol_translator.translate(req.description)  # type: ignore[attr-defined]
     except Exception:
         commands = []
 

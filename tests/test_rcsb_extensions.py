@@ -7,11 +7,11 @@ from fastapi.testclient import TestClient
 # stub rdkit to avoid heavy imports
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 chem_mod = types.ModuleType("rdkit.Chem")
-chem_mod.Fragments = object
-chem_mod.Descriptors = object
-chem_mod.AllChem = object
+chem_mod.Fragments = object  # type: ignore[attr-defined]
+chem_mod.Descriptors = object  # type: ignore[attr-defined]
+chem_mod.AllChem = object  # type: ignore[attr-defined]
 rdkit_mod = types.ModuleType("rdkit")
-rdkit_mod.Chem = chem_mod
+rdkit_mod.Chem = chem_mod  # type: ignore[attr-defined]
 sys.modules["rdkit"] = rdkit_mod
 sys.modules["rdkit.Chem"] = chem_mod
 

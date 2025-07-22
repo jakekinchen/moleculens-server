@@ -5,7 +5,7 @@ LLM Service Module - Handles interactions with LLM provider OpenAI
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, Generic, Literal, Optional, Type, TypeVar, Union
+from typing import Any, Dict, Generic, Literal, Optional, Type, TypeVar, Union, cast
 
 from dotenv import load_dotenv
 from pydantic import BaseModel
@@ -127,7 +127,7 @@ class StructuredLLMRequest(LLMRequest, Generic[T]):
     """Request structure for structured output."""
 
     response_model: Type[T]
-    response_format: ResponseFormat = ResponseFormat(type="json_object")
+    response_format: Optional[Dict[str, Any]] = None  # type: ignore[assignment]
 
 
 @dataclass

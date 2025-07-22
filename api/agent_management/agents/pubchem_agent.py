@@ -32,9 +32,9 @@ def _sdf_to_pdb_block(sdf_data: str) -> str:
         return ""
 
     if mol.GetNumConformers() == 0:
-        AllChem.EmbedMolecule(mol, AllChem.ETKDG())
+        AllChem.EmbedMolecule(mol, AllChem.ETKDG())  # type: ignore[attr-defined]
 
-    AllChem.MMFFOptimizeMolecule(mol)
+    AllChem.MMFFOptimizeMolecule(mol)  # type: ignore[attr-defined]
 
     pdb_data = Chem.MolToPDBBlock(mol)
     return pdb_data if pdb_data else ""
@@ -806,7 +806,7 @@ Only respond with the molecule name or 'N/A', no other text.""",
             raise ValueError("Unable to parse SDF data")
 
         if mol.GetNumConformers() == 0:
-            AllChem.Compute2DCoords(mol)
+            AllChem.Compute2DCoords(mol)  # type: ignore[attr-defined]
 
         conf = mol.GetConformer()
         atoms = []
@@ -868,6 +868,8 @@ Only respond with the molecule name or 'N/A', no other text.""",
         for item in queries:
             q = item.get("query")
             box = item.get("box")
+            if q is None:
+                continue
             molecule = self.get_molecule_2d_info(q)
             layout.append(
                 {

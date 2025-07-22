@@ -7,17 +7,17 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 import types
 
 chem_mod = types.ModuleType("rdkit.Chem")
-chem_mod.Fragments = object
-chem_mod.Descriptors = object
-chem_mod.AllChem = object
+chem_mod.Fragments = object  # type: ignore[attr-defined]
+chem_mod.Descriptors = object  # type: ignore[attr-defined]
+chem_mod.AllChem = object  # type: ignore[attr-defined]
 rdkit_mod = types.ModuleType("rdkit")
-rdkit_mod.Chem = chem_mod
+rdkit_mod.Chem = chem_mod  # type: ignore[attr-defined]
 sys.modules["rdkit"] = rdkit_mod
 sys.modules["rdkit.Chem"] = chem_mod
 
 # Stub out the heavy `openai` dependency used in some modules
 openai_mod = types.ModuleType("openai")
-openai_mod.OpenAI = object
+openai_mod.OpenAI = object  # type: ignore[attr-defined]
 types_mod = types.ModuleType("openai.types")
 chat_mod = types.ModuleType("openai.types.chat")
 chat_completion_mod = types.ModuleType("openai.types.chat.chat_completion")

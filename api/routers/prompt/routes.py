@@ -805,7 +805,7 @@ async def generate_molecule_diagram(
 
         return DiagramResponse(
             diagram_image=svg_image,
-            diagram_plan=final_diagram_plan_obj.model_dump(),
+            diagram_plan=final_diagram_plan_obj,
             status="completed",
         )
 
@@ -819,12 +819,13 @@ async def generate_molecule_diagram(
         error_plan = DiagramPlan(
             plan=f"ValueError: {str(ve)}",
             molecule_list=[],
+            arrows=[],
             canvas_width=request.canvas_width,  # Add here
             canvas_height=request.canvas_height,  # Add here
         )
         return DiagramResponse(
             diagram_image="",
-            diagram_plan=error_plan.model_dump(),
+            diagram_plan=error_plan,
             status="failed",
             error=str(ve),
         )

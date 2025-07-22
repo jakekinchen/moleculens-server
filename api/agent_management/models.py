@@ -301,7 +301,7 @@ class DiagramPlan(BaseModel):
     """Plan for rendering a molecular diagram."""
 
     plan: str = Field(description="Description of the diagram plan")
-    molecule_list: List[MoleculePosition] = Field(
+    molecule_list: List["MoleculePlacement"] = Field(
         description="List of molecules and their positions"
     )
     arrows: List[Arrow] = Field(description="List of arrows connecting molecules")

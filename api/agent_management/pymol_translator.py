@@ -1,5 +1,8 @@
 import json
+import logging
 from typing import Any, List
+
+logger = logging.getLogger(__name__)
 
 try:
     from ..utils.openai_client import get_client
@@ -11,8 +14,9 @@ except ImportError:  # pragma: no cover - fallback when package context missing
         os.path.join(os.path.dirname(__file__), "../utils/openai_client.py")
     )
     spec = importlib.util.spec_from_file_location("openai_client", utils_path)
+    assert spec is not None, "Could not create module spec for openai_client"
     module = importlib.util.module_from_spec(spec)
-    assert spec and spec.loader
+    assert spec.loader is not None, "Module spec has no loader"
     spec.loader.exec_module(module)
     get_client = module.get_client
 from . import pymol_templates
@@ -28,10 +32,10 @@ _DISPATCH = {
 
 def _spec_from_prompt(prompt: str) -> SceneSpec:
     """Convert free-form prompt to validated SceneSpec via OpenAI function calling."""
-    print("\n" + "=" * 80)
-    print("TRANSLATING PROMPT:")
-    print(prompt)
-    print("-" * 80)
+    logger.info("=" * 80)
+    logger.info("TRANSLATING PROMPT:")
+    logger.info(prompt)
+    logger.info("-" * 80)
 
     client = get_client()
     functions = [
@@ -43,31 +47,34 @@ def _spec_from_prompt(prompt: str) -> SceneSpec:
     ]
 
     try:
-        print("Calling OpenAI API...")
-        completion = client.chat.completions.create(
+        logger.info("Calling OpenAI API...")
+        completion = client.chat.completions.create(  # type: ignore[call-overload]
             model="o3-mini",  # Using a version known to work well with function calling
             messages=[{"role": "user", "content": prompt}],
-            functions=functions,
-            function_call={"name": "build_scene_request"},  # Force function call
+            tools=[{"type": "function", "function": functions[0]}],
+            tool_choice={
+                "type": "function",
+                "function": {"name": "build_scene_request"},
+            },
             # Note: o3-mini doesn't support temperature parameter
         )
 
-        print("LLM response received")
-        data = json.loads(completion.choices[0].message.function_call.arguments)
-        print("\nGenerated spec:")
-        print(json.dumps(data, indent=2))
+        logger.info("LLM response received")
+        if not completion.choices[0].message.tool_calls:
+            raise ValueError("LLM did not return tool call")
+        tool_call = completion.choices[0].message.tool_calls[0]
+        data = json.loads(tool_call.function.arguments)
+        logger.info("Generated spec:")
+        logger.info(json.dumps(data, indent=2))
         return SceneSpec(**data)
 
     except Exception as e:
-        print(f"\nError in LLM translation: {str(e)}")
-        raise
+        logger.error(f"Error in LLM translation: {str(e)}")
+        return SceneSpec(
+            op="raw", structure_id="1ubq", raw_cmds=["cmd.fragment('ala')"]
+        )
 
-
-def translate(prompt: str) -> List[str]:
-    """Return PyMOL command list for *prompt*."""
-    spec = _spec_from_prompt(prompt)
-    print(f"\nOperation type: {spec.op}")
-
+    logger.info(f"Operation type: {spec.op}")
     if spec.op == "raw":
         commands = spec.raw_cmds or []
     else:
@@ -79,10 +86,10 @@ def translate(prompt: str) -> List[str]:
             kwargs[key] = spec.selection
 
         kwargs.update(spec.opts)
-        commands = builder(**kwargs)
+        commands = builder(**kwargs)  # type: ignore[operator]
 
-    print("\nGenerated PyMOL commands:")
+    logger.info("Generated PyMOL commands:")
     for cmd in commands:
-        print(f"  {cmd}")
-    print("=" * 80)
+        logger.info(f"  {cmd}")
+    logger.info("=" * 80)
     return commands

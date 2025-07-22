@@ -154,7 +154,9 @@ def _render_single_molecule(dwg: svgwrite.Drawing, data: Dict[str, Any]):
 
 def render_diagram(
     plan: DiagramPlan,
-    molecule_data: Dict[str, List[Dict[str, Any]]],
+    molecule_data: Dict[
+        str, Any
+    ],  # Can be Dict[str, Any] or Dict[str, List[Dict[str, Any]]]
     canvas_width: Optional[int] = None,
     canvas_height: Optional[int] = None,
 ) -> str:
@@ -180,7 +182,15 @@ def render_diagram(
     for molecule in plan.molecule_list:
         name = molecule.molecule
         if name in molecule_data:
-            data = molecule_data[name]
+            data_list = molecule_data[name]
+            # molecule_data contains a list, but we need a single dict for rendering
+            if isinstance(data_list, list) and len(data_list) > 0:
+                data = data_list[0].copy()  # Use first item and make a copy
+            elif isinstance(data_list, dict):
+                data = data_list.copy()  # Handle case where it's already a dict
+            else:
+                continue  # Skip if no valid data
+
             data["box"] = {"x": molecule.x, "y": molecule.y}
             _render_single_molecule(dwg, data)
 

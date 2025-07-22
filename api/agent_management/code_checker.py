@@ -12,11 +12,10 @@ try:
     from ..utils.openai_client import get_client
 except ImportError:
     # Fallback for direct module loading
-    import os
     import sys
 
     sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-    from utils.openai_client import get_client
+    from utils.openai_client import get_client  # type: ignore[no-redef]
 
 # Configuration
 MAX_ITERATIONS = 5
@@ -314,7 +313,7 @@ class CodeQualityTool:
                     "role": "system",
                     "content": "You are a vision expert that evaluates if rendered images match expected visual outcomes. Provide clear feedback about what matches and what doesn't.",
                 },
-                {"role": "user", "content": content_parts},
+                {"role": "user", "content": content_parts},  # type: ignore[list-item,misc]
             ],
         )
 

@@ -6,11 +6,14 @@ different tasks.
 """
 
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 from agent_management.llm_service import ProviderType
 from agent_management.model_config import ModelCategory
 from pydantic import BaseModel
+
+if TYPE_CHECKING:
+    from agent_management.llm_service import LLMService
 
 
 class AgentType(str, Enum):

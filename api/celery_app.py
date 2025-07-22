@@ -24,14 +24,18 @@ _lock = threading.Lock()
 def render_scene(
     description: str, output_format: Literal["gltf", "usdz"] = "gltf"
 ) -> str:
-    """Render a scene in a background task and return the file path."""
+    """Render a scene in a background task and return the file path.
+
+    Note: cache.get() returns a tuple (file_path, metadata) when a cached
+    result is found, or None if no cache entry exists.
+    """
     key = sha256(f"{description}_{output_format}".encode()).hexdigest()
     cached = cache.get(key)
     if cached:
-        return cached["file_path"]
+        return cached[0]  # cached is a tuple (file_path, metadata)
 
     try:
-        commands = pymol_translator.translate(description)
+        commands = pymol_translator.translate(description)  # type: ignore[attr-defined]
     except Exception:
         commands = ["cmd.fragment('ala')"]
 

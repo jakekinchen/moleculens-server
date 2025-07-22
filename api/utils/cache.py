@@ -1,7 +1,24 @@
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Protocol, Tuple, Union, runtime_checkable
+
+
+@runtime_checkable
+class RedisLike(Protocol):
+    """Protocol for Redis-like cache backends."""
+
+    def get(self, key: str) -> Optional[Union[str, bytes]]:
+        """Get a value by key."""
+        ...
+
+    def set(self, key: str, value: str) -> None:
+        """Set a value by key."""
+        ...
+
+    def ping(self) -> bool:
+        """Test connection."""
+        ...
 
 
 # Simple in-memory cache implementation
@@ -15,6 +32,9 @@ class _DummyRedis:
     def set(self, key, value):
         self._store[key] = value
 
+    def ping(self) -> bool:
+        return True
+
 
 # Only try to use real Redis if explicitly configured
 REDIS_HOST = os.getenv("REDIS_HOST")
@@ -24,7 +44,7 @@ if REDIS_HOST:
     try:
         import redis
 
-        redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT)
+        redis_client: RedisLike = redis.Redis(host=REDIS_HOST, port=REDIS_PORT)  # type: ignore[assignment]
         # Test the connection
         redis_client.ping()
     except (ImportError, Exception):
@@ -53,8 +73,15 @@ def get(key: str) -> Optional[Tuple[str, Dict[str, Any]]]:
         return None
 
     try:
-        meta: Dict[str, Any] = json.loads(raw)
-    except (json.JSONDecodeError, TypeError):
+        # Handle both bytes and str return types from Redis
+        if isinstance(raw, bytes):
+            raw_str = raw.decode()
+        elif isinstance(raw, str):
+            raw_str = raw
+        else:
+            return None
+        meta: Dict[str, Any] = json.loads(raw_str)
+    except (json.JSONDecodeError, TypeError, AttributeError):
         return None
 
     path = Path(meta.get("file_path", ""))

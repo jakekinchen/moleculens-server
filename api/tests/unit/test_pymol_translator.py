@@ -3,6 +3,7 @@ import os
 import sys
 import types
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.append(str(ROOT))
@@ -13,17 +14,19 @@ def _load_scene_spec() -> type:
         "api.agent_management.scene_spec",
         ROOT / "api" / "agent_management" / "scene_spec.py",
     )
+    if spec_s is None:
+        raise ImportError("Could not create module spec")
     module = importlib.util.module_from_spec(spec_s)
     assert spec_s and spec_s.loader
     spec_s.loader.exec_module(module)
     return module.SceneSpec
 
 
-def _load_translator(monkeypatch: any) -> any:
+def _load_translator(monkeypatch: Any) -> Any:
     pkg = types.ModuleType("api.agent_management")
     pkg.__path__ = [str(ROOT / "api" / "agent_management")]
     api_pkg = types.ModuleType("api")
-    api_pkg.agent_management = pkg
+    api_pkg.agent_management = pkg  # type: ignore[attr-defined]
     monkeypatch.setitem(sys.modules, "api", api_pkg)
     monkeypatch.setitem(sys.modules, "api.agent_management", pkg)
 
@@ -31,6 +34,8 @@ def _load_translator(monkeypatch: any) -> any:
         "api.agent_management.pymol_translator",
         ROOT / "api" / "agent_management" / "pymol_translator.py",
     )
+    if spec_t is None:
+        raise ImportError("Could not create module spec")
     module_t = importlib.util.module_from_spec(spec_t)
     assert spec_t and spec_t.loader
     spec_t.loader.exec_module(module_t)
