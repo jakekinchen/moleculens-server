@@ -74,7 +74,12 @@ def _spec_from_prompt(prompt: str) -> SceneSpec:
             op="raw", structure_id="1ubq", raw_cmds=["cmd.fragment('ala')"]
         )
 
+
+def translate(prompt: str) -> List[str]:
+    """Translate a natural-language prompt into PyMOL commands."""
+    spec = _spec_from_prompt(prompt)
     logger.info(f"Operation type: {spec.op}")
+
     if spec.op == "raw":
         commands = spec.raw_cmds or []
     else:
