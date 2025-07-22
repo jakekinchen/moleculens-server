@@ -1,6 +1,7 @@
 import importlib.util
 import os
 import sys
+from pathlib import Path
 
 
 def test_imports():
@@ -9,10 +10,10 @@ def test_imports():
     print("Directory contents:", os.listdir())
 
     try:
-        # Try to load the module directly
-        spec = importlib.util.spec_from_file_location(
-            "routes", "/app/api/routers/render/routes.py"
+        routes_path = (
+            Path(__file__).resolve().parents[1] / "routers" / "render" / "routes.py"
         )
+        spec = importlib.util.spec_from_file_location("routes", routes_path)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
 
