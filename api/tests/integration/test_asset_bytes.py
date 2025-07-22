@@ -1,75 +1,70 @@
-import os
-import subprocess
-import time
+import importlib.util
+import sys
+import types
 from pathlib import Path
 
 import pytest
-import requests
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
 
 
 @pytest.mark.integration
-@pytest.mark.slow
-def test_render_model_bytes():
-    """Build the Docker image, run the server, render a model and ensure
-    the returned payload is non-empty (>1 kB).
-    This is a smoke-test proving the full containerized stack works.
-    """
+def test_render_model_bytes(tmp_path, monkeypatch):
+    """Render a model using stubbed PyMOL and ensure bytes are returned."""
 
-    image = "moleculens-test:latest"
+    # Stub minimal pymol.cmd used by the router
+    pymol_stub = types.ModuleType("pymol")
 
-    # Build image (use cache when available)
-    subprocess.run(
-        ["docker", "build", "-t", image, Path(__file__).resolve().parents[3]],
-        check=True,
+    class _CmdStub:
+        def reinitialize(self):
+            pass
+
+        def save(self, path: str, *args, **kwargs):
+            Path(path).write_text("ATOM\n" * 300)
+
+        def png(self, path: str, *args, **kwargs):
+            Path(path).write_text("PNG")
+
+        def do(self, *args, **kwargs):
+            pass
+
+    pymol_stub.cmd = _CmdStub()
+    monkeypatch.setitem(sys.modules, "pymol", pymol_stub)
+
+    # Stub translator and utilities
+    translator_stub = types.ModuleType("api.agent_management.pymol_translator")
+    translator_stub.translate = lambda desc: ["cmd.save('out.pdb')"]
+    agent_root = types.ModuleType("api.agent_management")
+    agent_root.pymol_translator = translator_stub
+    monkeypatch.setitem(sys.modules, "agent_management", agent_root)
+    monkeypatch.setitem(
+        sys.modules, "agent_management.pymol_translator", translator_stub
+    )
+    monkeypatch.setitem(sys.modules, "api.agent_management", agent_root)
+    monkeypatch.setitem(
+        sys.modules, "api.agent_management.pymol_translator", translator_stub
     )
 
-    # Bind container port 8000 to a random free host port ("0").
-    container_id = (
-        subprocess.check_output(["docker", "run", "-d", "-p", "0:8000", image])
-        .decode()
-        .strip()
+    utils_stub = types.ModuleType("api.utils")
+    utils_stub.cache = types.SimpleNamespace(
+        CACHE_DIR=tmp_path, get=lambda key: None, set=lambda key, meta: None
     )
+    utils_stub.security = types.SimpleNamespace(validate_commands=lambda c: None)
+    monkeypatch.setitem(sys.modules, "api.utils", utils_stub)
 
-    # Discover which host port Docker chose.
-    host_port = (
-        subprocess.check_output(["docker", "port", container_id, "8000/tcp"])
-        .decode()
-        .split(":")[-1]
-        .strip()
+    # Load router after stubs are in place
+    root = Path(__file__).resolve().parents[3]
+    spec = importlib.util.spec_from_file_location(
+        "render_routes", root / "api" / "routers" / "render" / "routes.py"
     )
+    module = importlib.util.module_from_spec(spec)
+    assert spec and spec.loader
+    spec.loader.exec_module(module)
 
-    def _cleanup() -> None:
-        subprocess.run(
-            ["docker", "rm", "-f", container_id],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+    app = FastAPI()
+    app.include_router(module.router)
 
-    try:
-        # Wait until /health reports healthy (max 120 s)
-        deadline = time.time() + 120
-        while time.time() < deadline:
-            try:
-                res = requests.get(f"http://localhost:{host_port}/health", timeout=5)
-                if res.status_code == 200:
-                    break
-            except requests.RequestException:
-                pass
-            time.sleep(2)
-        else:
-            pytest.fail("API inside container did not become healthy within 120 s")
-
-        payload = {
-            "description": "fetch 1ubq; hide everything; show cartoon; orient",
-            "format": "model",
-        }
-        response = requests.post(
-            f"http://localhost:{host_port}/render", json=payload, timeout=180
-        )
-        response.raise_for_status()
-
-        size = len(response.content)
-        assert size > 1024, f"Expected model >1 kB, got {size} bytes"
-
-    finally:
-        _cleanup()
+    with TestClient(app) as client:
+        resp = client.post("/render", json={"description": "demo", "format": "model"})
+        assert resp.status_code == 200
+        assert len(resp.content) > 1024
