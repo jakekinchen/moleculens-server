@@ -22,12 +22,12 @@ from api.agent_management.model_registry import ModelRegistry
 from api.agent_management.models import (
     AnimationCode,
     BaseModelWithConfig,
-    DiagramPlan,
     OrchestrationPlan,
     SceneScript,
 )
 from api.agent_management.scene_packager import ScenePackager
 from api.dependencies.use_llm import use_llm
+from api.diagram.models import DiagramPlan
 
 # Diagram Pydantic models are imported from api.agent_management.models to avoid duplication
 

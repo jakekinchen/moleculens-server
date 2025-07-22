@@ -212,3 +212,31 @@ These features pave the way for upcoming Mol* integration and XR/VR export capab
 ### pymol_command_builder
 * Accepts `SceneSpec`, dispatches to template helpers (`overview_scene`, `binding_site_scene`, `mutation_scene`).
 * Raises `SceneValidationError` (Pydantic) on invalid specs.
+
+Coding Guidelines for Moleculens Server
+
+## Build/Test Commands
+- **Run all tests**: `pytest`
+- **Run single test**: `pytest api/tests/test_filename.py::test_function_name`
+- **Run by marker**: `pytest -m unit` | `pytest -m integration` | `pytest -m "not slow"`
+- **Lint**: `flake8` (max line length: 100, extends ignore: D,E203,E501,F401,F821,W503,E402,F811,F541,E722,W605,W391)
+- **Format**: `black .` and `isort --profile black .`
+- **Type check**: `mypy` (currently non-strict mode, ignores missing imports for pymol/rdkit/pubchempy)
+
+## Code Style
+- **Imports**: Use absolute imports from project root (`from agent_management.agents.rcsb_agent import RCSBAgent`)
+- **Formatting**: Black + isort with black profile
+- **Types**: Use type hints with `typing` module (`Dict[str, Any]`, `Literal["pdb", "cif"]`)
+- **Classes**: PascalCase with docstrings (`class RCSBAgent:`)
+- **Functions**: snake_case with docstrings using NumPy style
+- **Constants**: UPPER_SNAKE_CASE as class attributes
+- **Models**: Pydantic BaseModel for request/response schemas
+- **Error handling**: Raise HTTPException for API routes, ValueError/requests exceptions for agents
+- **Async**: Use async/await for I/O operations, sync for computational tasks
+- **Security**: Whitelist PyMOL commands, validate inputs, no secrets in logs
+
+## Project Structure
+- `api/agent_management/`: AI agents and LLM services
+- `api/routers/`: FastAPI route handlers with Pydantic models
+- `api/tests/`: Unit/integration tests with fixtures
+- `api/utils/`: Shared utilities (cache, security, rate limiting)

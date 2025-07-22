@@ -66,3 +66,4 @@ static/scene_*.js
 
 # Cache
 *.cache
+.DS_Store

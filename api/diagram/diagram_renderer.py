@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 
 import svgwrite  # type: ignore
 
-from .models import DiagramPlan
+from ..agent_management.models import DiagramPlan
 
 # CPK colors dictionary (common elements)
 CPK_COLORS = {

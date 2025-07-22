@@ -24,7 +24,7 @@ try:
 except ImportError:
     # html_to_caption_json requires beautifulsoup4 which may not be available
     html_to_caption_json = None  # type: ignore[assignment]
-from . import diagram_renderer
+from ..diagram import diagram_renderer
 
 __all__ = [
     "pymol_translator",
