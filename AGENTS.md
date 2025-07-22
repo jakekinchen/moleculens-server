@@ -9,6 +9,7 @@
 * 2025-08-03  Keyword prompt→template translator, lint baseline ✅
 * 2025-07-21  Translator wired into render flow ✅
 * 2025-07-21  Added `mutation_focus_scene` template ✅
+* 2025-07-22  Celery render_scene task → produce glTF/USDZ ✅
 
 ---
 
@@ -17,15 +18,14 @@ Exactly one open item keeps all agents aligned:
 
 | Area | Task | Owner | Status |
 |------|------|-------|--------|
-| Backend | **Celery render_scene task → produce glTF/USDZ** | RenderWG | 🛠 |
+| Tooling | **Tighten flake8/mypy rules; re-enable strict hook** | DevOps | 🛠 |
 
 *CI fails if this table becomes empty.*
 
 ---
 
 ## Future (backlog + next_steps)
-1. Tighten flake8/mypy rules; re-enable strict hook.
-2. Assess whether any of the following should be integrated or are already integrated "Backend to‑do list—keep it lean:
+1. Assess whether any of the following should be integrated or are already integrated "Backend to‑do list—keep it lean:
 	1.	Token mint & verify
 	•	utils/tokens.py – sign(payload, ttl) & verify(token) using HS256 + env secret.
 	•	Include scene fingerprint + plan flag.
