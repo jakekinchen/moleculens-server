@@ -30,6 +30,10 @@ sys.modules.setdefault(
 # Alias the `api.dependencies` package so imports like `dependencies.use_llm` work
 sys.modules.setdefault("dependencies", importlib.import_module("api.dependencies"))
 
+# Alias the `api.routers` package so imports like `api.routers.render` work
+_api_routers_pkg = importlib.import_module("api.routers")
+sys.modules.setdefault("api.routers", _api_routers_pkg)
+
 # Provide a lightweight stub for `pymol` (used by render routes) when the real
 # library is not available (e.g., during CI or unit testing where PyMOL isn't
 # installed). The stub implements the minimal API surface needed by the code.
@@ -130,6 +134,3 @@ if "celery" not in sys.modules:
 
     _celery.Celery = _CeleryApp  # type: ignore[attr-defined]
     sys.modules["celery"] = _celery
-
-# Alias routers package so `import routers` works
-sys.modules.setdefault("routers", importlib.import_module("api.routers"))

@@ -2,7 +2,7 @@ import json
 import os
 from typing import Optional
 
-from openai import OpenAI
+from .openai_client import get_client
 
 SYSTEM_PROMPT = "Translate the user description into a deterministic list of PyMOL cmd API calls only."
 
@@ -15,29 +15,16 @@ FUNCTION_SCHEMA = {
     },
 }
 
-# Lazily instantiate the OpenAI client so that merely importing this module
-# does not require a valid API key (which may be unavailable during unit
-# testing). If the key is missing we fall back to a dummy value so the client
-# can still be created and the downstream code/tests can stub network calls.
-
-_CLIENT: Optional[OpenAI] = None
-
-
-def _get_client() -> OpenAI:
-    global _CLIENT
-    if _CLIENT is None:
-        api_key = os.environ.get("OPENAI_API_KEY", "DUMMY_TEST_KEY")
-        _CLIENT = OpenAI(api_key=api_key)
-    return _CLIENT
+# Use centralized client helper
 
 
 def description_to_commands(description: str) -> list[str]:
     """Call the LLM to translate a free-form description into a list of PyMOL
     commands."""
-    client = _get_client()
+    client = get_client()
     try:
         response = client.chat.completions.create(
-            model="o3-mini",
+            model="o3-mini",  # Using a version known to work well with function calling
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": description},
@@ -50,7 +37,8 @@ def description_to_commands(description: str) -> list[str]:
             raise ValueError("LLM did not return function call")
         args = json.loads(choice.message.function_call.arguments)
         return args.get("commands", [])
-    except Exception:
+    except Exception as e:
+        print(f"Error in LLM translation: {str(e)}")
         # In test or offline environments, gracefully fall back to a simple default
         # to avoid network dependency. Returning an empty list is safe for callers.
         return []

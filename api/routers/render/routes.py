@@ -1,5 +1,10 @@
+import importlib.util
 import json
+import os
 import subprocess
+
+# Import pymol_translator using proper Python imports
+import sys
 import tempfile
 import threading
 from hashlib import sha256
@@ -9,10 +14,65 @@ from typing import Any, Dict, Literal
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
-from pymol import cmd
 
-from api.agent_management import pymol_translator
-from api.utils import cache, security
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+
+try:
+    from agent_management import pymol_translator
+except ImportError:
+    # Fallback to direct import if package import fails
+    translator_path = os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__), "../../agent_management/pymol_translator.py"
+        )
+    )
+    spec = importlib.util.spec_from_file_location("pymol_translator", translator_path)
+    pymol_translator = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(pymol_translator)
+
+# Import utils modules directly
+utils_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../utils"))
+cache_path = os.path.join(utils_path, "cache.py")
+security_path = os.path.join(utils_path, "security.py")
+
+spec = importlib.util.spec_from_file_location("cache", cache_path)
+cache = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(cache)
+
+spec = importlib.util.spec_from_file_location("security", security_path)
+security = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(security)
+
+# ---------------------------------------------------------------------------
+# PyMOL integration
+# ---------------------------------------------------------------------------
+# We want the router to use the real PyMOL library when it is installed but still
+# be import-able in environments (e.g. CI) where the native shared library is
+# missing.  The existing integration tests patch `sys.modules["pymol"]` with a
+# stub *before* importing this router, so the block below also behaves nicely in
+# those cases.
+
+try:
+    # Set PyMOL environment variables for headless mode
+    os.environ["PYMOL_QUIET"] = "1"
+    os.environ["PYMOL_HEADLESS"] = "1"
+
+    import pymol  # type: ignore
+
+    # Launch PyMOL in quiet, headless mode exactly once.  This call is a no-op
+    # on the stub object injected by the tests because the attribute will be
+    # absent.
+    if hasattr(pymol, "finish_launching"):
+        pymol.finish_launching(["pymol", "-cq"])  # c = command-line, q = quiet
+
+    pymol_cmd = pymol.cmd  # type: ignore[attr-defined]
+
+except Exception:  # pragma: no cover – fallback when PyMOL truly unavailable
+    # Create a minimal stub so the module still loads; the integration tests
+    # will monkey-patch the attributes they need at runtime.
+    from types import SimpleNamespace
+
+    pymol_cmd = SimpleNamespace()  # type: ignore
 
 router = APIRouter(prefix="/render", tags=["Render"])
 
@@ -34,15 +94,15 @@ def _metadata() -> Dict[str, Any]:
     """Collect useful scene metadata from PyMOL (best-effort)."""
     data: Dict[str, Any] = {}
     try:
-        data["camera"] = cmd.get_view()
+        data["camera"] = pymol_cmd.get_view()
     except Exception:
         pass
     try:
-        data["center"] = cmd.centerofmass()
+        data["center"] = pymol_cmd.centerofmass()
     except Exception:
         pass
     try:
-        data["bbox"] = cmd.get_extent()
+        data["bbox"] = pymol_cmd.get_extent()
     except Exception:
         pass
     return data
@@ -64,8 +124,9 @@ async def render(req: RenderRequest):
         commands = pymol_translator.translate(req.description)
     except Exception:
         commands = []
+
     # Fallback: if LLM could not translate description (e.g. no API key),
-    # render a simple alanine fragment so that the PNG is not blank.
+    # render a simple structure so that the PNG is not blank.
     if not commands:
         commands = [
             "cmd.fetch('1ubq')",  # Ubiquitin
@@ -85,22 +146,22 @@ async def render(req: RenderRequest):
 
     # Generate output under lock so concurrent requests don't clash
     with lock:
-        cmd.reinitialize()
+        pymol_cmd.reinitialize()
         for c in commands:
             # Supports both "cmd.fetch('1abc')" and "fetch 1abc" styles
             if c.startswith("cmd."):
                 eval(c)
             else:
-                cmd.do(c)
+                pymol_cmd.do(c)
 
         if req.format == "image":
-            cmd.png(str(out_path))
+            pymol_cmd.png(str(out_path))
         elif req.format == "model":
-            cmd.save(str(out_path))
+            pymol_cmd.save(str(out_path))
         else:  # animation
             tmp_dir = tempfile.mkdtemp()
             frame = Path(tmp_dir) / "frame.png"
-            cmd.png(str(frame))
+            pymol_cmd.png(str(frame))
             subprocess.run(
                 [
                     "ffmpeg",

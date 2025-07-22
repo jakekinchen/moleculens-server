@@ -1,18 +1,20 @@
 services:
   api:
-    build: .
+    build:
+      context: ..
+      dockerfile: Dockerfile
     container_name: fastapi_app
     restart: always
     ports:
       - "8000:8000"
     volumes:
-      - ./:/app
+      - ../:/app
     networks:
       - ai_network
     command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2", "--timeout-keep-alive", "4000", "--reload"]
-    working_dir: /app
+    working_dir: /app/api
     environment:
-      - PYTHONPATH=/app
+      - PYTHONPATH=/app:/app/api
 
 networks:
   ai_network:

@@ -32,13 +32,13 @@ def extend_llm_service(module):
                     "Image processing is only supported with OpenAI provider"
                 )
 
-            # Use the OpenAI provider to process the image
-            from openai import OpenAI
+            # Use the centralized OpenAI client
+            from ..utils.openai_client import get_client
 
-            client = OpenAI(api_key=self.config.api_key)
+            client = get_client(self.config.api_key)
 
             response = client.chat.completions.create(
-                model="gpt-4-vision-preview",
+                model="gpt-4o-mini",
                 messages=[
                     {
                         "role": "user",

@@ -11,6 +11,10 @@ ALLOWED_COMMANDS = {
     "png",
     "save",
     "label",
+    "select",  # Essential for creating selections
+    "set",  # Essential for setting properties like transparency
+    "zoom",  # Essential for focusing on specific regions
+    "surface",  # For surface representations
 }
 
 

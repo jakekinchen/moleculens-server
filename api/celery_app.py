@@ -28,7 +28,7 @@ def render_scene(
     key = sha256(f"{description}_{output_format}".encode()).hexdigest()
     cached = cache.get(key)
     if cached:
-        return cached[0]
+        return cached["file_path"]
 
     try:
         commands = pymol_translator.translate(description)
