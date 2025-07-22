@@ -1,8 +1,10 @@
 alembic==1.13.1
 
 # Code quality
-black==24.1.1
+black==24.4.2
 celery==5.3.6
+
+click==8.1.8
 esprima==4.0.1
 fastapi==0.109.2
 flake8==7.0.0
