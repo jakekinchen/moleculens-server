@@ -2,6 +2,7 @@ alembic==1.13.1
 
 # Code quality
 black==24.1.1
+celery==5.3.6
 esprima==4.0.1
 fastapi==0.109.2
 flake8==7.0.0
@@ -34,7 +35,6 @@ python-dotenv==1.0.1
 python-multipart==0.0.9
 rdkit==2023.9.2
 redis==5.0.1
-celery==5.3.6
 requests==2.31.0
 SQLAlchemy==2.0.27
 svgwrite==1.4.3

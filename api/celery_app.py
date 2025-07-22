@@ -21,7 +21,9 @@ _lock = threading.Lock()
 
 
 @celery_app.task(name="render_scene")
-def render_scene(description: str, output_format: Literal["gltf", "usdz"] = "gltf") -> str:
+def render_scene(
+    description: str, output_format: Literal["gltf", "usdz"] = "gltf"
+) -> str:
     """Render a scene in a background task and return the file path."""
     key = sha256(f"{description}_{output_format}".encode()).hexdigest()
     cached = cache.get(key)
@@ -50,9 +52,10 @@ def render_scene(description: str, output_format: Literal["gltf", "usdz"] = "glt
         cmd.save(str(tmp_obj), format="obj")
         converter = "assimp"
         if shutil.which(converter):
-            subprocess.run([converter, "export", str(tmp_obj), str(out_path)], check=True)
+            subprocess.run(
+                [converter, "export", str(tmp_obj), str(out_path)], check=True
+            )
         else:
             out_path.write_text("placeholder")
     cache.set(key, {"file_path": str(out_path), "format": output_format})
     return str(out_path)
-

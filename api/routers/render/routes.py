@@ -11,8 +11,8 @@ from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 from pymol import cmd
 
-from api.utils import cache, security
 from api.agent_management import pymol_translator
+from api.utils import cache, security
 
 router = APIRouter(prefix="/render", tags=["Render"])
 

@@ -1,13 +1,14 @@
+import importlib.util
 import os
 import sys
-import importlib.util
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.append(str(ROOT))
 
 spec = importlib.util.spec_from_file_location(
-    "api.agent_management.pymol_templates", ROOT / "api" / "agent_management" / "pymol_templates.py"
+    "api.agent_management.pymol_templates",
+    ROOT / "api" / "agent_management" / "pymol_templates.py",
 )
 module = importlib.util.module_from_spec(spec)
 assert spec and spec.loader

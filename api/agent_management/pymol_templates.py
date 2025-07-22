@@ -11,14 +11,15 @@ Available helpers
 * ``binding_site_scene(structure_id, selection)``
 * ``mutation_scene(structure_id, mutation_selection, original_residue=None)``
 """
+
 from __future__ import annotations
 
 from typing import List
 
-
 # --------------------------------------------------------------------------- #
 # Core scenes                                                                 #
 # --------------------------------------------------------------------------- #
+
 
 def overview_scene(structure_id: str) -> List[str]:
     """Generic overview – coloured cartoon plus transparent surface."""

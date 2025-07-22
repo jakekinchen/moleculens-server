@@ -1,15 +1,15 @@
 from __future__ import annotations
 
 import json
-from typing import List, Any
+from typing import Any, List
 
 import openai
 
 from .pymol_templates import (
-    overview_scene,
     binding_site_scene,
-    mutation_scene,
     mutation_focus_scene,
+    mutation_scene,
+    overview_scene,
 )
 from .scene_spec import SceneSpec
 
