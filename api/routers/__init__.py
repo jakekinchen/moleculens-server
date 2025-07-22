@@ -1,8 +1,11 @@
-from importlib import import_module
+from . import geometry, prompt, rcsb, render
 
-# Expose all router subpackages for convenient access,
-# e.g. `routers.prompt.router`.
-for _name in ("prompt", "geometry", "render", "rcsb"):
-    import_module(f"{__name__}.{_name}")
-
+# Expose all router subpackages for convenient access
 __all__ = ["prompt", "geometry", "render", "rcsb"]
+
+from .geometry.routes import router as geometry_router
+
+# Ensure submodules are properly exposed
+from .prompt.routes import router as prompt_router
+from .rcsb.routes import router as rcsb_router
+from .render.routes import router as render_router

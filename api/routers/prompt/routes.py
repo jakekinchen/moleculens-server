@@ -4,10 +4,10 @@ import logging
 import os
 import traceback
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional, Tuple
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from api.agent_management.agent_factory import AgentFactory
 from api.agent_management.agents.pubchem_agent import PubChemAgent, _sdf_to_pdb_block
@@ -67,6 +67,22 @@ class CompletePipelineResponse(BaseModelWithConfig):
     title: str
     timecode_markers: List[str]
     total_elements: int
+
+
+class DiagramPromptRequest(BaseModel):
+    prompt: str
+    canvas_width: int = 960
+    canvas_height: int = 640
+    model: Optional[str] = None
+    preferred_model_category: Optional[str] = None
+
+
+class DiagramResponse(BaseModel):
+    diagram_image: str  # base-64 PNG or SVG string
+    diagram_plan: DiagramPlan
+    status: Literal["completed", "failed", "processing"] = "completed"
+    job_id: Optional[str] = None
+    error: Optional[str] = None
 
 
 class GeometryResponse(BaseModel):

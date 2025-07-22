@@ -43,34 +43,34 @@ DEFAULT_AGENT_MODELS = [
     AgentModelConfig(
         agent_type=AgentType.DOMAIN_VALIDATOR,
         preferred_model="o3-mini",  # Fast, cost-effective
-        fallback_models=["gpt-4o", "claude-3-5-sonnet-latest"],
+        fallback_models=["gpt-4o"],
         required_categories=[ModelCategory.GENERAL],
         description="Validates if user prompts are scientific in nature",
     ),
     AgentModelConfig(
         agent_type=AgentType.SCRIPT,
         preferred_model="o3-mini",  # High quality required for script generation
-        fallback_models=["claude-3-7-sonnet-latest", "gpt-4.5-preview"],
+        fallback_models=["gpt-4.5-preview"],
         required_categories=[ModelCategory.REASONING],
         description="Generates animation scripts with timecodes and captions",
     ),
     AgentModelConfig(
         agent_type=AgentType.ORCHESTRATION,
         preferred_model="gpt-4o",  # Planning requires strong reasoning
-        fallback_models=["claude-3-7-sonnet-latest", "gpt-4.5-preview"],
+        fallback_models=["gpt-4.5-preview"],
         required_categories=[ModelCategory.REASONING],
         description="Plans which objects are needed for the animation",
     ),
     AgentModelConfig(
         agent_type=AgentType.GEOMETRY,
-        preferred_model="claude-3-5-sonnet-latest",  # Code generation quality
-        fallback_models=["gpt-4.5-preview", "qwen-2.5-coder-32b"],
+        preferred_model="o3-mini",  # Code generation quality
+        fallback_models=["gpt-4.5-preview"],
         required_categories=[ModelCategory.CODE],
         description="Generates Three.js geometry code for objects",
     ),
     AgentModelConfig(
         agent_type=AgentType.ANIMATION,
-        preferred_model="claude-3-7-sonnet-latest",  # Best for code generation
+        preferred_model="o3-mini",  # Best for code generation
         fallback_models=["gpt-4.5-preview", "gpt-4o"],
         required_categories=[ModelCategory.CODE],
         description="Generates animation code that manipulates objects over time",
@@ -78,21 +78,21 @@ DEFAULT_AGENT_MODELS = [
     AgentModelConfig(
         agent_type=AgentType.CAPTION,
         preferred_model="o3-mini",  # Simple task, cost-effective model
-        fallback_models=["gpt-4o", "llama3-70b-8192"],
+        fallback_models=["gpt-4o", "gpt-4.5-preview"],
         required_categories=[ModelCategory.GENERAL],
         description="Generates captions for animation frames",
     ),
     AgentModelConfig(
         agent_type=AgentType.AGGREGATOR,
         preferred_model="o3-mini",  # Simple aggregation task
-        fallback_models=["gpt-4o", "llama3-70b-8192"],
+        fallback_models=["gpt-4o"],
         required_categories=[ModelCategory.GENERAL],
         description="Combines outputs from various agents",
     ),
     AgentModelConfig(
         agent_type=AgentType.PUBCHEM,
         preferred_model="o3-mini",  # Changed to OpenAI model for reliability
-        fallback_models=["gpt-4o", "claude-3-7-sonnet-latest", "gpt-4.5-preview"],
+        fallback_models=["gpt-4o", "gpt-4.5-preview"],
         required_categories=[ModelCategory.REASONING],
         description="Handles PubChem data retrieval and processing",
     ),

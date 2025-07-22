@@ -3,26 +3,34 @@ import os
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
-try:
-    import redis  # type: ignore
-except ImportError:  # pragma: no cover – fallback stub for test environments
 
-    class _DummyRedis:
-        _store: dict = {}
+# Simple in-memory cache implementation
+class _DummyRedis:
+    _store: dict = {}
 
-        def get(self, key):
-            value = self._store.get(key)
-            return value.encode() if isinstance(value, str) else value
+    def get(self, key):
+        value = self._store.get(key)
+        return value.encode() if isinstance(value, str) else value
 
-        def set(self, key, value):
-            self._store[key] = value
+    def set(self, key, value):
+        self._store[key] = value
 
-    redis = type("redis", (), {"Redis": lambda *args, **kwargs: _DummyRedis()})  # type: ignore
 
-REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
-REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+# Only try to use real Redis if explicitly configured
+REDIS_HOST = os.getenv("REDIS_HOST")
+REDIS_PORT = int(os.getenv("REDIS_PORT", "6379"))
 
-redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT)
+if REDIS_HOST:
+    try:
+        import redis
+
+        redis_client = redis.Redis(host=REDIS_HOST, port=REDIS_PORT)
+        # Test the connection
+        redis_client.ping()
+    except (ImportError, Exception):
+        redis_client = _DummyRedis()
+else:
+    redis_client = _DummyRedis()
 
 # Determine writable cache directory
 _DEFAULT_CACHE_DIR = Path("/srv/cache")

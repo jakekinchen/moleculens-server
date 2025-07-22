@@ -6,16 +6,25 @@ import tempfile
 from typing import Dict, List, Literal, Optional
 
 # External libraries
-import openai
 from playwright.async_api import async_playwright
+
+try:
+    from ..utils.openai_client import get_client
+except ImportError:
+    # Fallback for direct module loading
+    import os
+    import sys
+
+    sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+    from utils.openai_client import get_client
 
 # Configuration
 MAX_ITERATIONS = 5
 
 
 class CodeQualityTool:
-    def __init__(self, openai_api_key: str):
-        self.openai_client = openai.Client(api_key=openai_api_key)
+    def __init__(self, openai_api_key: Optional[str] = None):
+        self.openai_client = get_client(openai_api_key)
 
     async def process_code(
         self,
