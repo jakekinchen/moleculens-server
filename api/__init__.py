@@ -113,5 +113,23 @@ if "redis" not in sys.modules:
 
     sys.modules["redis"] = _RedisStubModule()
 
+# Provide a stub for the `celery` module when not installed. This allows tests
+# to import the Celery app without requiring the real dependency.
+if "celery" not in sys.modules:
+    _celery = _types.ModuleType("celery")
+
+    class _CeleryApp:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        def task(self, *args, **kwargs):  # noqa: D401 - mimic decorator
+            def decorator(func):
+                return func
+
+            return decorator
+
+    _celery.Celery = _CeleryApp  # type: ignore[attr-defined]
+    sys.modules["celery"] = _celery
+
 # Alias routers package so `import routers` works
 sys.modules.setdefault("routers", importlib.import_module("api.routers"))
