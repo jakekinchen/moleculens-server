@@ -10,8 +10,8 @@
 * 2025-07-21  Translator wired into render flow ✅
 * 2025-07-21  Added `mutation_focus_scene` template ✅
 * 2025-07-22  Celery render_scene task → produce glTF/USDZ ✅
-* 2025-08-04  Tighten flake8/mypy rules; re-enable strict hook ✅
-* 2025-01-22  **LLM + PyMOL Integration Fully Operational** ✅
+* 2025-07-22  Tighten flake8/mypy rules; re-enable strict hook ✅
+* 2025-07-22  **LLM + PyMOL Integration Fully Operational** ✅
   - Fixed OpenAI SDK to v1.97.1 with Responses API structured outputs
   - Resolved import conflicts preventing LLM translation in Docker environment
   - Updated security validation to allow essential PyMOL commands (select, set, zoom)

@@ -6,10 +6,6 @@ import json
 from typing import Any, Dict, List
 
 from agent_management.llm_service import LLMService
-from agent_management.providers.deepseek_utils import (
-    extract_structured_output_from_deepseek,
-    is_deepseek_model,
-)
 
 
 class CaptionAgent:
@@ -31,15 +27,11 @@ class CaptionAgent:
         """
         response = self.llm_service.generate(llm_prompt)
 
-        # Check if we're using a DeepSeek model and apply special extraction if needed
-        content = response.content
-        if is_deepseek_model(response.model):
-            content = extract_structured_output_from_deepseek(content, "json")
-
         try:
             # Ensure response is a string before passing to json.loads
-            captions_data: List[Dict[str, Any]] = json.loads(str(content))
-        except:
+            captions_data: List[Dict[str, Any]] = json.loads(str(response.content))
+        except Exception as e:
+            print(f"Error parsing captions: {e}")
             # fallback if invalid
             captions_data = [
                 {"time": 0, "text": "Default start caption"},
