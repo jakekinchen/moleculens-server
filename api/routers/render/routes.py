@@ -2,11 +2,10 @@ import importlib.util
 import json
 import os
 import subprocess
-
-# Import pymol_translator using proper Python imports
-import sys
 import tempfile
 import threading
+import sys
+import types
 from hashlib import sha256
 from pathlib import Path
 from typing import Any, Dict, Literal
@@ -15,33 +14,32 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
-
 try:
-    from agent_management import pymol_translator
-except ImportError:
-    # Fallback to direct import if package import fails
+    from api.agent_management import pymol_translator
+except Exception:  # pragma: no cover - fallback for test loaders
     translator_path = os.path.abspath(
         os.path.join(
             os.path.dirname(__file__), "../../agent_management/pymol_translator.py"
         )
     )
-    spec = importlib.util.spec_from_file_location("pymol_translator", translator_path)
+    package_root = os.path.dirname(translator_path)
+
+    api_root = os.path.dirname(os.path.dirname(translator_path))
+    api_pkg = sys.modules.setdefault("api", types.ModuleType("api"))
+    api_pkg.__path__ = [api_root]
+    agent_pkg = sys.modules.setdefault(
+        "api.agent_management", types.ModuleType("api.agent_management")
+    )
+    agent_pkg.__path__ = [package_root]
+    api_pkg.agent_management = agent_pkg
+
+    spec = importlib.util.spec_from_file_location(
+        "api.agent_management.pymol_translator", translator_path
+    )
     pymol_translator = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(pymol_translator)
 
-# Import utils modules directly
-utils_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../utils"))
-cache_path = os.path.join(utils_path, "cache.py")
-security_path = os.path.join(utils_path, "security.py")
-
-spec = importlib.util.spec_from_file_location("cache", cache_path)
-cache = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(cache)
-
-spec = importlib.util.spec_from_file_location("security", security_path)
-security = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(security)
+from api.utils import cache, security
 
 # ---------------------------------------------------------------------------
 # PyMOL integration
@@ -150,7 +148,7 @@ async def render(req: RenderRequest):
         for c in commands:
             # Supports both "cmd.fetch('1abc')" and "fetch 1abc" styles
             if c.startswith("cmd."):
-                eval(c)
+                eval(c, {"cmd": pymol_cmd})
             else:
                 pymol_cmd.do(c)
 
