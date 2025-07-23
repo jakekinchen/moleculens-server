@@ -15,6 +15,20 @@ ALLOWED_COMMANDS = {
     "set",  # Essential for setting properties like transparency
     "zoom",  # Essential for focusing on specific regions
     "surface",  # For surface representations
+    # NEW: Advanced rendering commands
+    "ray",  # Ray-tracing
+    "antialias",  # Edge smoothing
+    "depth_cue",  # Depth emphasis
+    "clip",  # Viewport clipping
+    "field_of_view",  # Camera controls
+    "spectrum",  # Color gradients
+    "ramp_new",  # Custom color ramps
+    "distance",  # Measurement objects
+    "angle",  # Angle measurements
+    "dihedral",  # Dihedral measurements
+    "cgo_arrow",  # Custom graphics objects
+    "h_add",  # Hydrogen bond detection
+    "find_pairs",  # Interaction detection
 }
 
 

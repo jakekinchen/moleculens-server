@@ -11,7 +11,6 @@ from pydantic import BaseModel, Field
 
 from api.agent_management.agent_factory import AgentFactory
 from api.agent_management.agents.pubchem_agent import PubChemAgent, _sdf_to_pdb_block
-from api.agent_management.diagram_renderer import render_diagram
 from api.agent_management.llm_service import (
     LLMModelConfig,
     LLMService,
@@ -27,6 +26,7 @@ from api.agent_management.models import (
 )
 from api.agent_management.scene_packager import ScenePackager
 from api.dependencies.use_llm import use_llm
+from api.diagram.diagram_renderer import render_diagram
 from api.diagram.models import DiagramPlan
 
 # Diagram Pydantic models are imported from api.agent_management.models to avoid duplication

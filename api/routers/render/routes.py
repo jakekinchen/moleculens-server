@@ -101,6 +101,16 @@ lock = threading.Lock()
 class RenderRequest(BaseModel):
     description: str
     format: Literal["image", "model", "animation"] = "image"
+    # NEW: Advanced rendering options
+    transparent_background: bool = False
+    ray_trace: bool = True
+    resolution: tuple[int, int] = (1920, 1080)
+    dpi: int = 300
+    ray_trace_mode: Literal["default", "cartoon_outline", "bw", "poster"] = "default"
+    antialias: bool = True
+    ray_shadow: bool = True
+    depth_cue: bool = True
+    background_color: str = "white"
 
 
 def _output_path(key: str, fmt: str) -> Path:
@@ -139,9 +149,19 @@ async def render(req: RenderRequest):
 
     # Convert description to PyMOL commands via translator
     try:
-        commands = pymol_translator.translate(req.description)  # type: ignore[attr-defined]
+        commands, llm_rendering_opts = pymol_translator.translate_with_options(req.description)  # type: ignore[attr-defined]
+        # Merge LLM rendering options with request options (request takes precedence)
+        merged_opts = {**llm_rendering_opts}
+        for key, value in req.model_dump().items():
+            if key in ["description", "format"]:
+                continue
+            if hasattr(req, key):
+                merged_opts[key] = value
     except Exception:
         commands = []
+        merged_opts = req.model_dump()
+        merged_opts.pop("description", None)
+        merged_opts.pop("format", None)
 
     # Fallback: if LLM could not translate description (e.g. no API key),
     # render a simple structure so that the PNG is not blank.
@@ -172,14 +192,49 @@ async def render(req: RenderRequest):
             else:
                 pymol_cmd.do(c)
 
+        # Apply advanced rendering settings using merged options
+        if merged_opts.get("transparent_background", False):
+            pymol_cmd.set("ray_opaque_background", 0)
+
+        # Set background color
+        pymol_cmd.do(f"bg_color {merged_opts.get('background_color', 'white')}")
+
+        if merged_opts.get("ray_trace", True):
+            # Configure ray-tracing quality
+            pymol_cmd.set("antialias", 1 if merged_opts.get("antialias", True) else 0)
+            pymol_cmd.set("ray_shadow", 1 if merged_opts.get("ray_shadow", True) else 0)
+            pymol_cmd.set("depth_cue", 1 if merged_opts.get("depth_cue", True) else 0)
+
+            # Set ray-trace mode
+            ray_mode = merged_opts.get("ray_trace_mode", "default")
+            if ray_mode == "cartoon_outline":
+                pymol_cmd.set("ray_trace_mode", 3)
+            elif ray_mode == "bw":
+                pymol_cmd.set("ray_trace_mode", 2)
+            elif ray_mode == "poster":
+                pymol_cmd.set("ray_trace_mode", 1)
+
+            # Ray-trace at specified resolution
+            resolution = merged_opts.get("resolution", (1920, 1080))
+            pymol_cmd.ray(resolution[0], resolution[1])
+
         if req.format == "image":
-            pymol_cmd.png(str(out_path))
+            # Use enhanced PNG export with DPI and ray-tracing
+            dpi = merged_opts.get("dpi", 300)
+            ray_trace = merged_opts.get("ray_trace", True)
+            pymol_cmd.png(str(out_path), dpi=dpi, ray=1 if ray_trace else 0)
         elif req.format == "model":
             pymol_cmd.save(str(out_path))
         else:  # animation
             tmp_dir = tempfile.mkdtemp()
             frame = Path(tmp_dir) / "frame.png"
-            pymol_cmd.png(str(frame))
+            # Apply same rendering settings for animation frames
+            if merged_opts.get("ray_trace", True):
+                resolution = merged_opts.get("resolution", (1920, 1080))
+                pymol_cmd.ray(resolution[0], resolution[1])
+            dpi = merged_opts.get("dpi", 300)
+            ray_trace = merged_opts.get("ray_trace", True)
+            pymol_cmd.png(str(frame), dpi=dpi, ray=1 if ray_trace else 0)
             subprocess.run(
                 [
                     "ffmpeg",

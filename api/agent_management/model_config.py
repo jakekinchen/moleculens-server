@@ -142,6 +142,13 @@ def get_models_by_category(category: ModelCategory) -> List[str]:
     return models
 
 
+def get_default_model_for_use_case(use_case: str) -> str:
+    """Get the default model for a specific use case."""
+    # For now, return the general default model
+    # This can be expanded to have use-case specific models
+    return get_default_model()
+
+
 def get_llm_service(model_name: Optional[str] = None) -> LLMService:
     """Get an LLM service instance for a model."""
     if model_name is None:

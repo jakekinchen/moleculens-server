@@ -14,11 +14,38 @@ Available helpers
 
 from __future__ import annotations
 
+import re
+import tempfile
 from typing import List
+
+from api.agent_management.agents.pubchem_agent import PubChemAgent
+from api.agent_management.llm_service import LLMService
 
 # --------------------------------------------------------------------------- #
 # Core scenes                                                                 #
 # --------------------------------------------------------------------------- #
+
+# Helper to determine if structure_id is a PDB ID
+PDB_ID_PATTERN = re.compile(r"^[0-9a-zA-Z]{4}$")
+
+
+def _get_structure_load_command(structure_id: str) -> str:
+    """Return the appropriate PyMOL command to load a structure, supporting small molecules."""
+    if PDB_ID_PATTERN.match(structure_id):
+        return f"fetch {structure_id}, async=0"
+    # Small molecule: fetch from PubChem, convert to PDB, save temp file, and load
+    pubchem_agent = PubChemAgent(LLMService())
+    try:
+        pkg = pubchem_agent.get_molecule_package(structure_id)
+        pdb_data = pkg.pdb_data
+        if not pdb_data:
+            raise ValueError(f"No PDB data for molecule: {structure_id}")
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdb") as tmp:
+            tmp.write(pdb_data.encode("utf-8"))
+            tmp_path = tmp.name
+        return f"load {tmp_path}"
+    except Exception as e:
+        raise RuntimeError(f"Failed to fetch small molecule '{structure_id}': {e}")
 
 
 def overview_scene(structure_id: str) -> List[str]:
@@ -141,3 +168,163 @@ def mutation_focus_scene(structure_id: str, mutation_selection: str) -> List[str
         "zoom mutation_site, 8",
         "bg_color white",
     ]
+
+
+def transparent_molecule_scene(structure_id: str, style: str = "cartoon") -> List[str]:
+    """Generate a molecule with transparent background for overlays.
+
+    Parameters
+    ----------
+    structure_id : str
+        PDB ID or local object name to load.
+    style : str
+        PyMOL representation style (cartoon, sticks, spheres, etc.)
+
+    Returns
+    -------
+    List[str]
+        PyMOL commands for transparent background rendering.
+    """
+    return [
+        _get_structure_load_command(structure_id),
+        "hide everything",
+        f"show {style}",
+        "color chainbow, all",
+        "bg_color white",  # Will be made transparent by ray settings
+        "orient",
+        "set ray_opaque_background, 0",  # KEY: Enable transparency
+        "set antialias, 1",
+        "set ray_shadow, 1",
+        "set depth_cue, 1",
+    ]
+
+
+def publication_quality_scene(
+    structure_id: str, highlight_selection: str | None = None, transparent: bool = False
+) -> List[str]:
+    """High-quality rendering for publications with optional highlighting.
+
+    Parameters
+    ----------
+    structure_id : str
+        PDB ID or local object name to load.
+    highlight_selection : str, optional
+        PyMOL selection string for highlighting specific regions.
+    transparent : bool
+        Whether to enable transparent background.
+
+    Returns
+    -------
+    List[str]
+        PyMOL commands for publication-quality rendering.
+    """
+    commands = [
+        _get_structure_load_command(structure_id),
+        "hide everything",
+        "show cartoon",
+        "color grey90, all",
+        "set cartoon_highlight_color, blue",
+        "set ray_trace_mode, 1",  # High quality mode
+    ]
+
+    if highlight_selection:
+        commands.extend(
+            [
+                f"select highlight, ({highlight_selection})",
+                "show sticks, highlight",
+                "color hotpink, highlight",
+                "set transparency, 0.3",
+                "show surface, highlight around 4",
+            ]
+        )
+
+    if transparent:
+        commands.append("set ray_opaque_background, 0")
+
+    return commands
+
+
+def annotated_molecule_scene(
+    structure_id: str, annotations: List[dict] | None = None
+) -> List[str]:
+    """Create molecule with labels, distances, and annotations.
+
+    Parameters
+    ----------
+    structure_id : str
+        PDB ID or local object name to load.
+    annotations : List[dict], optional
+        List of annotation dictionaries with 'type', 'name', and parameters.
+
+    Returns
+    -------
+    List[str]
+        PyMOL commands for annotated molecular visualization.
+    """
+    commands = [
+        _get_structure_load_command(structure_id),
+        "hide everything",
+        "show cartoon",
+        "color chainbow, all",
+        "orient",
+        "set label_color, black",
+        "set label_size, 14",
+    ]
+
+    if annotations:
+        for annotation in annotations:
+            if annotation["type"] == "distance":
+                commands.append(
+                    f"distance {annotation['name']}, {annotation['atom1']}, {annotation['atom2']}"
+                )
+            elif annotation["type"] == "label":
+                commands.append(
+                    f"label {annotation['selection']}, '{annotation['text']}'"
+                )
+            elif annotation["type"] == "angle":
+                commands.append(
+                    f"angle {annotation['name']}, {annotation['atom1']}, {annotation['atom2']}, {annotation['atom3']}"
+                )
+
+    return commands
+
+
+def transparent_binding_site_scene(
+    structure_id: str, selection: str, transparent_bg: bool = True
+) -> List[str]:
+    """Binding site visualization with transparent background for presentations.
+
+    Parameters
+    ----------
+    structure_id : str
+        PDB ID or local object name to load.
+    selection : str
+        PyMOL selection string for the binding site.
+    transparent_bg : bool
+        Whether to enable transparent background.
+
+    Returns
+    -------
+    List[str]
+        PyMOL commands for transparent binding site visualization.
+    """
+    commands = [
+        _get_structure_load_command(structure_id),
+        "hide everything",
+        "show cartoon",
+        "color lightblue, all",
+        "select binding_site, (" + selection + ")",
+        "show sticks, binding_site",
+        "color orange, binding_site",
+        "set transparency, 0.5",
+        "show surface, binding_site around 4",
+        "zoom binding_site, 10",
+        "bg_color white",
+        "set antialias, 1",
+        "set ray_shadow, 1",
+    ]
+
+    if transparent_bg:
+        commands.append("set ray_opaque_background, 0")
+
+    return commands

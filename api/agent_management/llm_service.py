@@ -189,14 +189,15 @@ class LLMService:
         return self._provider.generate_structured(request)
 
 
-# Example usage with ThreeGroup from models.py
-from api.agent_management.models import ThreeGroup
-
-
 def generate_three_group(
     service: LLMService, description: str, provider: ProviderType, model_name: str
-) -> ThreeGroup:
+):
     """Generate a Three.js group from a description using specified provider.
+
+    Returns
+    -------
+    ThreeGroup
+        Generated Three.js group structure.
 
     Args:
         service: LLMService instance
@@ -207,6 +208,8 @@ def generate_three_group(
     Returns:
         ThreeGroup: A validated Three.js group containing the described object
     """
+    from api.agent_management.models import ThreeGroup
+
     prompt = f"""Create a Three.js group that represents the following object: {description}
 
 The group should:

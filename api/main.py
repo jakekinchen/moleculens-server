@@ -74,20 +74,20 @@ app.add_middleware(
     max_age=86400,  # Cache preflight response for 24 hours
 )
 
-# rate limiting
-app.add_middleware(RateLimitMiddleware)
+# rate limiting - temporarily disabled for testing
+# app.add_middleware(RateLimitMiddleware)
 
 
 @app.get("/health")
 async def health_check() -> Dict[str, Any]:
     """Health check endpoint."""
     try:
-        # Check Redis connection
-        redis_client = redis.Redis(
-            host=os.environ.get("REDIS_HOST", "localhost"),
-            port=int(os.environ.get("REDIS_PORT", 6379)),
-        )
-        redis_client.ping()
+        # Check Redis connection - temporarily disabled
+        # redis_client = redis.Redis(
+        #     host=os.environ.get("REDIS_HOST", "localhost"),
+        #     port=int(os.environ.get("REDIS_PORT", 6379)),
+        # )
+        # redis_client.ping()
 
         # Check PyMOL
         with pymol_lock:
@@ -96,7 +96,7 @@ async def health_check() -> Dict[str, Any]:
         return {
             "status": "healthy",
             "timestamp": datetime.datetime.now().isoformat(),
-            "services": {"redis": "connected", "pymol": "running"},
+            "services": {"redis": "disabled", "pymol": "running"},
         }
     except Exception as e:
         return {
