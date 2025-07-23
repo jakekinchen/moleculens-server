@@ -24,7 +24,7 @@ try:
 except ImportError:
     # html_to_caption_json requires beautifulsoup4 which may not be available
     html_to_caption_json = None  # type: ignore[assignment]
-from ..diagram import diagram_renderer
+# from ..diagram import diagram_renderer  # Removed to avoid circular import
 
 __all__ = [
     "pymol_translator",
@@ -40,7 +40,7 @@ __all__ = [
     "llm_service_extension",
     "model_registry",
     "debug_utils",
-    "diagram_renderer",
+    # "diagram_renderer",  # Removed to avoid circular import
 ]
 
 # Add optional modules to __all__ only if they were successfully imported

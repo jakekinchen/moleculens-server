@@ -27,6 +27,10 @@ _DISPATCH = {
     "binding_site": pymol_templates.binding_site_scene,
     "mutation": pymol_templates.mutation_scene,
     "mutation_focus": pymol_templates.mutation_focus_scene,
+    "transparent_molecule": pymol_templates.transparent_molecule_scene,
+    "publication_quality": pymol_templates.publication_quality_scene,
+    "annotated_molecule": pymol_templates.annotated_molecule_scene,
+    "transparent_binding_site": pymol_templates.transparent_binding_site_scene,
 }
 
 
@@ -71,12 +75,20 @@ def _spec_from_prompt(prompt: str) -> SceneSpec:
     except Exception as e:
         logger.error(f"Error in LLM translation: {str(e)}")
         return SceneSpec(
-            op="raw", structure_id="1ubq", raw_cmds=["cmd.fragment('ala')"]
+            op="raw",
+            structure_id="1ubq",
+            raw_cmds=["cmd.fetch('1ubq')", "cmd.show('cartoon')"],
         )
 
 
-def translate(prompt: str) -> List[str]:
-    """Translate a natural-language prompt into PyMOL commands."""
+def translate_with_options(prompt: str) -> tuple[List[str], dict[str, Any]]:
+    """Translate a natural-language prompt into PyMOL commands and rendering options.
+
+    Returns
+    -------
+    tuple[List[str], dict[str, Any]]
+        PyMOL commands and rendering options dictionary
+    """
     spec = _spec_from_prompt(prompt)
     logger.info(f"Operation type: {spec.op}")
 
@@ -93,8 +105,28 @@ def translate(prompt: str) -> List[str]:
         kwargs.update(spec.opts)
         commands = builder(**kwargs)  # type: ignore[operator]
 
+    # Extract rendering options from the spec
+    rendering_opts = {
+        "transparent_background": spec.rendering.transparent_background,
+        "ray_trace": spec.rendering.ray_trace,
+        "resolution": spec.rendering.resolution,
+        "dpi": spec.rendering.dpi,
+        "ray_trace_mode": spec.rendering.ray_trace_mode,
+        "antialias": spec.rendering.antialias,
+        "ray_shadow": spec.rendering.ray_shadow,
+        "depth_cue": spec.rendering.depth_cue,
+        "background_color": spec.rendering.background_color,
+    }
+
     logger.info("Generated PyMOL commands:")
     for cmd in commands:
         logger.info(f"  {cmd}")
+    logger.info(f"Rendering options: {rendering_opts}")
     logger.info("=" * 80)
+    return commands, rendering_opts
+
+
+def translate(prompt: str) -> List[str]:
+    """Translate a natural-language prompt into PyMOL commands (backward compatibility)."""
+    commands, _ = translate_with_options(prompt)
     return commands
