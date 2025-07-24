@@ -14,24 +14,20 @@ Available helpers
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import re
 import tempfile
 import threading
-from typing import List
+import urllib.parse
+from typing import List, Optional
 
-from pydantic import BaseModel
+import requests
+
+from api.agent_management.agents.pubchem_agent import PubChemAgent
 
 logger = logging.getLogger(__name__)
-
-from api.agent_management.providers.openai_provider import generate_structured
-
-
-# Module-level model for PDB data
-class PDBData(BaseModel):
-    pdb: str  # raw PDB text
-
 
 # --------------------------------------------------------------------------- #
 # Core scenes                                                                 #
@@ -41,43 +37,72 @@ class PDBData(BaseModel):
 PDB_ID_PATTERN = re.compile(r"^[0-9][0-9a-zA-Z]{3}$")
 
 
+def _rcsb_find_first_id(query: str) -> Optional[str]:
+    """Query RCSB search API and return the first matching PDB ID or *None*."""
+    payload = {
+        "query": {
+            "type": "terminal",
+            "service": "full_text",
+            "parameters": {"value": query},
+        },
+        "return_type": "entry",
+        "request_options": {"paginate": {"start": 0, "rows": 1}},
+    }
+    url = "https://search.rcsb.org/rcsbsearch/v2/query?json=" + urllib.parse.quote(
+        json.dumps(payload)
+    )
+    try:
+        resp = requests.get(url, timeout=8)
+        resp.raise_for_status()
+        hits = resp.json().get("result_set", [])
+        return hits[0]["identifier"] if hits else None
+    except Exception as exc:  # pragma: no cover
+        logger.debug("RCSB lookup failed: %s", exc)
+        return None
+
+
 def _get_structure_load_command(structure_id: str) -> str:
-    """Return the appropriate PyMOL command to load a structure, supporting small molecules."""
+    """Return a robust PyMOL `load …` or `fetch …` command for proteins *or* small molecules."""
+
+    # 1 – direct PDB ID?
     if PDB_ID_PATTERN.match(structure_id):
         return f"fetch {structure_id}, async=0"
 
-    # For unknown molecules, try LLM to get PDB block
+    # 2 – search RCSB by name ⇒ PDB ID
+    pdb_id = _rcsb_find_first_id(structure_id)
+    if pdb_id:
+        logger.info("RCSB hit: %s → %s", structure_id, pdb_id)
+        return f"fetch {pdb_id}, async=0"
+
+    # 3 – PubChem fallback for small molecules (bond order preserved via SDF)
     try:
-        pkg: PDBData = generate_structured(
-            user_prompt=f"Return the PDB block for {structure_id}",
-            response_model=PDBData,
-            system_prompt=(
-                "You output exactly one JSON object with a single key 'pdb'. "
-                "No extra text."
-            ),
-        )
-        pdb_content = pkg.pdb
-        if not pdb_content:
-            raise ValueError(f"No PDB data for molecule: {structure_id}")
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdb") as fp:
-            fp.write(pdb_content.encode("utf-8"))
+        agent = PubChemAgent()
+        # Search for the molecule by name to get CID
+        search_results = agent._search_pubchem_direct(structure_id)
+        if not search_results:
+            raise ValueError("No PubChem results found")
+
+        # Get the first result's CID and fetch SDF
+        cid = search_results[0].get("cid")
+        if not cid:
+            raise ValueError("No CID found in search results")
+
+        sdf_text = agent.fetch_sdf_for_cid(cid)
+        if not sdf_text:
+            raise ValueError("PubChem returned empty SDF")
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".sdf") as fp:
+            fp.write(sdf_text.encode())
             tmp_path = fp.name
-
-        # Schedule deletion of the temp file shortly after load to prevent leaks
-        def safe_unlink(path):
-            try:
-                os.unlink(path)
-            except FileNotFoundError:
-                pass  # File already removed, no action needed
-
-        threading.Timer(2.0, safe_unlink, args=[tmp_path]).start()
+        threading.Timer(
+            2, lambda p: os.unlink(p) if os.path.exists(p) else None, args=[tmp_path]
+        ).start()
         return f"load {tmp_path}"
-    except Exception as e:
-        # Final fallback: use fragment command with the molecule name
-        logger.warning(
-            f"Failed to fetch PDB for '{structure_id}': {e}. Using fragment fallback.",
-        )
-        return f"fragment {structure_id.lower()}"
+    except Exception as exc:
+        logger.warning("PubChem fallback failed for '%s': %s", structure_id, exc)
+
+    # 4 – last resort
+    return f"fragment {structure_id.lower()}"
 
 
 def overview_scene(structure_id: str) -> List[str]:

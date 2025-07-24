@@ -15,7 +15,7 @@ def generate_structured(
     user_prompt: str,
     response_model: Type[T],
     *,
-    model_name: str = "gpt-4o-2024-08-06",
+    model_name: str = "o3-mini",
     system_prompt: str = "You are a helpful assistant.",
 ) -> T:
     messages: List[ChatCompletionMessageParam] = cast(
