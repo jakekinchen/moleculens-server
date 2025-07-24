@@ -2,6 +2,20 @@
 
 A FastAPI-based server for molecular visualization and analysis, featuring AI-powered molecule rendering and diagram generation.
 
+## Project Structure
+
+See [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for detailed organization of the codebase.
+
+```
+moleculens-server/
+├── api/              # Main application code
+├── tests/            # Organized test suite
+├── examples/         # Usage examples and demos
+├── sample_outputs/   # Example generated files
+├── docs/             # Documentation
+└── README.md         # This file
+```
+
 ## Features
 
 - 3D molecular visualization using PyMOL
@@ -77,15 +91,24 @@ moleculens-server/
 
 ### Running Tests
 
+The test suite is organized into categories:
+
 ```bash
 # Run all tests
 pytest
 
-# Run specific test category
-pytest -m unit
-pytest -m integration
-pytest -m "not slow"
+# Run by directory
+pytest tests/unit/           # Unit tests only
+pytest tests/integration/    # Integration tests only
+pytest tests/demos/          # Demo/example tests
+
+# Run by markers
+pytest -m unit              # Unit tests
+pytest -m integration       # Integration tests
+pytest -m "not slow"        # Exclude slow tests
 ```
+
+See [tests/README.md](tests/README.md) for detailed test organization.
 
 ### Code Style
 
