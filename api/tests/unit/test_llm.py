@@ -2,7 +2,7 @@
 """Unit tests for LLM service."""
 import os
 import sys
-from typing import Dict
+from typing import Dict, Type, TypeVar
 from unittest.mock import MagicMock
 
 sys.path.append(
@@ -12,49 +12,51 @@ sys.path.append(
 import pytest
 from pydantic import BaseModel
 
-from api.agent_management.llm_service import LLMRequest, LLMResponse, LLMService
+from api.agent_management.llm_service import LLMService
 from api.agent_management.model_config import LLMModelConfig, ProviderType
-from api.agent_management.models import StructuredLLMRequest
+
+
+class TestSchema(BaseModel):
+    key: str = "value"
+
+
+T = TypeVar("T", bound=BaseModel)
 
 
 @pytest.fixture
-def llm_service() -> LLMService:
+def llm_service() -> LLMService[TestSchema]:
     """Create a test LLM service instance."""
     config = LLMModelConfig(provider=ProviderType.OPENAI, model_name="gpt-3.5-turbo")
-    return LLMService(config)
+    return LLMService[TestSchema](config)
 
 
 @pytest.mark.unit
 class TestLLMService:
     """Test suite for LLMService."""
 
-    def test_init(self, llm_service: LLMService) -> None:
+    def test_init(self, llm_service: LLMService[TestSchema]) -> None:
         """Test LLMService initialization."""
         assert llm_service.config.provider == ProviderType.OPENAI
         assert llm_service.config.model_name == "gpt-3.5-turbo"
 
-    def test_generate(self, llm_service: LLMService) -> None:
-        """Test generate method (mock provider)."""
-        llm_service._provider.generate = MagicMock(return_value=LLMResponse(content="ok", model="test", usage={}))  # type: ignore
-        response = llm_service.generate(LLMRequest(user_prompt="Test"))
-        assert response.content == "ok"
-
-    def test_generate_structured(self, llm_service: LLMService) -> None:
-        """Test generate_structured method with provider mocked via
-        attribute."""
-        expected_result = {"key": "value"}
+    def test_generate_structured(self, llm_service: LLMService[TestSchema]) -> None:
+        """Test generate_structured method with provider mocked."""
+        expected_result = TestSchema(key="value")
 
         # Mock the provider's generate_structured directly
-        llm_service._provider.generate_structured = MagicMock(return_value=expected_result)  # type: ignore
-
-        class TestSchema(BaseModel):
-            key: str = "value"
-
-        request = StructuredLLMRequest[TestSchema](  # type: ignore
-            user_prompt="Test prompt",
-            output_schema=TestSchema,  # type: ignore
+        llm_service._provider.generate_structured = MagicMock(
+            return_value=expected_result
         )
 
-        response: Dict[str, str] = llm_service.generate_structured(request)
+        response = llm_service.generate_structured(
+            user_prompt="Test prompt",
+            response_model=TestSchema,
+            system_prompt="Test system prompt",
+        )
         assert response == expected_result
-        llm_service._provider.generate_structured.assert_called_once()  # type: ignore
+        llm_service._provider.generate_structured.assert_called_once_with(
+            user_prompt="Test prompt",
+            response_model=TestSchema,
+            system_prompt="Test system prompt",
+            model_name="gpt-3.5-turbo",
+        )

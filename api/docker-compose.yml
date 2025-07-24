@@ -1,14 +1,4 @@
 services:
-  redis:
-    image: redis:7-alpine
-    container_name: redis_cache
-    restart: always
-    ports:
-      - "6379:6379"
-    networks:
-      - ai_network
-    command: redis-server --appendonly yes
-
   api:
     build:
       context: ..
@@ -25,10 +15,7 @@ services:
     working_dir: /app/api
     environment:
       - PYTHONPATH=/app:/app/api
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-    depends_on:
-      - redis
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
 
 networks:
   ai_network:

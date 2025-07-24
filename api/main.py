@@ -8,15 +8,15 @@ from typing import Any, Dict
 
 import pymol
 import redis
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 
 from api import routers
 
 # Import and initialize the model registry at startup
 from api.agent_management.model_config import register_models
 from api.utils.rate_limit import RateLimitMiddleware
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 # Register all models
 register_models()
@@ -111,6 +111,7 @@ app.include_router(routers.prompt.router)
 app.include_router(routers.geometry.router)
 app.include_router(routers.render.router)
 app.include_router(routers.rcsb.router)
+app.include_router(routers.graphic.router)
 
 # ---------------------------------------------------------------------------
 # Optional heavy dependencies

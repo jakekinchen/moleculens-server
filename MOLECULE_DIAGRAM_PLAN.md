@@ -219,6 +219,33 @@ End of document
 
 
 
+## Implementation Status (January 2025)
+
+✅ **COMPLETED FEATURES:**
+- Schema + Planner + Validator implementation
+- New `/graphic/*` endpoints fully implemented:
+  - `POST /graphic/plan` - Generate YAML spec from brief
+  - `POST /graphic/validate` - Validate YAML specifications
+  - `POST /graphic/render` - Deterministic SVG rendering
+  - `POST /graphic/make` - Full pipeline processing
+  - `GET /graphic/job/{id}` - Job status endpoint
+- Fixed import issues and circular dependencies
+- OpenAI provider updated to support o3-mini (no temperature parameter)
+- YAML to DiagramPlan adapter for backward compatibility
+- Integrated with existing FastAPI application
+
+🔄 **IN PROGRESS:**
+- Docker testing and validation
+- Calvin cycle infographic generation testing
+- 3D/2D protein/molecule insertion verification
+
+📋 **IMPLEMENTATION DETAILS:**
+- All new routes registered in `/api/routers/graphic/routes.py`
+- Planner service uses o3-mini model by default
+- Validator uses JSON schema validation with custom rules
+- Renderer integrates with existing diagram rendering system
+- Maintains backward compatibility with existing `/generate-molecule-diagram/` endpoint
+
 Next steps:
 Transform and extend current codebase. Do not restart.
 

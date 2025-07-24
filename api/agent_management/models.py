@@ -177,6 +177,12 @@ class OrchestrationPlan(BaseModel):
     scene_overview: Optional[str] = Field(
         default=None, description="High-level overview of the overall scene"
     )
+    canvas_width: Optional[int] = Field(
+        default=None, description="Canvas width in pixels, if applicable"
+    )
+    canvas_height: Optional[int] = Field(
+        default=None, description="Canvas height in pixels, if applicable"
+    )
 
 
 class AnimationKeyframe(BaseModel):

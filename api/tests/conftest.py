@@ -7,9 +7,10 @@ from enum import Enum
 from typing import Any, Dict, Generator, Generic, Optional, Type, TypeVar
 
 import pytest
+from pydantic import BaseModel
+
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from pydantic import BaseModel
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
@@ -53,15 +54,50 @@ agent_pkg = types.ModuleType("agent_management.agents")
 agent_pkg.rcsb_agent = rcsb_agent_mod  # type: ignore[attr-defined]
 agent_root = types.ModuleType("agent_management")
 agent_root.agents = agent_pkg  # type: ignore[attr-defined]
-sys.modules["agent_management"] = agent_root
-sys.modules["agent_management.agents"] = agent_pkg
-sys.modules["agent_management.agents.rcsb_agent"] = rcsb_agent_mod
+# sys.modules["agent_management"] = agent_root
+# sys.modules["agent_management.agents"] = agent_pkg
+# sys.modules["agent_management.agents.rcsb_agent"] = rcsb_agent_mod
 api_mod = types.ModuleType("api")
-api_mod.agent_management = agent_root  # type: ignore[attr-defined]
-sys.modules["api"] = api_mod
-sys.modules["api.agent_management"] = agent_root
+# api_mod.agent_management = agent_root  # type: ignore[attr-defined]
+# sys.modules["api"] = api_mod
+# sys.modules["api.agent_management"] = agent_root
+api_mod.__path__ = [str(Path(__file__).resolve().parents[2])]
+# sys.modules["api.agent_management"] = agent_root
+# Allow loading of real subpackages under api.agent_management
+agent_root.__path__ = [str(Path(__file__).resolve().parents[1] / "agent_management")]
 sys.modules["api.agent_management.agents"] = agent_pkg
 sys.modules["api.agent_management.agents.rcsb_agent"] = rcsb_agent_mod
+
+# Load real providers package and modules
+providers_init = (
+    Path(__file__).resolve().parents[1]
+    / "agent_management"
+    / "providers"
+    / "__init__.py"
+)
+spec_providers = importlib.util.spec_from_file_location(
+    "api.agent_management.providers", providers_init
+)
+assert spec_providers is not None
+assert spec_providers.loader is not None
+providers_pkg = importlib.util.module_from_spec(spec_providers)
+spec_providers.loader.exec_module(providers_pkg)
+sys.modules["api.agent_management.providers"] = providers_pkg
+
+openai_file = (
+    Path(__file__).resolve().parents[1]
+    / "agent_management"
+    / "providers"
+    / "openai_provider.py"
+)
+spec_openai = importlib.util.spec_from_file_location(
+    "api.agent_management.providers.openai_provider", openai_file
+)
+assert spec_openai is not None
+assert spec_openai.loader is not None
+openai_mod = importlib.util.module_from_spec(spec_openai)
+spec_openai.loader.exec_module(openai_mod)
+sys.modules["api.agent_management.providers.openai_provider"] = openai_mod
 
 # Provide lightweight stubs for models and the LLM service used in unit tests
 models_stub = types.ModuleType("agent_management.models")
@@ -147,6 +183,17 @@ sys.modules["openai"] = openai_mod
 sys.modules["openai.types"] = types_mod
 sys.modules["openai.types.chat"] = chat_mod
 sys.modules["openai.types.chat.chat_completion"] = chat_completion_mod
+# Stub openai.types.response_format for providers
+response_format_mod = types.ModuleType("openai.types.response_format")
+
+
+class ResponseFormatJSONSchema:
+    def __init__(self, *args, **kwargs):
+        pass
+
+
+setattr(response_format_mod, "ResponseFormatJSONSchema", ResponseFormatJSONSchema)
+sys.modules["openai.types.response_format"] = response_format_mod
 
 import importlib.util
 from pathlib import Path

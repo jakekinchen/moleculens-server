@@ -14,44 +14,76 @@ Available helpers
 
 from __future__ import annotations
 
+import logging
+import os
 import re
 import tempfile
+import threading
 from typing import List
 
-from api.agent_management.agents.pubchem_agent import PubChemAgent
-from api.agent_management.llm_service import LLMService
+from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
+
+from api.agent_management.providers.openai_provider import generate_structured
+
+
+# Module-level model for PDB data
+class PDBData(BaseModel):
+    pdb: str  # raw PDB text
+
 
 # --------------------------------------------------------------------------- #
 # Core scenes                                                                 #
 # --------------------------------------------------------------------------- #
 
-# Helper to determine if structure_id is a PDB ID
-PDB_ID_PATTERN = re.compile(r"^[0-9a-zA-Z]{4}$")
+# Helper to determine if structure_id is a PDB ID (starts with number, 4 chars total)
+PDB_ID_PATTERN = re.compile(r"^[0-9][0-9a-zA-Z]{3}$")
 
 
 def _get_structure_load_command(structure_id: str) -> str:
     """Return the appropriate PyMOL command to load a structure, supporting small molecules."""
     if PDB_ID_PATTERN.match(structure_id):
         return f"fetch {structure_id}, async=0"
-    # Small molecule: fetch from PubChem, convert to PDB, save temp file, and load
-    pubchem_agent = PubChemAgent(LLMService())
+
+    # For unknown molecules, try LLM to get PDB block
     try:
-        pkg = pubchem_agent.get_molecule_package(structure_id)
-        pdb_data = pkg.pdb_data
-        if not pdb_data:
+        pkg: PDBData = generate_structured(
+            user_prompt=f"Return the PDB block for {structure_id}",
+            response_model=PDBData,
+            system_prompt=(
+                "You output exactly one JSON object with a single key 'pdb'. "
+                "No extra text."
+            ),
+        )
+        pdb_content = pkg.pdb
+        if not pdb_content:
             raise ValueError(f"No PDB data for molecule: {structure_id}")
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdb") as tmp:
-            tmp.write(pdb_data.encode("utf-8"))
-            tmp_path = tmp.name
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdb") as fp:
+            fp.write(pdb_content.encode("utf-8"))
+            tmp_path = fp.name
+
+        # Schedule deletion of the temp file shortly after load to prevent leaks
+        def safe_unlink(path):
+            try:
+                os.unlink(path)
+            except FileNotFoundError:
+                pass  # File already removed, no action needed
+
+        threading.Timer(2.0, safe_unlink, args=[tmp_path]).start()
         return f"load {tmp_path}"
     except Exception as e:
-        raise RuntimeError(f"Failed to fetch small molecule '{structure_id}': {e}")
+        # Final fallback: use fragment command with the molecule name
+        logger.warning(
+            f"Failed to fetch PDB for '{structure_id}': {e}. Using fragment fallback.",
+        )
+        return f"fragment {structure_id.lower()}"
 
 
 def overview_scene(structure_id: str) -> List[str]:
     """Generic overview – coloured cartoon plus transparent surface."""
     return [
-        f"fetch {structure_id}, async=0",  # synchronous so caller may continue
+        _get_structure_load_command(structure_id),
         "hide everything",
         "show cartoon",
         # rainbow by chain for quick distinction
@@ -72,7 +104,7 @@ def binding_site_scene(structure_id: str, selection: str) -> List[str]:
     *selection*      Valid PyMOL atom-selection string (e.g. ``\"resi 45+78 and chain A\"``).
     """
     return [
-        f"fetch {structure_id}, async=0",
+        _get_structure_load_command(structure_id),
         "hide everything",
         "show cartoon",
         "color lightblue, all",
@@ -115,7 +147,7 @@ def mutation_scene(
     colour_orig = "yellow"
 
     cmds: List[str] = [
-        f"fetch {structure_id}, async=0",
+        _get_structure_load_command(structure_id),
         "hide everything",
         "show cartoon",
         "color grey80, all",
@@ -158,7 +190,7 @@ def mutation_focus_scene(structure_id: str, mutation_selection: str) -> List[str
     """
 
     return [
-        f"fetch {structure_id}, async=0",
+        _get_structure_load_command(structure_id),
         "hide everything",
         "show cartoon",
         "color grey80, all",

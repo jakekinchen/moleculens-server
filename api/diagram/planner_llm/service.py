@@ -3,8 +3,9 @@
 import logging
 from typing import Any, Dict, Optional
 
-from ..agent_management.llm_service import LLMService, StructuredLLMRequest
-from ..agent_management.model_config import get_llm_service
+from pydantic import BaseModel
+
+from api.utils.llm_direct import generate_structured
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +46,10 @@ Notes: {notes}
 Generate a complete YAML specification for this molecular diagram."""
 
 
+class YAMLResponse(BaseModel):
+    content: str
+
+
 def plan(
     brief: str,
     context: str = "Molecular visualization for educational purposes",
@@ -53,7 +58,7 @@ def plan(
     height: int = 640,
     sections: Optional[str] = None,
     notes: Optional[str] = None,
-    model_name: str = "o3-mini",
+    model_name: str = "gpt-4o-mini",
 ) -> str:
     """Generate YAML spec from natural language brief.
 
@@ -103,28 +108,20 @@ def plan(
     )
 
     try:
-        # Get LLM service
-        llm_service = get_llm_service(model_name)
-
-        # Create structured request for YAML output
-        request = StructuredLLMRequest(
+        # Generate the plan using direct OpenAI provider
+        response = generate_structured(
             user_prompt=user_prompt,
+            response_model=YAMLResponse,
             system_prompt=PLANNER_SYSTEM_PROMPT,
-            response_format={"type": "text"},  # We want raw YAML text
+            model_name=model_name,
             max_tokens=2000,
-            temperature=0.3,  # Lower temperature for more consistent output
+            temperature=(
+                None if model_name.startswith("o") else 0.3
+            ),  # o* models don't support temperature
         )
 
-        # Generate the plan
-        response = llm_service.generate_structured(request)
-
         # Extract YAML content
-        if isinstance(response, dict) and "content" in response:
-            yaml_content = response["content"]
-        elif isinstance(response, str):
-            yaml_content = response
-        else:
-            raise ValueError(f"Unexpected response format: {type(response)}")
+        yaml_content = response.content
 
         if not yaml_content.strip():
             raise ValueError("Empty YAML response from LLM")

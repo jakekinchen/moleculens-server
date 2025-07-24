@@ -2,6 +2,7 @@ alembic==1.13.1
 
 # Code quality
 black==24.4.2
+cairosvg==2.7.1
 celery==5.3.6
 
 click==8.1.8

@@ -2,6 +2,10 @@ import json
 import logging
 from typing import Any, List
 
+from pydantic import BaseModel
+
+from api.agent_management.providers.openai_provider import generate_structured
+
 logger = logging.getLogger(__name__)
 
 try:
@@ -41,44 +45,31 @@ def _spec_from_prompt(prompt: str) -> SceneSpec:
     logger.info(prompt)
     logger.info("-" * 80)
 
-    client = get_client()
-    functions = [
-        {
-            "name": "build_scene_request",
-            "parameters": SceneSpec.model_json_schema(),
-            "description": "Return a SceneSpec describing the requested PyMOL operation.",
-        }
-    ]
+    # Note: client and functions are defined but not used in current implementation
+    # They may be needed for future function calling approach
+    # client = get_client()
+    # functions = [
+    #     {
+    #         "name": "build_scene_request",
+    #         "parameters": SceneSpec.model_json_schema(),
+    #         "description": "Return a SceneSpec describing the requested PyMOL operation.",
+    #     }
+    # ]
 
     try:
         logger.info("Calling OpenAI API...")
-        completion = client.chat.completions.create(  # type: ignore[call-overload]
-            model="o3-mini",  # Using a version known to work well with function calling
-            messages=[{"role": "user", "content": prompt}],
-            tools=[{"type": "function", "function": functions[0]}],
-            tool_choice={
-                "type": "function",
-                "function": {"name": "build_scene_request"},
-            },
-            # Note: o3-mini doesn't support temperature parameter
+        # Generate structured SceneSpec via LLM
+        scene_spec: SceneSpec = generate_structured(
+            user_prompt=prompt,
+            response_model=SceneSpec,
+            system_prompt="You are a helpful assistant that translates a natural-language prompt into a PyMOL command.",
         )
-
         logger.info("LLM response received")
-        if not completion.choices[0].message.tool_calls:
-            raise ValueError("LLM did not return tool call")
-        tool_call = completion.choices[0].message.tool_calls[0]
-        data = json.loads(tool_call.function.arguments)
-        logger.info("Generated spec:")
-        logger.info(json.dumps(data, indent=2))
-        return SceneSpec(**data)
+        return scene_spec
 
     except Exception as e:
         logger.error(f"Error in LLM translation: {str(e)}")
-        return SceneSpec(
-            op="raw",
-            structure_id="1ubq",
-            raw_cmds=["cmd.fetch('1ubq')", "cmd.show('cartoon')"],
-        )
+        raise e
 
 
 def translate_with_options(prompt: str) -> tuple[List[str], dict[str, Any]]:

@@ -29,6 +29,14 @@ ALLOWED_COMMANDS = {
     "cgo_arrow",  # Custom graphics objects
     "h_add",  # Hydrogen bond detection
     "find_pairs",  # Interaction detection
+    "fragment",  # Create molecular fragments
+    "builder",  # Molecular builder
+    "edit",  # Edit molecules
+    "delete",  # Delete objects/selections
+    "fab",  # Fragment assembly/building
+    "pseudoatom",  # Create pseudoatoms
+    "bond",  # Create bonds
+    "util",  # Utility functions (util.cbaw, etc)
 }
 
 
@@ -45,7 +53,17 @@ def _command_name(command: str) -> str:
 
     # Handle parentheses style e.g. fetch("1abc")
     before_paren = command.split("(", 1)[0]
-    name = before_paren.split()[0]  # Also handles whitespace style
+
+    # Handle comma-separated arguments e.g. "util.cbaw, glucose"
+    before_comma = before_paren.split(",", 1)[0]
+
+    # Get the base command name (handles whitespace and dot notation)
+    name = before_comma.split()[0]
+
+    # Handle dot notation like util.cbaw -> util
+    if "." in name:
+        name = name.split(".")[0]
+
     return name
 
 
@@ -53,6 +71,10 @@ def validate_commands(commands: list[str]) -> None:
     """Validate PyMOL commands against the allowed whitelist."""
 
     for cmd in commands:
+        # Skip comment lines
+        if cmd.strip().startswith("#") or not cmd.strip():
+            continue
+
         name = _command_name(cmd)
         if name not in ALLOWED_COMMANDS:
             raise ValueError(f"Command '{name}' not allowed")

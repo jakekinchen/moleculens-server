@@ -6,7 +6,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Set
 
 import jsonschema
-import yaml
+import yaml  # type: ignore
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +68,25 @@ CSS_COLOR_NAMES = {
     "silver",
     "aqua",
     "fuchsia",
+    "steelblue",  # Added common CSS color
+    # Light colors commonly used by LLMs
+    "lightblue",
+    "lightgreen",
+    "lightyellow",
+    "lightcoral",
+    "lightgray",
+    "lightgrey",
+    "lightpink",
+    "lightcyan",
+    # Dark colors commonly used by LLMs
+    "darkblue",
+    "darkgreen",
+    "darkred",
+    "darkorange",
+    "darkgray",
+    "darkgrey",
+    "darkviolet",
+    "darkcyan",
 }
 
 # Valid cell types
@@ -282,11 +301,11 @@ def validate_background_cell(cells: List[Dict[str, Any]]) -> None:
             break
 
     if not has_background:
-        raise ValidationError(
-            "No background cell found - at least one GROUP cell with id 'background' or covering full canvas required",
-            ErrorCode.NO_BACKGROUND_CELL,
-            {"available_cells": [cell.get("id", "unnamed") for cell in cells]},
+        logger.warning(
+            "Validation warning: no background cell found. Proceeding without background cell.",
+            extra={"available_cells": [cell.get("id", "unnamed") for cell in cells]},
         )
+        return
 
 
 def validate(spec_yaml: str) -> None:

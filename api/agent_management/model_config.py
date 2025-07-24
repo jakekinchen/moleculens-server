@@ -151,7 +151,15 @@ def get_default_model_for_use_case(use_case: str) -> str:
 
 def get_llm_service(model_name: Optional[str] = None) -> LLMService:
     """Get an LLM service instance for a model."""
+    import os
+
+    from api.agent_management.llm_service import LLMModelConfig, ProviderType
+
     if model_name is None:
         model_name = get_default_model()
-    config = ModelRegistry.create_instance(model_name)
+    # Use OPENAI_API_KEY from environment
+    api_key = os.environ.get("OPENAI_API_KEY")
+    config = LLMModelConfig(
+        provider=ProviderType.OPENAI, model_name=model_name, api_key=api_key
+    )
     return LLMService(config)
