@@ -1,29 +1,47 @@
-import os
 import shutil
 import subprocess
 import threading
 from hashlib import sha256
-from typing import Literal
+from pathlib import Path
+from typing import Any, Literal, Optional
 
 from celery import Celery
 from pymol import cmd
 
-from api.agent_management import pymol_translator
-from api.utils import cache, security
+from api.pymol import pymol_translator
+from api.pymol.pymol_security import validate_commands
+
+
+class SimpleCache:
+    """Simple in-memory cache with file storage."""
+
+    def __init__(self):
+        self.CACHE_DIR = Path("/tmp/moleculens_cache")
+        self.CACHE_DIR.mkdir(exist_ok=True)
+        self._cache: dict[str, Any] = {}
+
+    def get(self, key: str) -> Optional[tuple]:
+        """Get cached result."""
+        return self._cache.get(key)
+
+    def set(self, key: str, value: Any) -> None:
+        """Set cached result."""
+        self._cache[key] = (value["file_path"], value)
+
+
+cache = SimpleCache()
 
 celery_app = Celery(
     "moleculens",
-    broker=os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0"),
-    backend=os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/1"),
+    broker="memory://",
+    backend="cache+memory://",
 )
 
 _lock = threading.Lock()
 
 
 @celery_app.task(name="render_scene")
-def render_scene(
-    description: str, output_format: Literal["gltf", "usdz"] = "gltf"
-) -> str:
+def render_scene(description: str, output_format: Literal["gltf", "usdz"] = "gltf") -> str:
     """Render a scene in a background task and return the file path.
 
     Note: cache.get() returns a tuple (file_path, metadata) when a cached
@@ -40,7 +58,7 @@ def render_scene(
         commands = ["cmd.fragment('ala')"]
 
     try:
-        security.validate_commands(commands)
+        validate_commands(commands)
     except ValueError:
         raise
 
@@ -56,9 +74,7 @@ def render_scene(
         cmd.save(str(tmp_obj), format="obj")
         converter = "assimp"
         if shutil.which(converter):
-            subprocess.run(
-                [converter, "export", str(tmp_obj), str(out_path)], check=True
-            )
+            subprocess.run([converter, "export", str(tmp_obj), str(out_path)], check=True)
         else:
             out_path.write_text("placeholder")
     cache.set(key, {"file_path": str(out_path), "format": output_format})

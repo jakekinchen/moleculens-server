@@ -1,46 +1,13 @@
 import math
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import svgwrite  # type: ignore
 
+from ..constants import CPK_COLORS, TEXT_COLORS
 from ..models import DiagramPlan
 
-# CPK colors dictionary (common elements)
-CPK_COLORS = {
-    "H": "white",
-    "C": "black",
-    "N": "blue",
-    "O": "red",
-    "F": "lightgreen",
-    "Cl": "green",
-    "Br": "darkred",
-    "I": "purple",
-    "S": "yellow",
-    "P": "orange",
-    "B": "tan",
-    "Si": "grey",
-    # Add more elements and colors as needed
-    "DEFAULT": "pink",  # Default color for unknown elements
-}
 
-TEXT_COLORS = {
-    "white": "black",  # Text color for light backgrounds
-    "black": "white",  # Text color for dark backgrounds
-    "blue": "white",
-    "red": "white",
-    "lightgreen": "black",
-    "green": "white",
-    "darkred": "white",
-    "purple": "white",
-    "yellow": "black",
-    "orange": "black",
-    "tan": "black",
-    "grey": "white",
-    "DEFAULT": "black",
-}
-
-
-def _render_single_molecule(dwg: svgwrite.Drawing, data: Dict[str, Any]):
+def _render_single_molecule(dwg: svgwrite.Drawing, data: dict[str, Any]) -> None:
     atoms = data.get("atoms", [])
     bonds = data.get("bonds", [])
     box = data.get("box", {})
@@ -82,9 +49,7 @@ def _render_single_molecule(dwg: svgwrite.Drawing, data: Dict[str, Any]):
         y1 = offset_y + a1["y"] * scale
         x2 = offset_x + a2["x"] * scale
         y2 = offset_y + a2["y"] * scale
-        dwg.add(
-            dwg.line(start=(x1, y1), end=(x2, y2), stroke="black", stroke_width=1.5)
-        )
+        dwg.add(dwg.line(start=(x1, y1), end=(x2, y2), stroke="black", stroke_width=1.5))
 
     for atom_data in atoms:
         element = atom_data.get("element", "X")  # Default to X if no element
@@ -119,15 +84,11 @@ def _render_single_molecule(dwg: svgwrite.Drawing, data: Dict[str, Any]):
         padding = 5  # Padding between molecule box and label
         if label_position == "above":
             x = box.get("x", 0) + box_w / 2
-            y = (
-                box.get("y", 0) - padding - (label_font_size / 2)
-            )  # Position above the box
+            y = box.get("y", 0) - padding - (label_font_size / 2)  # Position above the box
             anchor = "middle"
         elif label_position == "below":
             x = box.get("x", 0) + box_w / 2
-            y = (
-                box.get("y", 0) + box_h + padding + label_font_size
-            )  # Position below the box
+            y = box.get("y", 0) + box_h + padding + label_font_size  # Position below the box
             anchor = "middle"
         elif label_position == "left":
             x = box.get("x", 0) - padding
@@ -154,9 +115,7 @@ def _render_single_molecule(dwg: svgwrite.Drawing, data: Dict[str, Any]):
 
 def render_diagram(
     plan: DiagramPlan,
-    molecule_data: Dict[
-        str, Any
-    ],  # Can be Dict[str, Any] or Dict[str, List[Dict[str, Any]]]
+    molecule_data: dict[str, Any],  # Can be Dict[str, Any] or Dict[str, List[Dict[str, Any]]]
     canvas_width: Optional[int] = None,
     canvas_height: Optional[int] = None,
 ) -> str:
@@ -191,7 +150,16 @@ def render_diagram(
             else:
                 continue  # Skip if no valid data
 
-            data["box"] = {"x": molecule.x, "y": molecule.y}
+            default_w = 100.0
+            default_h = 100.0
+            data["box"] = {
+                "x": molecule.x,
+                "y": molecule.y,
+                "width": molecule.width or default_w,
+                "height": molecule.height or default_h,
+            }
+            data["label"] = molecule.label or name
+            data["label_position"] = molecule.label_position
             _render_single_molecule(dwg, data)
 
     # Add arrows

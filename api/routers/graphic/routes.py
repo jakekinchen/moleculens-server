@@ -2,22 +2,21 @@
 
 import base64
 import io
-import json
 import logging
 import tempfile
 import traceback
 from pathlib import Path
-from typing import Any, Dict, Literal, Optional
+from typing import Any, Literal, Optional
 
 import httpx
 import yaml
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from api.diagram.models import DiagramPlan
 from api.diagram.planner_llm.service import plan, plan_simple
 from api.diagram.renderer.diagram import render_diagram
 from api.diagram.validator.core import validate
-from fastapi import APIRouter, BackgroundTasks, HTTPException
 
 logger = logging.getLogger(__name__)
 
@@ -31,15 +30,9 @@ router = APIRouter(
 class GraphicPlanRequest(BaseModel):
     """Request model for generating YAML specs from natural language."""
 
-    brief: str = Field(
-        description="Natural language description of the desired diagram"
-    )
-    context: str = Field(
-        default="Educational molecular diagram", description="Context for the graphic"
-    )
-    theme: str = Field(
-        default="Clean scientific visualization", description="Visual theme"
-    )
+    brief: str = Field(description="Natural language description of the desired diagram")
+    context: str = Field(default="Educational molecular diagram", description="Context for the graphic")
+    theme: str = Field(default="Clean scientific visualization", description="Visual theme")
     width: int = Field(default=960, description="Canvas width in pixels")
     height: int = Field(default=640, description="Canvas height in pixels")
     sections: Optional[str] = Field(default=None, description="Section breakdown")
@@ -74,18 +67,14 @@ class GraphicRenderRequest(BaseModel):
 
     yaml_spec: str = Field(description="YAML specification to render")
     deterministic: bool = Field(default=True, description="Use deterministic rendering")
-    output_format: Literal["svg", "png", "both"] = Field(
-        default="svg", description="Output format"
-    )
+    output_format: Literal["svg", "png", "both"] = Field(default="svg", description="Output format")
 
 
 class GraphicRenderResponse(BaseModel):
     """Response model for rendered graphics."""
 
     svg_content: str = Field(description="Rendered SVG content")
-    png_base64: Optional[str] = Field(
-        default=None, description="Base64 encoded PNG if requested"
-    )
+    png_base64: Optional[str] = Field(default=None, description="Base64 encoded PNG if requested")
     status: str = Field(default="completed", description="Rendering status")
     error: Optional[str] = Field(default=None, description="Error message if failed")
 
@@ -97,9 +86,7 @@ class GraphicMakeRequest(BaseModel):
     width: int = Field(default=960, description="Canvas width")
     height: int = Field(default=640, description="Canvas height")
     model_name: str = Field(default="o3-mini", description="LLM model to use")
-    output_format: Literal["svg", "png", "both"] = Field(
-        default="both", description="Output format"
-    )
+    output_format: Literal["svg", "png", "both"] = Field(default="both", description="Output format")
 
 
 class GraphicMakeResponse(BaseModel):
@@ -107,17 +94,13 @@ class GraphicMakeResponse(BaseModel):
 
     yaml_spec: str = Field(description="Generated YAML specification")
     svg_content: str = Field(description="Rendered SVG content")
-    png_base64: Optional[str] = Field(
-        default=None, description="Base64 encoded PNG if requested"
-    )
-    job_id: Optional[str] = Field(
-        default=None, description="Job ID for async processing"
-    )
+    png_base64: Optional[str] = Field(default=None, description="Base64 encoded PNG if requested")
+    job_id: Optional[str] = Field(default=None, description="Job ID for async processing")
     status: str = Field(default="completed", description="Processing status")
     error: Optional[str] = Field(default=None, description="Error message if failed")
 
 
-async def _generate_molecule_images(plan: DiagramPlan) -> Dict[str, str]:
+async def _generate_molecule_images(plan: DiagramPlan) -> dict[str, str]:
     """Generate transparent PNG images for each molecule in the diagram plan.
 
     Args:
@@ -151,9 +134,7 @@ async def _generate_molecule_images(plan: DiagramPlan) -> Dict[str, str]:
                     "ADP": "adenosine diphosphate ADP molecule",
                 }
 
-                enhanced_description = enhanced_descriptions.get(
-                    molecule_name, f"{molecule_name} molecule structure"
-                )
+                enhanced_description = enhanced_descriptions.get(molecule_name, f"{molecule_name} molecule structure")
 
                 render_request = {
                     "description": f"Show {enhanced_description} with transparent background for diagram overlay",
@@ -165,14 +146,10 @@ async def _generate_molecule_images(plan: DiagramPlan) -> Dict[str, str]:
                     "background_color": "white",
                 }
 
-                logger.info(
-                    f"Rendering molecule {i+1}/{len(unique_molecules)}: {molecule_name}"
-                )
+                logger.info(f"Rendering molecule {i + 1}/{len(unique_molecules)}: {molecule_name}")
 
                 # Call the render endpoint
-                response = await client.post(
-                    "http://localhost:8000/render", json=render_request
-                )
+                response = await client.post("http://localhost:8000/render", json=render_request)
 
                 if response.status_code == 200:
                     # Check if response is JSON (large file redirect) or direct image
@@ -183,61 +160,43 @@ async def _generate_molecule_images(plan: DiagramPlan) -> Dict[str, str]:
                         json_response = response.json()
                         image_url = json_response.get("url")
                         if image_url:
-                            image_response = await client.get(
-                                f"http://localhost:8000{image_url}"
-                            )
+                            image_response = await client.get(f"http://localhost:8000{image_url}")
                             if image_response.status_code == 200:
-                                image_data = base64.b64encode(
-                                    image_response.content
-                                ).decode("utf-8")
+                                image_data = base64.b64encode(image_response.content).decode("utf-8")
                                 molecule_images[molecule_name] = image_data
                     else:
                         # Direct image response
                         image_data = base64.b64encode(response.content).decode("utf-8")
                         molecule_images[molecule_name] = image_data
 
-                    logger.info(
-                        f"Successfully generated image for molecule: {molecule_name}"
-                    )
+                    logger.info(f"Successfully generated image for molecule: {molecule_name}")
                 elif response.status_code == 429:
-                    logger.warning(
-                        f"Rate limited for molecule {molecule_name}, waiting longer..."
-                    )
+                    logger.warning(f"Rate limited for molecule {molecule_name}, waiting longer...")
                     await asyncio.sleep(5)  # Wait 5 seconds and retry once
                     # Retry once
-                    retry_response = await client.post(
-                        "http://localhost:8000/render", json=render_request
-                    )
+                    retry_response = await client.post("http://localhost:8000/render", json=render_request)
                     if retry_response.status_code == 200:
-                        image_data = base64.b64encode(retry_response.content).decode(
-                            "utf-8"
-                        )
+                        image_data = base64.b64encode(retry_response.content).decode("utf-8")
                         molecule_images[molecule_name] = image_data
-                        logger.info(
-                            f"Successfully generated image for molecule on retry: {molecule_name}"
-                        )
+                        logger.info(f"Successfully generated image for molecule on retry: {molecule_name}")
                     else:
                         logger.warning(
                             f"Failed to render molecule {molecule_name} even after retry: {retry_response.status_code}"
                         )
                 else:
-                    logger.warning(
-                        f"Failed to render molecule {molecule_name}: {response.status_code}"
-                    )
+                    logger.warning(f"Failed to render molecule {molecule_name}: {response.status_code}")
 
             except Exception as e:
                 logger.error(f"Error rendering molecule {molecule_name}: {str(e)}")
                 continue
 
-    logger.info(
-        f"Generated {len(molecule_images)} molecule images out of {len(unique_molecules)} requested"
-    )
+    logger.info(f"Generated {len(molecule_images)} molecule images out of {len(unique_molecules)} requested")
     return molecule_images
 
 
 def _render_diagram_with_molecules(
     plan: DiagramPlan,
-    molecule_images: Dict[str, str],
+    molecule_images: dict[str, str],
     canvas_width: int,
     canvas_height: int,
 ) -> str:
@@ -321,9 +280,7 @@ def _render_diagram_with_molecules(
 
         # Add molecule label below (ensure it stays within canvas)
         if molecule.label:
-            label_y = min(
-                molecule.y + (molecule.height or 100) / 2 + 20, canvas_height - 10
-            )
+            label_y = min(molecule.y + (molecule.height or 100) / 2 + 20, canvas_height - 10)
             dwg.add(
                 dwg.text(
                     molecule.label,
@@ -360,18 +317,10 @@ def _render_diagram_with_molecules(
             angle = math.pi / 6  # 30 degrees
 
             # Calculate arrow head points
-            p1x = end_adj[0] - arrow_size * (
-                udx * math.cos(angle) - udy * math.sin(angle)
-            )
-            p1y = end_adj[1] - arrow_size * (
-                udx * math.sin(angle) + udy * math.cos(angle)
-            )
-            p2x = end_adj[0] - arrow_size * (
-                udx * math.cos(angle) + udy * math.sin(angle)
-            )
-            p2y = end_adj[1] - arrow_size * (
-                -udx * math.sin(angle) + udy * math.cos(angle)
-            )
+            p1x = end_adj[0] - arrow_size * (udx * math.cos(angle) - udy * math.sin(angle))
+            p1y = end_adj[1] - arrow_size * (udx * math.sin(angle) + udy * math.cos(angle))
+            p2x = end_adj[0] - arrow_size * (udx * math.cos(angle) + udy * math.sin(angle))
+            p2y = end_adj[1] - arrow_size * (-udx * math.sin(angle) + udy * math.cos(angle))
 
             # Draw arrow line
             dwg.add(
@@ -418,8 +367,6 @@ def _svg_to_png(svg_content: str, width: int = 960, height: int = 640) -> str:
     """
     try:
         # Try using svglib + reportlab + PIL (most compatible)
-        import xml.etree.ElementTree as ET
-
         from PIL import Image
         from reportlab.graphics import renderPM
         from svglib.svglib import renderSVG
@@ -496,7 +443,7 @@ def _svg_to_png(svg_content: str, width: int = 960, height: int = 640) -> str:
         # Add a simple message
         try:
             font = ImageFont.truetype("Arial.ttf", 24)
-        except:
+        except OSError:
             font = ImageFont.load_default()
 
         text = "SVG Diagram\n(PNG conversion not available)"
@@ -522,9 +469,7 @@ def _svg_to_png(svg_content: str, width: int = 960, height: int = 640) -> str:
         logger.warning(f"PIL fallback failed: {e}")
 
     # If all conversion methods fail, return empty string
-    logger.warning(
-        "No SVG to PNG conversion library available (svglib, cairosvg, wand, PIL)"
-    )
+    logger.warning("No SVG to PNG conversion library available (svglib, cairosvg, wand, PIL)")
     return ""
 
 
@@ -564,22 +509,16 @@ async def validate_graphic(request: GraphicValidateRequest) -> GraphicValidateRe
         try:
             yaml.safe_load(request.yaml_spec)
         except yaml.YAMLError as e:
-            return GraphicValidateResponse(
-                valid=False, errors=[f"YAML syntax error: {str(e)}"], status="completed"
-            )
+            return GraphicValidateResponse(valid=False, errors=[f"YAML syntax error: {str(e)}"], status="completed")
 
         # Validate using our validator
         errors = validate(request.yaml_spec)
 
-        return GraphicValidateResponse(
-            valid=len(errors) == 0, errors=errors, status="completed"
-        )
+        return GraphicValidateResponse(valid=len(errors) == 0, errors=errors, status="completed")
 
     except Exception as e:
         logger.error(f"Failed to validate spec: {str(e)}\n{traceback.format_exc()}")
-        return GraphicValidateResponse(
-            valid=False, errors=[f"Validation error: {str(e)}"], status="failed"
-        )
+        return GraphicValidateResponse(valid=False, errors=[f"Validation error: {str(e)}"], status="failed")
 
 
 @router.post("/render", response_model=GraphicRenderResponse)
@@ -593,7 +532,7 @@ async def render_graphic(request: GraphicRenderRequest) -> GraphicRenderResponse
         try:
             spec_dict = yaml.safe_load(request.yaml_spec)
         except yaml.YAMLError as e:
-            raise HTTPException(status_code=422, detail=f"Invalid YAML: {str(e)}")
+            raise HTTPException(status_code=422, detail=f"Invalid YAML: {str(e)}") from e
 
         # Validate first
         errors = validate(request.yaml_spec)
@@ -619,9 +558,7 @@ async def render_graphic(request: GraphicRenderRequest) -> GraphicRenderResponse
         if request.output_format in ["png", "both"]:
             png_base64 = _svg_to_png(svg_content, canvas_width, canvas_height)
 
-        return GraphicRenderResponse(
-            svg_content=svg_content, png_base64=png_base64, status="completed"
-        )
+        return GraphicRenderResponse(svg_content=svg_content, png_base64=png_base64, status="completed")
 
     except HTTPException:
         raise
@@ -638,9 +575,7 @@ async def make_graphic(request: GraphicMakeRequest) -> GraphicMakeResponse:
             raise HTTPException(status_code=422, detail="Brief cannot be empty")
 
         # Step 1: Generate YAML spec
-        yaml_spec = plan_simple(
-            brief=request.brief, width=request.width, height=request.height
-        )
+        yaml_spec = plan_simple(brief=request.brief, width=request.width, height=request.height)
 
         # Step 2: Validate the spec
         errors = validate(yaml_spec)
@@ -677,12 +612,10 @@ async def make_graphic(request: GraphicMakeRequest) -> GraphicMakeResponse:
 
     except Exception as e:
         logger.error(f"Failed to make graphic: {str(e)}\n{traceback.format_exc()}")
-        return GraphicMakeResponse(
-            yaml_spec="", svg_content="", png_base64=None, status="failed", error=str(e)
-        )
+        return GraphicMakeResponse(yaml_spec="", svg_content="", png_base64=None, status="failed", error=str(e))
 
 
-def _yaml_to_diagram_plan(spec_dict: Dict[str, Any]) -> DiagramPlan:
+def _yaml_to_diagram_plan(spec_dict: dict[str, Any]) -> DiagramPlan:
     """Convert YAML spec to DiagramPlan for compatibility with existing renderer."""
     # Extract basic info
     meta = spec_dict.get("meta", {})
@@ -712,9 +645,7 @@ def _yaml_to_diagram_plan(spec_dict: Dict[str, Any]) -> DiagramPlan:
             for i, node in enumerate(nodes):
                 # Distribute nodes horizontally across the usable canvas area
                 x_pos = margin + (usable_width / (node_count + 1)) * (i + 1)
-                y_pos = (
-                    canvas_height / 2 - 30
-                )  # Slightly above center to leave room for labels
+                y_pos = canvas_height / 2 - 30  # Slightly above center to leave room for labels
 
                 molecule_list.append(
                     {

@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Molecule Viewer - {{ molecule_name }}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; }
+        {{ molecule_styles }}
+    </style>
+</head>
+<body>
+<div id="container"></div>
+<div id="molecule-label">{{ molecule_name }}</div>
+
+<script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.156.1/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.156.1/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { PDBLoader } from 'three/addons/loaders/PDBLoader.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+let camera, scene, renderer, labelRenderer, controls;
+let root, labelsGroup;
+const rotationSpeed = 0.0015; // Speed of auto-rotation (radians per frame)
+
+// Configuration settings
+const config = {
+    enableAnnotations: {{ enable_annotations }}  // Default setting - can be toggled
+};
+
+init();
+animate();
+
+function init() {
+    const container = document.getElementById('container');
+
+    // Scene
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x050505);
+
+    // Camera
+    camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 5000);
+    camera.position.z = 500;
+
+    // Lights
+    const light1 = new THREE.DirectionalLight(0xffffff, 2.5);
+    light1.position.set(1, 1, 1);
+    scene.add(light1);
+
+    const light2 = new THREE.DirectionalLight(0xffffff, 1.5);
+    light2.position.set(-1, -1, 1);
+    scene.add(light2);
+
+    // Root group and labels group
+    root = new THREE.Group();
+    scene.add(root);
+
+    // Renderer
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    container.appendChild(renderer.domElement);
+
+    // CSS2D Renderer for atom labels
+    labelRenderer = new THREE.CSS2DRenderer();
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0px';
+    labelRenderer.domElement.style.pointerEvents = 'none';
+    container.appendChild(labelRenderer.domElement);
+
+    // Controls
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 1.5;
+
+    // Handle resize
+    window.addEventListener('resize', onWindowResize);
+
+    // Add labelRenderer resize tracking
+    if (!window.labelRendererResizeListener) {
+        window.labelRendererResizeListener = true;
+        window.addEventListener('resize', () => {
+            if (window.labelRenderer) {
+                const container = document.querySelector('#container');
+                if (container) {
+                    window.labelRenderer.setSize(container.clientWidth, container.clientHeight);
+                }
+            }
+        });
+    }
+
+    // Add camera fitting function
+    function fitCameraToMolecule() {
+        const box = new THREE.Box3();
+        root.children.forEach(child => {
+            if (!(child instanceof THREE.Light)) {
+                box.expandByObject(child);
+            }
+        });
+
+        const size = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+
+        // Calculate distance based on diagonal
+        const diagonal = Math.sqrt(
+            size.x * size.x +
+            size.y * size.y +
+            size.z * size.z
+        );
+
+        // Increase distance for larger molecules using log scale
+        const scaleFactor = Math.max(1.2, Math.log10(diagonal) * 0.8);
+        const distance = diagonal * scaleFactor;
+
+        // Position camera using spherical coordinates
+        const theta = Math.PI / 4; // 45 degrees
+        const phi = Math.PI / 6;   // 30 degrees
+
+        camera.position.set(
+            center.x + distance * Math.sin(theta) * Math.cos(phi),
+            center.y + distance * Math.sin(phi),
+            center.z + distance * Math.cos(theta) * Math.cos(phi)
+        );
+
+        camera.lookAt(center);
+        controls.target.copy(center);
+
+        // Adjust near/far planes
+        camera.near = distance * 0.01;
+        camera.far = distance * 10;
+        camera.updateProjectionMatrix();
+
+        // Update controls min/max distance
+        controls.minDistance = distance * 0.1;
+        controls.maxDistance = distance * 5;
+        controls.update();
+    }
+
+    // Load molecule
+    const pdbData = `{{ pdb_data }}`;
+    const pdbBlob = new Blob([pdbData], { type: 'text/plain' });
+    const pdbUrl = URL.createObjectURL(pdbBlob);
+
+    // Make PDBLoader available globally for compatibility with both approaches
+    window.PDBLoader = PDBLoader;
+    const loader = new PDBLoader();
+    const scaleFactor = .3;
+
+    // Array to track all labels
+    const labels = [];
+
+    // Add toggle function to root
+    root.toggleAnnotations = function(enable) {
+        if (typeof enable === 'boolean') {
+            root.enableAnnotations = enable;
+        } else {
+            root.enableAnnotations = !root.enableAnnotations;
+        }
+
+        // Toggle visibility of each label
+        labels.forEach(label => {
+            label.visible = root.enableAnnotations;
+        });
+
+        return root.enableAnnotations;
+    };
+
+    // Set initial annotation state
+    root.enableAnnotations = config.enableAnnotations;
+
+    loader.load(pdbUrl, (pdb) => {
+        const geometryAtoms = pdb.geometryAtoms;
+        const geometryBonds = pdb.geometryBonds;
+        const json = pdb.json;
+        const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
+        const sphereGeometry = new THREE.IcosahedronGeometry(1, 3);
+        const offset = new THREE.Vector3();
+
+        geometryAtoms.computeBoundingBox();
+        geometryAtoms.boundingBox.getCenter(offset).negate();
+
+        geometryAtoms.translate(offset.x, offset.y, offset.z);
+        geometryBonds.translate(offset.x, offset.y, offset.z);
+
+        let positions = geometryAtoms.getAttribute('position');
+        const colors = geometryAtoms.getAttribute('color');
+        const position = new THREE.Vector3();
+        const color = new THREE.Color();
+
+        // Add atoms and their labels
+        for (let i = 0; i < positions.count; i++) {
+            position.set(
+                positions.getX(i),
+                positions.getY(i),
+                positions.getZ(i)
+            );
+            color.setRGB(
+                colors.getX(i),
+                colors.getY(i),
+                colors.getZ(i)
+            );
+
+            const material = new THREE.MeshPhongMaterial({ color: color });
+            const atom = new THREE.Mesh(sphereGeometry, material);
+            atom.position.copy(position).multiplyScalar(120 * scaleFactor);
+            atom.scale.setScalar(40 * scaleFactor);
+            root.add(atom);
+
+            // Add atom labels using CSS2DObject
+            if (config.enableAnnotations && json.atoms[i]) {
+                const atomSymbol = json.atoms[i][4];
+                if (atomSymbol) {
+                    const text = document.createElement('div');
+                    text.className = 'atom-label';
+                    text.textContent = atomSymbol;
+                    text.style.color = `rgb(${Math.round(color.r*255)},${Math.round(color.g*255)},${Math.round(color.b*255)})`;
+
+                    // Create CSS2DObject and attach it directly to the scene
+                    const label = new CSS2DObject(text);
+                    label.position.copy(atom.position);
+                    scene.add(label);
+
+                    // Add reference to the label for toggling
+                    labels.push(label);
+                }
+            }
+        }
+
+        // Add bonds
+        positions = geometryBonds.getAttribute('position');
+        const start = new THREE.Vector3();
+        const end = new THREE.Vector3();
+
+        for (let i = 0; i < positions.count; i += 2) {
+            start.set(
+                positions.getX(i),
+                positions.getY(i),
+                positions.getZ(i)
+            ).multiplyScalar(120 * scaleFactor);
+
+            end.set(
+                positions.getX(i+1),
+                positions.getY(i+1),
+                positions.getZ(i+1)
+            ).multiplyScalar(120 * scaleFactor);
+
+            const bondMesh = new THREE.Mesh(
+                boxGeometry,
+                new THREE.MeshPhongMaterial({ color: 0xffffff })
+            );
+            bondMesh.position.copy(start).lerp(end, 0.5);
+            bondMesh.scale.set(8 * scaleFactor, 8 * scaleFactor, start.distanceTo(end));
+            bondMesh.lookAt(end);
+            root.add(bondMesh);
+        }
+
+        // Clean up
+        URL.revokeObjectURL(pdbUrl);
+
+        // Fit camera to the molecule after loading
+        fitCameraToMolecule();
+    });
+}
+
+function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+
+    // Update controls
+    controls.update();
+
+    // Render both the 3D scene and labels
+    renderer.render(scene, camera);
+    labelRenderer.render(scene, camera);
+}
+</script>
+</body>
+</html>

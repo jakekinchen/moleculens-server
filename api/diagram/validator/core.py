@@ -3,10 +3,11 @@
 import logging
 import re
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Optional
 
-import jsonschema
 import yaml  # type: ignore
+
+from ..constants import MAX_CANVAS_AREA
 
 logger = logging.getLogger(__name__)
 
@@ -14,9 +15,7 @@ logger = logging.getLogger(__name__)
 class ValidationError(Exception):
     """Custom exception for validation errors with error codes."""
 
-    def __init__(
-        self, message: str, error_code: str, details: Optional[Dict[str, Any]] = None
-    ):
+    def __init__(self, message: str, error_code: str, details: Optional[dict[str, Any]] = None):
         super().__init__(message)
         self.error_code = error_code
         self.details = details or {}
@@ -96,7 +95,7 @@ VALID_CELL_TYPES = {"TEXT", "DIAGRAM", "IMAGE_GEN", "COMPUTE", "GROUP"}
 SNAKE_CASE_PATTERN = re.compile(r"^[a-z][a-z0-9_]*[a-z0-9]$|^[a-z]$")
 
 
-def validate_yaml_syntax(spec_yaml: str) -> Dict[str, Any]:
+def validate_yaml_syntax(spec_yaml: str) -> dict[str, Any]:
     """Validate YAML syntax and return parsed data.
 
     Args:
@@ -124,7 +123,7 @@ def validate_yaml_syntax(spec_yaml: str) -> Dict[str, Any]:
         ) from e
 
 
-def validate_canvas_size(canvas: Dict[str, Any]) -> None:
+def validate_canvas_size(canvas: dict[str, Any]) -> None:
     """Validate canvas dimensions.
 
     Args:
@@ -136,11 +135,11 @@ def validate_canvas_size(canvas: Dict[str, Any]) -> None:
     width = canvas.get("w", 0)
     height = canvas.get("h", 0)
 
-    if width * height > 8192 * 8192:
+    if width * height > MAX_CANVAS_AREA:
         raise ValidationError(
             f"Canvas too large: {width}x{height} exceeds 8192x8192 limit",
             ErrorCode.CANVAS_TOO_LARGE,
-            {"width": width, "height": height, "max_area": 8192 * 8192},
+            {"width": width, "height": height, "max_area": MAX_CANVAS_AREA},
         )
 
 
@@ -196,7 +195,7 @@ def validate_color(color: str) -> None:
     )
 
 
-def validate_bbox(bbox: Dict[str, Any], canvas_width: int, canvas_height: int) -> None:
+def validate_bbox(bbox: dict[str, Any], canvas_width: int, canvas_height: int) -> None:
     """Validate bounding box coordinates.
 
     Args:
@@ -227,7 +226,7 @@ def validate_bbox(bbox: Dict[str, Any], canvas_width: int, canvas_height: int) -
         )
 
 
-def validate_node_references(cells: List[Dict[str, Any]]) -> None:
+def validate_node_references(cells: list[dict[str, Any]]) -> None:
     """Validate that all node references in DIAGRAM cells are valid.
 
     Args:
@@ -237,7 +236,7 @@ def validate_node_references(cells: List[Dict[str, Any]]) -> None:
         ValidationError: If invalid node references found
     """
     # Collect all node IDs from DIAGRAM cells
-    all_node_ids: Set[str] = set()
+    all_node_ids: set[str] = set()
     diagram_cells = []
 
     for cell in cells:
@@ -278,7 +277,7 @@ def validate_node_references(cells: List[Dict[str, Any]]) -> None:
                 )
 
 
-def validate_background_cell(cells: List[Dict[str, Any]]) -> None:
+def validate_background_cell(cells: list[dict[str, Any]]) -> None:
     """Validate that at least one background cell exists.
 
     Args:
@@ -291,9 +290,8 @@ def validate_background_cell(cells: List[Dict[str, Any]]) -> None:
 
     for cell in cells:
         # Check for explicit background cell or GROUP cell that covers full canvas
-        if (
-            cell.get("id") == "background"
-            or cell.get("type") == "GROUP"
+        if cell.get("id") == "background" or (
+            cell.get("type") == "GROUP"
             and cell.get("bbox", {}).get("x", 0) == 0
             and cell.get("bbox", {}).get("y", 0) == 0
         ):

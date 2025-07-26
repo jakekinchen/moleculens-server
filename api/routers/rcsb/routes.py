@@ -1,8 +1,9 @@
-from typing import Any, Dict, Literal
+from typing import Any, Literal
 
-from agent_management.agents.rcsb_agent import RCSBAgent
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+
+from api.pymol.services.rcsb import RCSBService
 
 router = APIRouter(
     prefix="/rcsb",
@@ -26,11 +27,11 @@ class ModelRequest(BaseModel):
 
 
 class MetadataResponse(BaseModel):
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 class AnnotationResponse(BaseModel):
-    annotations: Dict[str, Any]
+    annotations: dict[str, Any]
 
 
 class GraphQLRequest(BaseModel):
@@ -55,98 +56,98 @@ class AlignmentRequest(BaseModel):
 @router.post("/fetch-structure/", response_model=StructureResponse)
 def fetch_structure(request: StructureRequest) -> StructureResponse:
     try:
-        agent = RCSBAgent()
-        content = agent.fetch_structure(request.identifier, request.format)
+        service = RCSBService()
+        content = service.fetch_structure(request.identifier, request.format)
         return StructureResponse(data=content)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/fetch-model/", response_model=StructureResponse)
 def fetch_model(request: ModelRequest) -> StructureResponse:
     try:
-        agent = RCSBAgent()
-        content = agent.fetch_alphafold_model(request.uniprot_id, request.format)
+        service = RCSBService()
+        content = service.fetch_alphafold_model(request.uniprot_id, request.format)
         return StructureResponse(data=content)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/entry/{identifier}", response_model=MetadataResponse)
 def entry_metadata(identifier: str) -> MetadataResponse:
     try:
-        agent = RCSBAgent()
-        meta = agent.fetch_entry_metadata(identifier)
+        service = RCSBService()
+        meta = service.fetch_entry_metadata(identifier)
         return MetadataResponse(metadata=meta)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/annotations/{identifier}", response_model=AnnotationResponse)
 def sequence_annotations(identifier: str) -> AnnotationResponse:
     try:
-        agent = RCSBAgent()
-        data = agent.fetch_sequence_annotations(identifier)
+        service = RCSBService()
+        data = service.fetch_sequence_annotations(identifier)
         return AnnotationResponse(annotations=data)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/computed-model/", response_model=MetadataResponse)
 def computed_model(request: GraphQLRequest) -> MetadataResponse:
     try:
-        agent = RCSBAgent()
-        data = agent.fetch_graphql_model(request.identifier, request.model_id)
+        service = RCSBService()
+        data = service.fetch_graphql_model(request.identifier, request.model_id)
         return MetadataResponse(metadata=data)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/fetch-esm-model/", response_model=StructureResponse)
 def fetch_esm_model(request: ModelRequest) -> StructureResponse:
     try:
-        agent = RCSBAgent()
-        content = agent.fetch_esmf_model(request.uniprot_id, request.format)
+        service = RCSBService()
+        content = service.fetch_esmf_model(request.uniprot_id, request.format)
         return StructureResponse(data=content)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/upload-structure/", response_model=UploadResponse)
 def upload_structure(request: UploadRequest) -> UploadResponse:
     try:
-        agent = RCSBAgent()
-        upload_id = agent.upload_structure(request.data.encode(), request.filename)
+        service = RCSBService()
+        upload_id = service.upload_structure(request.data.encode(), request.filename)
         return UploadResponse(upload_id=upload_id)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.post("/align/", response_model=MetadataResponse)
 def pairwise_alignment(request: AlignmentRequest) -> MetadataResponse:
     try:
-        agent = RCSBAgent()
-        data = agent.fetch_pairwise_alignment(request.identifier1, request.identifier2)
+        service = RCSBService()
+        data = service.fetch_pairwise_alignment(request.identifier1, request.identifier2)
         return MetadataResponse(metadata=data)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/group/{group_id}", response_model=MetadataResponse)
 def group_entries(group_id: str) -> MetadataResponse:
     try:
-        agent = RCSBAgent()
-        data = agent.fetch_group_entries(group_id)
+        service = RCSBService()
+        data = service.fetch_group_entries(group_id)
         return MetadataResponse(metadata=data)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @router.get("/feature-annotations/{identifier}", response_model=AnnotationResponse)
 def feature_annotations(identifier: str) -> AnnotationResponse:
     try:
-        agent = RCSBAgent()
-        data = agent.fetch_feature_annotations(identifier)
+        service = RCSBService()
+        data = service.fetch_feature_annotations(identifier)
         return AnnotationResponse(annotations=data)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e

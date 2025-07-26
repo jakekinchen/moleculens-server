@@ -1,0 +1,41 @@
+[project]
+name = "moleculens-server"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Jake Kinchen", email = "jake.kinchen@onetier.com" }
+]
+requires-python = ">=3.9.6"
+dependencies = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+lint = [
+    "ruff>=0.12.5",
+]
+
+[tool.ruff]
+# Universal settings
+target-version = "py39"              # Match project Python version
+line-length = 120                    # Match former Black config
+extend-exclude = ["migrations", "build", ".venv", "__pycache__"]
+fix = true                           # Auto-apply fixes on save / CI
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "N", "B"]  # PEP8, flakes, isort, pyupgrade, pep8-naming, bugbear
+extend-select = [
+    "TCH",   # type-checking completeness
+    "PYI",   # stub-style purity
+    "UP",    # pyupgrade (already on, but explicit)
+]
+ignore = ["E501"]                         # Long lines already enforced by formatter
+extend-fixable = ["TCH", "PYI"]          # Allow auto-fixing type issues
+
+[tool.ruff.format]                        # Black parity
+indent-style = "space"
+quote-style = "double"
+docstring-code-format = true

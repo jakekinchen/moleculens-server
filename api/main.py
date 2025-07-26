@@ -1,25 +1,21 @@
-import datetime
 import os
 import sys
 import threading
 import types
 from pathlib import Path
-from typing import Any, Dict
 
 import pymol
-import redis
 
-from api import routers
-
-# Import and initialize the model registry at startup
-from api.agent_management.model_config import register_models
-from api.utils.rate_limit import RateLimitMiddleware
+# Note: model registry needs to be located or created
+# from api.agent_management.model_config import register_models
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-# Register all models
-register_models()
+from api import routers
+
+# Register all models - commented out until model registry is located
+# register_models()
 
 app = FastAPI(
     title="AI Backend",
@@ -74,41 +70,9 @@ app.add_middleware(
     max_age=86400,  # Cache preflight response for 24 hours
 )
 
-# rate limiting - temporarily disabled for testing
-# app.add_middleware(RateLimitMiddleware)
-
-
-@app.get("/health")
-async def health_check() -> Dict[str, Any]:
-    """Health check endpoint."""
-    try:
-        # Check Redis connection - temporarily disabled
-        # redis_client = redis.Redis(
-        #     host=os.environ.get("REDIS_HOST", "localhost"),
-        #     port=int(os.environ.get("REDIS_PORT", 6379)),
-        # )
-        # redis_client.ping()
-
-        # Check PyMOL
-        with pymol_lock:
-            pymol.cmd.reinitialize()
-
-        return {
-            "status": "healthy",
-            "timestamp": datetime.datetime.now().isoformat(),
-            "services": {"redis": "disabled", "pymol": "running"},
-        }
-    except Exception as e:
-        return {
-            "status": "unhealthy",
-            "timestamp": datetime.datetime.now().isoformat(),
-            "error": str(e),
-        }
-
 
 # user management related endpoints
 app.include_router(routers.prompt.router)
-app.include_router(routers.geometry.router)
 app.include_router(routers.render.router)
 app.include_router(routers.rcsb.router)
 app.include_router(routers.graphic.router)
@@ -141,21 +105,6 @@ except ModuleNotFoundError:
     pymol.cmd = _CmdStub()  # type: ignore
     sys.modules["pymol"] = pymol
 
-# ----- Redis --------------------------------------------------------------
-try:
-    import redis  # type: ignore
-except ModuleNotFoundError:
-    redis = types.ModuleType("redis")
-
-    class _DummyRedis:  # noqa: D401
-        def __init__(self, *args, **kwargs):
-            pass
-
-        def ping(self):
-            return True
-
-    redis.Redis = _DummyRedis  # type: ignore
-    sys.modules["redis"] = redis
 
 # ----- PubChemPy ----------------------------------------------------------
 try:

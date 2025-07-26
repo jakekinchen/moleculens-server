@@ -9,22 +9,11 @@ repos:
     -   id: debug-statements
     -   id: requirements-txt-fixer
 
--   repo: local
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.12.5  # Use the ref you want to point at
     hooks:
-    -   id: black
-        name: black
-        entry: black
-        language: system
-        types: [python]
-
-    -   id: isort
-        name: isort
-        entry: isort --profile black
-        language: system
-        types: [python]
-
-    -   id: flake8
-        name: flake8
-        entry: flake8
-        language: system
-        types: [python]
+    -   id: ruff
+        args: [--fix]
+        stages: [commit]
+    -   id: ruff-format
+        stages: [commit]

@@ -1,11 +1,13 @@
 """Planner LLM service for generating YAML specs from natural language briefs."""
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from pydantic import BaseModel
 
-from api.utils.llm_direct import generate_structured
+from api.llm.openai_provider import generate_structured
+
+from ..constants import MAX_CANVAS_AREA
 
 logger = logging.getLogger(__name__)
 
@@ -84,17 +86,12 @@ def plan(
     if width <= 0 or height <= 0:
         raise ValueError("Canvas dimensions must be positive")
 
-    if width * height > 8192 * 8192:
+    if width * height > MAX_CANVAS_AREA:
         raise ValueError("Canvas too large (max 8192x8192)")
 
     # Prepare sections and notes
-    sections_text = (
-        sections or "- id: main_diagram\n  purpose: Primary molecular visualization"
-    )
-    notes_text = (
-        notes
-        or "• Use clear molecular representations\n• Ensure proper spacing and alignment"
-    )
+    sections_text = sections or "- id: main_diagram\n  purpose: Primary molecular visualization"
+    notes_text = notes or "• Use clear molecular representations\n• Ensure proper spacing and alignment"
 
     # Format the user prompt
     user_prompt = PLANNER_USER_TEMPLATE.format(
@@ -115,9 +112,7 @@ def plan(
             system_prompt=PLANNER_SYSTEM_PROMPT,
             model_name=model_name,
             max_tokens=2000,
-            temperature=(
-                None if model_name.startswith("o") else 0.3
-            ),  # o* models don't support temperature
+            temperature=(0.0 if model_name.startswith("o") else 0.3),  # o* models use 0.0 instead of None
         )
 
         # Extract YAML content
@@ -126,11 +121,11 @@ def plan(
         if not yaml_content.strip():
             raise ValueError("Empty YAML response from LLM")
 
-        logger.info(f"Generated YAML spec for brief: {brief[:50]}...")
+        logger.info(f"Generated YAML spec for brief: {brief}")
         return yaml_content.strip()
 
     except Exception as e:
-        logger.error(f"Failed to generate plan for brief '{brief[:50]}...': {str(e)}")
+        logger.error(f"Failed to generate plan for brief '{brief}': {str(e)}")
         raise ValueError(f"Planning failed: {str(e)}") from e
 
 

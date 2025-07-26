@@ -8,40 +8,52 @@ import threading
 import types
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, Dict, Literal
+from typing import Any, Literal, Optional
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
 try:
-    from api.agent_management import pymol_translator
+    from api.pymol import pymol_translator
 except Exception:  # pragma: no cover - fallback for test loaders
-    translator_path = os.path.abspath(
-        os.path.join(
-            os.path.dirname(__file__), "../../agent_management/pymol_translator.py"
-        )
-    )
+    translator_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../pymol/pymol_translator.py"))
     package_root = os.path.dirname(translator_path)
 
     api_root = os.path.dirname(os.path.dirname(translator_path))
     api_pkg = sys.modules.setdefault("api", types.ModuleType("api"))
     api_pkg.__path__ = [api_root]
-    agent_pkg = sys.modules.setdefault(
-        "api.agent_management", types.ModuleType("api.agent_management")
-    )
+    agent_pkg = sys.modules.setdefault("api.agent_management", types.ModuleType("api.agent_management"))
     agent_pkg.__path__ = [package_root]
     api_pkg.agent_management = agent_pkg  # type: ignore[attr-defined]
 
-    spec = importlib.util.spec_from_file_location(
-        "api.agent_management.pymol_translator", translator_path
-    )
+    spec = importlib.util.spec_from_file_location("api.agent_management.pymol_translator", translator_path)
     assert spec is not None, "Could not create module spec for pymol_translator"
     pymol_translator = importlib.util.module_from_spec(spec)
     assert spec.loader is not None, "Module spec has no loader"
     spec.loader.exec_module(pymol_translator)
 
-from api.utils import cache, security
+from api.pymol.pymol_security import validate_commands
+
+
+class SimpleCache:
+    """Simple in-memory cache with file storage."""
+
+    def __init__(self):
+        self.CACHE_DIR = Path("/tmp/moleculens_cache")
+        self.CACHE_DIR.mkdir(exist_ok=True)
+        self._cache: dict[str, Any] = {}
+
+    def get(self, key: str) -> Optional[tuple]:
+        """Get cached result."""
+        return self._cache.get(key)
+
+    def set(self, key: str, value: Any) -> None:
+        """Set cached result."""
+        self._cache[key] = (value["file_path"], value)
+
+
+cache = SimpleCache()
 
 # ---------------------------------------------------------------------------
 # PyMOL integration
@@ -118,9 +130,9 @@ def _output_path(key: str, fmt: str) -> Path:
     return cache.CACHE_DIR / f"{key}.{ext}"
 
 
-def _metadata() -> Dict[str, Any]:
+def _metadata() -> dict[str, Any]:
     """Collect useful scene metadata from PyMOL (best-effort)."""
-    data: Dict[str, Any] = {}
+    data: dict[str, Any] = {}
     try:
         data["camera"] = pymol_cmd.get_view()
     except Exception:
@@ -176,9 +188,9 @@ async def render(req: RenderRequest):
             "cmd.label('name ca', 'resi')",  # label residues
         ]
     try:
-        security.validate_commands(commands)
+        validate_commands(commands)
     except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     out_path = _output_path(key, req.format)
 
@@ -259,7 +271,7 @@ async def render(req: RenderRequest):
     return _build_response(str(out_path), req.format, meta)
 
 
-def _build_response(path: str, fmt: str, meta: Dict[str, Any]):
+def _build_response(path: str, fmt: str, meta: dict[str, Any]):
     """Return a FileResponse or, for large payloads, a JSON pointer to static
     storage."""
     media_types = {
@@ -276,6 +288,4 @@ def _build_response(path: str, fmt: str, meta: Dict[str, Any]):
         Path(path).rename(static_path)
         return JSONResponse({"url": f"/static/{static_path.name}", "metadata": meta})
 
-    return FileResponse(
-        path, media_type=media_types[fmt], headers={"X-Metadata": json.dumps(meta)}
-    )
+    return FileResponse(path, media_type=media_types[fmt], headers={"X-Metadata": json.dumps(meta)})
