@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -12,7 +12,7 @@ class Arrow(BaseModel):
 
     start: tuple[float, float] = Field(description="Starting coordinates")
     end: tuple[float, float] = Field(description="Ending coordinates")
-    text: str | None = Field(description="Optional text to display along the arrow")
+    text: Optional[str] = Field(description="Optional text to display along the arrow")
 
 
 class MoleculePlacement(BaseModel):
@@ -21,9 +21,9 @@ class MoleculePlacement(BaseModel):
     molecule: str
     x: float
     y: float
-    width: float | None = None
-    height: float | None = None
-    label: str | None = None
+    width: Optional[float] = None
+    height: Optional[float] = None
+    label: Optional[str] = None
     label_position: Literal["above", "below", "left", "right"] = "below"
 
     @property

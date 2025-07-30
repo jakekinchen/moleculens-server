@@ -77,6 +77,14 @@ app.include_router(routers.render.router)
 app.include_router(routers.rcsb.router)
 app.include_router(routers.graphic.router)
 
+# Enhanced render endpoints for client integration
+try:
+    from api.routers.render.enhanced_routes import router as enhanced_render_router
+
+    app.include_router(enhanced_render_router)
+except ImportError:
+    pass  # Enhanced routes are optional
+
 # ---------------------------------------------------------------------------
 # Optional heavy dependencies
 # ---------------------------------------------------------------------------

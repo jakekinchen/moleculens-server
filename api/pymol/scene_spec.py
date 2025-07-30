@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any, List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -10,7 +10,7 @@ class RenderingOptions(BaseModel):
 
     transparent_background: bool = False
     ray_trace: bool = True
-    resolution: list[int] = Field(default_factory=lambda: [1920, 1080])
+    resolution: List[int] = Field(default_factory=lambda: [1920, 1080])
     dpi: int = 300
     ray_trace_mode: Literal["default", "cartoon_outline", "bw", "poster"] = "default"
     antialias: bool = True
@@ -38,7 +38,7 @@ class SceneSpec(BaseModel):
         "transparent_binding_site",
     ]
     structure_id: str
-    selection: str | None = Field(
+    selection: Optional[str] = Field(
         default=None,
         description="PyMOL atom-selection targeting a subset of atoms.",
     )
@@ -46,7 +46,7 @@ class SceneSpec(BaseModel):
         default_factory=dict,
         description="Operation-specific keyword arguments.",
     )
-    raw_cmds: list[str] | None = Field(
+    raw_cmds: Optional[List[str]] = Field(
         default=None,
         description="Explicit PyMOL commands when op == 'raw'.",
     )

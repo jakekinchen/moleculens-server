@@ -11,24 +11,6 @@ __author__ = "Moleculens Team"
 import sys
 import types as _types
 
-# TODO: Remove old agent_management references after refactoring complete
-# _agent_mgmt_pkg = importlib.import_module("api.agent_management")
-# sys.modules.setdefault("agent_management", _agent_mgmt_pkg)
-
-# Also expose `llm_service` (frequently imported directly) at top-level
-# sys.modules.setdefault(
-#     "llm_service", importlib.import_module("api.agent_management.llm_service")
-# )
-
-# Backwards-compatibility single-file modules referenced in some tests
-# sys.modules.setdefault(
-#     "geometry_agent",
-#     importlib.import_module("api.agent_management.agents.geometry_agent"),
-# )
-
-# Alias the `api.dependencies` package so imports like `dependencies.use_llm` work
-# sys.modules.setdefault("dependencies", importlib.import_module("api.dependencies"))
-
 # Alias the `api.routers` package so imports like `api.routers.render` work
 # _api_routers_pkg = importlib.import_module("api.routers")
 # sys.modules.setdefault("api.routers", _api_routers_pkg)

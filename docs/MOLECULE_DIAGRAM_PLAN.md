@@ -61,7 +61,7 @@ api/
     service.py
 renderer/
   __init__.py
-  diagram.py      (moved from agent_management)
+  diagram.py
   text.py
   compute.py
   image_gen.py    (stub)

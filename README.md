@@ -1,148 +1,830 @@
-# Moleculens Server
+# MoleculeLens Server API
 
-A FastAPI-based server for molecular visualization and analysis, featuring AI-powered molecule rendering and diagram generation.
+A FastAPI-based server for molecular visualization, diagram generation, and protein structure analysis. This server provides comprehensive endpoints for working with molecular data, generating scientific diagrams, and rendering 3D molecular structures.
 
-## Project Structure
+## Overview
 
-See [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for detailed organization of the codebase.
+The MoleculeLens Server provides four main route groups:
 
-```
-moleculens-server/
-├── api/              # Main application code
-├── tests/            # Organized test suite
-├── examples/         # Usage examples and demos
-├── sample_outputs/   # Example generated files
-├── docs/             # Documentation
-└── README.md         # This file
-```
+- **`/graphic`** - Generate scientific diagrams from natural language descriptions
+- **`/prompt`** - Process molecular prompts and generate visualizations
+- **`/rcsb`** - Fetch protein structures and metadata from RCSB PDB
+- **`/render`** - Render 3D molecular structures using PyMOL
 
-## Features
+## Getting Started
 
-- 3D molecular visualization using PyMOL
-- 2D molecular diagram generation
-- AI-powered prompt interpretation
-- PubChem integration
-- RCSB integration
-- Real-time rendering and animation
+### Prerequisites
 
-## Prerequisites
+- Python 3.8+
+- PyMOL (for 3D rendering)
+- OpenAI API key (for LLM-powered features)
 
-- Docker and Docker Compose
-- Python 3.9+
-- OpenAI API key (for AI features)
-- Git
-
-## Quick Start
-
-1. Clone the repository:
-```bash
-git clone https://github.com/jakekinchen/moleculens-server.git
-cd moleculens-server
-```
-
-2. Create a `.env` file in the root directory:
-```env
-OPENAI_API_KEY=your-api-key
-ENVIRONMENT=development  # or production
-```
-
-3. Build and start the containers:
-```bash
-docker-compose up --build
-```
-
-The server will be available at `http://localhost:8000`.
-
-### Docker Commands
-
-- **Stop containers:**
-  ```bash
-  docker-compose down
-  ```
-
-- **Rebuild without cache:**
-  ```bash
-  docker-compose build --no-cache
-  ```
-
-- **View logs:**
-  ```bash
-  docker-compose logs -f
-  ```
-
-## Project Structure
-
-```
-moleculens-server/
-├── api/                    # Main application code
-│   ├── agent_management/   # AI agent configuration
-│   ├── dependencies/       # FastAPI dependencies
-│   ├── routers/           # API routes
-│   ├── static/            # Static files
-│   ├── tests/             # Test suite
-│   │   └── fixtures/      # Test data
-│   ├── utils/             # Utility functions
-│   └── main.py           # Application entry point
-├── docs/                  # Documentation
-└── docker-compose.yml    # Docker configuration
-```
-
-## Development
-
-### Running Tests
-
-The test suite is organized into categories:
+### Installation
 
 ```bash
-# Run all tests
-pytest
-
-# Run by directory
-pytest tests/unit/           # Unit tests only
-pytest tests/integration/    # Integration tests only
-pytest tests/demos/          # Demo/example tests
-
-# Run by markers
-pytest -m unit              # Unit tests
-pytest -m integration       # Integration tests
-pytest -m "not slow"        # Exclude slow tests
+pip install -r api/requirements.txt
 ```
 
-See [tests/README.md](tests/README.md) for detailed test organization.
+### Running the Server
 
-### Code Style
+```bash
+cd api
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
 
-The project follows PEP 8 guidelines. Use `black` for code formatting and `flake8` for linting.
+The API will be available at `http://localhost:8000` with interactive documentation at `http://localhost:8000/docs`.
 
-### Hot Reload
+## 🎯 Client Integration: 2D & 3D Data
 
-The development server supports hot reload. Any code changes to `main.py` will reflect immediately without needing to rebuild.
+### Quick Summary for Frontend Developers
 
-## Troubleshooting
+| Data Type | Endpoint | Format | Best For |
+|-----------|----------|--------|----------|
+| **2D Transparent PNG** | `/render` | `format: "image"` | UI overlays, diagrams, thumbnails |
+| **3D PDB Data** | `/render` | `format: "model"` | Three.js reconstruction |
+| **3D PDB (Known)** | `/rcsb/fetch-structure/` | `format: "pdb"` | Known protein structures |
 
-### Common Docker Issues
+### Getting 2D Transparent PNGs
 
-1. **ModuleNotFoundError: No module named 'openai'**
-   Solution options:
-   - Install directly in container: `docker exec -it fastapi_app pip install openai`
-   - Specify version in requirements.txt: `openai==1.3.7`
-   - Rebuild containers: `docker-compose build --no-cache`
+Perfect for UI elements, molecule thumbnails, and diagram overlays:
 
-2. **Container fails to start**
-   - Check logs: `docker-compose logs api`
-   - Verify environment variables
-   - Check disk space: `df -h`
+```javascript
+const get2DTransparentPNG = async (moleculeName) => {
+  const response = await fetch('/render', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      description: `Show ${moleculeName} molecule with transparent background`,
+      format: "image",
+      transparent_background: true,
+      ray_trace: true,
+      resolution: [512, 512],
+      dpi: 150
+    })
+  });
 
-For more detailed troubleshooting and deployment instructions, see [docs/deployment.md](docs/deployment.md).
+  // Handle both direct PNG and large file URL responses
+  if (response.headers.get('content-type')?.includes('image/png')) {
+    return response.blob(); // Direct PNG blob
+  } else {
+    const data = await response.json();
+    const imageResponse = await fetch(data.url);
+    return imageResponse.blob(); // PNG from URL
+  }
+};
 
-## Contributing
+// Usage
+const pngBlob = await get2DTransparentPNG('caffeine');
+const imageUrl = URL.createObjectURL(pngBlob);
+document.getElementById('molecule-img').src = imageUrl;
+```
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests
-5. Submit a pull request
+### Getting 3D PDB Data for Three.js
 
-## License
+PDB format is recommended over GLB because it's:
+- ✅ Lightweight text format
+- ✅ Natively supported by Three.js PDBLoader
+- ✅ Contains all atomic coordinates and bonds
+- ✅ Easier to manipulate and style
 
-[Your License Here]
+```javascript
+const get3DPDBData = async (moleculeName) => {
+  const response = await fetch('/render', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      description: `Load ${moleculeName} molecule structure`,
+      format: "model" // Returns PDB format
+    })
+  });
+
+  if (response.headers.get('content-type')?.includes('chemical/x-pdb')) {
+    return response.text(); // Direct PDB text
+  } else {
+    const data = await response.json();
+    const pdbResponse = await fetch(data.url);
+    return pdbResponse.text(); // PDB from URL
+  }
+};
+
+// Usage with Three.js PDB loader
+import { PDBLoader } from 'three/examples/jsm/loaders/PDBLoader.js';
+
+const load3DMolecule = async (moleculeName) => {
+  const pdbData = await get3DPDBData(moleculeName);
+
+  const loader = new PDBLoader();
+  const pdb = loader.parse(pdbData);
+
+  // Add to scene
+  scene.add(pdb);
+  return pdb;
+};
+```
+
+### Enhanced Endpoints (Recommended)
+
+Get both 2D and 3D data in a single request:
+
+```javascript
+const getMoleculeData = async (moleculeName) => {
+  const response = await fetch('/render/molecule', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      molecule_name: moleculeName,
+      render_type: "both", // "2d_transparent", "3d_pdb", or "both"
+      size: "medium", // "small", "medium", "large"
+      quality: "high" // "fast", "high", "publication"
+    })
+  });
+
+  const data = await response.json();
+  return {
+    name: data.molecule_name,
+    png: data.png_base64 ? `data:image/png;base64,${data.png_base64}` : data.png_url,
+    pdb: data.pdb_data,
+    metadata: data.metadata
+  };
+};
+
+// Usage
+const { png, pdb } = await getMoleculeData('caffeine');
+document.getElementById('molecule-img').src = png;
+// Load PDB into Three.js...
+```
+
+### Complete Three.js Integration Example
+
+```javascript
+import * as THREE from 'three';
+import { PDBLoader } from 'three/examples/jsm/loaders/PDBLoader.js';
+
+class MoleculeViewer {
+  constructor(containerId) {
+    this.container = document.getElementById(containerId);
+    this.scene = new THREE.Scene();
+    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    this.renderer = new THREE.WebGLRenderer({ alpha: true });
+
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.container.appendChild(this.renderer.domElement);
+
+    this.loader = new PDBLoader();
+  }
+
+  async loadMolecule(moleculeName) {
+    try {
+      // Get PDB data from API
+      const pdbData = await get3DPDBData(moleculeName);
+
+      // Parse with Three.js
+      const pdb = this.loader.parse(pdbData);
+
+      // Style the molecule
+      pdb.traverse((child) => {
+        if (child.isMesh) {
+          child.material.transparent = true;
+          child.material.opacity = 0.8;
+        }
+      });
+
+      // Add to scene
+      this.scene.add(pdb);
+
+      // Position camera
+      const box = new THREE.Box3().setFromObject(pdb);
+      const center = box.getCenter(new THREE.Vector3());
+      const size = box.getSize(new THREE.Vector3());
+
+      this.camera.position.copy(center);
+      this.camera.position.z += size.length();
+      this.camera.lookAt(center);
+
+      return pdb;
+    } catch (error) {
+      console.error('Failed to load molecule:', error);
+    }
+  }
+
+  render() {
+    this.renderer.render(this.scene, this.camera);
+  }
+}
+
+// Usage
+const viewer = new MoleculeViewer('molecule-container');
+await viewer.loadMolecule('caffeine');
+viewer.render();
+```
+
+## API Routes
+
+### 1. Graphic Routes (`/graphic`)
+
+Generate scientific diagrams from natural language descriptions using YAML specifications.
+
+#### `POST /graphic/plan`
+
+Generate a YAML specification from a natural language description.
+
+**Request Schema:**
+```json
+{
+  "brief": "string (required) - Natural language description of the desired diagram",
+  "context": "string (default: 'Educational molecular diagram') - Context for the graphic",
+  "theme": "string (default: 'Clean scientific visualization') - Visual theme",
+  "width": "integer (default: 960) - Canvas width in pixels",
+  "height": "integer (default: 640) - Canvas height in pixels",
+  "sections": "string (optional) - Section breakdown",
+  "notes": "string (optional) - Additional requirements",
+  "model_name": "string (default: 'o3-mini') - LLM model to use"
+}
+```
+
+**Response Schema:**
+```json
+{
+  "yaml_spec": "string - Generated YAML specification",
+  "status": "string - Generation status (completed/failed)",
+  "error": "string (optional) - Error message if failed"
+}
+```
+
+#### `POST /graphic/validate`
+
+Validate a YAML specification against the schema.
+
+**Request Schema:**
+```json
+{
+  "yaml_spec": "string (required) - YAML specification to validate"
+}
+```
+
+**Response Schema:**
+```json
+{
+  "valid": "boolean - Whether the spec is valid",
+  "errors": "array - List of validation errors if any",
+  "status": "string - Validation status"
+}
+```
+
+#### `POST /graphic/render`
+
+Render a graphic from a YAML specification.
+
+**Request Schema:**
+```json
+{
+  "yaml_spec": "string (required) - YAML specification to render",
+  "deterministic": "boolean (default: true) - Use deterministic rendering",
+  "output_format": "string (default: 'svg') - Output format: svg, png, or both"
+}
+```
+
+**Response Schema:**
+```json
+{
+  "svg_content": "string - Rendered SVG content",
+  "png_base64": "string (optional) - Base64 encoded PNG if requested",
+  "status": "string - Rendering status",
+  "error": "string (optional) - Error message if failed"
+}
+```
+
+#### `POST /graphic/make`
+
+Full pipeline: plan, validate, and render a graphic in one request.
+
+**Request Schema:**
+```json
+{
+  "brief": "string (required) - Natural language description",
+  "width": "integer (default: 960) - Canvas width",
+  "height": "integer (default: 640) - Canvas height",
+  "model_name": "string (default: 'o3-mini') - LLM model to use",
+  "output_format": "string (default: 'both') - Output format: svg, png, or both"
+}
+```
+
+**Response Schema:**
+```json
+{
+  "yaml_spec": "string - Generated YAML specification",
+  "svg_content": "string - Rendered SVG content",
+  "png_base64": "string (optional) - Base64 encoded PNG if requested",
+  "job_id": "string (optional) - Job ID for async processing",
+  "status": "string - Processing status",
+  "error": "string (optional) - Error message if failed"
+}
+```
+
+#### `GET /graphic/job/{job_id}`
+
+Get status of an async job (placeholder for future async processing).
+
+**Response Schema:**
+```json
+{
+  "job_id": "string - Job identifier",
+  "status": "string - Job status",
+  "message": "string - Status message"
+}
+```
+
+### 2. Prompt Routes (`/prompt`)
+
+Process molecular prompts and generate various types of visualizations.
+
+#### `POST /prompt/generate-from-pubchem/`
+
+Generate molecule names from a natural language prompt.
+
+**Request Schema:**
+```json
+{
+  "prompt": "string (required) - Natural language prompt",
+  "model": "string (optional) - Preferred model type"
+}
+```
+
+**Response Schema:**
+```json
+{
+  "molecule_names": "array[string] - List of generated molecule names"
+}
+```
+
+#### `POST /prompt/validate-scientific/`
+
+Validate if a prompt is scientific in nature.
+
+**Request Schema:**
+```json
+{
+  "prompt": "string (required) - Prompt to validate",
+  "model": "string (optional) - Preferred model type"
+}
+```
+
+**Response Schema:**
+```json
+{
+  "is_molecular": "boolean - Whether the prompt is scientific/molecular"
+}
+```
+
+#### `POST /prompt/generate-molecule-diagram/`
+
+Generate a 2D molecule diagram from a text prompt.
+
+**Request Schema:**
+```json
+{
+  "prompt": "string (required) - Text description of the diagram",
+  "canvas_width": "integer (default: 960) - Canvas width in pixels",
+  "canvas_height": "integer (default: 640) - Canvas height in pixels",
+  "model": "string (optional) - LLM model to use"
+}
+```
+
+**Response Schema:**
+```json
+{
+  "diagram_image": "string - Base64 PNG or SVG string",
+  "diagram_plan": {
+    "plan": "string - Description of the diagram plan",
+    "molecule_list": "array - List of molecules and their positions",
+    "arrows": "array - List of arrows connecting molecules",
+    "canvas_width": "integer - Canvas width",
+    "canvas_height": "integer - Canvas height"
+  },
+  "status": "string - Processing status (completed/failed/processing)",
+  "job_id": "string (optional) - Job ID for async processing",
+  "error": "string (optional) - Error message if failed"
+}
+```
+
+#### `POST /prompt/fetch-molecule-data/`
+
+Fetch molecule information and PDB data.
+
+**Request Schema:**
+```json
+{
+  "query": "string (required) - Molecule name or identifier"
+}
+```
+
+**Response Schema:**
+```json
+{
+  "molecule_data": "object - Molecule information and PDB data"
+}
+```
+
+#### `POST /prompt/fetch-molecule-2d/`
+
+Return 2D coordinate information for a molecule.
+
+**Request Schema:**
+```json
+{
+  "query": "string (required) - Molecule name or identifier"
+}
+```
+
+**Response Schema:**
+```json
+{
+  "query": "string - Original query",
+  "status": "string - Processing status"
+}
+```
+
+#### `POST /prompt/fetch-molecule-layout/`
+
+Return 2D info for multiple molecules with layout boxes.
+
+**Request Schema:**
+```json
+{
+  "molecules": [
+    {
+      "query": "string - Molecule name or identifier",
+      "box": {
+        "x": "float - X coordinate",
+        "y": "float - Y coordinate",
+        "width": "float - Box width",
+        "height": "float - Box height"
+      }
+    }
+  ]
+}
+```
+
+**Response Schema:**
+```json
+{
+  "molecules": "array - List of molecules with layout information"
+}
+```
+
+#### `POST /prompt/sdf-to-pdb/`
+
+Convert SDF text to PDB format using RDKit.
+
+**Request Schema:**
+```json
+{
+  "sdf": "string (required) - SDF text to convert"
+}
+```
+
+**Response Schema:**
+```json
+{
+  "pdb_data": "string - Converted PDB data"
+}
+```
+
+### 3. RCSB Routes (`/rcsb`)
+
+Fetch protein structures and metadata from the RCSB Protein Data Bank.
+
+#### `POST /rcsb/fetch-structure/`
+
+Fetch a protein structure by identifier.
+
+**Request Schema:**
+```json
+{
+  "identifier": "string (required) - PDB identifier (e.g., '1ubq')",
+  "format": "string (default: 'pdb') - Format: pdb or cif"
+}
+```
+
+**Response Schema:**
+```json
+{
+  "data": "string - Structure data in requested format"
+}
+```
+
+#### `POST /rcsb/fetch-model/`
+
+Fetch an AlphaFold model by UniProt ID.
+
+**Request Schema:**
+```json
+{
+  "uniprot_id": "string (required) - UniProt identifier",
+  "format": "string (default: 'pdb') - Format: pdb or cif"
+}
+```
+
+**Response Schema:**
+```json
+{
+  "data": "string - Model data in requested format"
+}
+```
+
+#### `GET /rcsb/entry/{identifier}`
+
+Get metadata for a PDB entry.
+
+**Response Schema:**
+```json
+{
+  "metadata": "object - Entry metadata"
+}
+```
+
+#### `GET /rcsb/annotations/{identifier}`
+
+Get sequence annotations for a PDB entry.
+
+**Response Schema:**
+```json
+{
+  "annotations": "object - Sequence annotation data"
+}
+```
+
+#### `POST /rcsb/computed-model/`
+
+Fetch computed model information via GraphQL.
+
+**Request Schema:**
+```json
+{
+  "identifier": "string (required) - Structure identifier",
+  "model_id": "string (required) - Model identifier"
+}
+```
+
+**Response Schema:**
+```json
+{
+  "metadata": "object - Computed model metadata"
+}
+```
+
+#### `POST /rcsb/fetch-esm-model/`
+
+Fetch an ESM (Evolutionary Scale Modeling) model.
+
+**Request Schema:**
+```json
+{
+  "uniprot_id": "string (required) - UniProt identifier",
+  "format": "string (default: 'pdb') - Format: pdb or cif"
+}
+```
+
+**Response Schema:**
+```json
+{
+  "data": "string - ESM model data"
+}
+```
+
+#### `POST /rcsb/upload-structure/`
+
+Upload a structure for processing.
+
+**Request Schema:**
+```json
+{
+  "data": "string (required) - Structure data to upload",
+  "filename": "string (default: 'upload.pdb') - Filename for the upload"
+}
+```
+
+**Response Schema:**
+```json
+{
+  "upload_id": "string - Unique identifier for the uploaded structure"
+}
+```
+
+#### `POST /rcsb/align/`
+
+Perform pairwise alignment between two structures.
+
+**Request Schema:**
+```json
+{
+  "identifier1": "string (required) - First structure identifier",
+  "identifier2": "string (required) - Second structure identifier"
+}
+```
+
+**Response Schema:**
+```json
+{
+  "metadata": "object - Alignment results and metadata"
+}
+```
+
+#### `GET /rcsb/group/{group_id}`
+
+Get entries belonging to a specific group.
+
+**Response Schema:**
+```json
+{
+  "metadata": "object - Group entries and metadata"
+}
+```
+
+#### `GET /rcsb/feature-annotations/{identifier}`
+
+Get feature annotations for a structure.
+
+**Response Schema:**
+```json
+{
+  "annotations": "object - Feature annotation data"
+}
+```
+
+### 4. Render Routes (`/render`)
+
+Render 3D molecular structures using PyMOL with advanced rendering options.
+
+#### `POST /render`
+
+Render a molecular structure from a natural language description.
+
+**Request Schema:**
+```json
+{
+  "description": "string (required) - Natural language description of what to render",
+  "format": "string (default: 'image') - Output format: image, model, or animation",
+  "transparent_background": "boolean (default: false) - Use transparent background",
+  "ray_trace": "boolean (default: true) - Enable ray tracing for high quality",
+  "resolution": "array[int, int] (default: [1920, 1080]) - Output resolution",
+  "dpi": "integer (default: 300) - DPI for image output",
+  "ray_trace_mode": "string (default: 'default') - Ray trace mode: default, cartoon_outline, bw, poster",
+  "antialias": "boolean (default: true) - Enable antialiasing",
+  "ray_shadow": "boolean (default: true) - Enable ray shadows",
+  "depth_cue": "boolean (default: true) - Enable depth cueing",
+  "background_color": "string (default: 'white') - Background color"
+}
+```
+
+**Response:**
+- For small files: Direct file response with appropriate media type
+- For large files (>25MB): JSON response with URL to static file
+
+**Large File Response Schema:**
+```json
+{
+  "url": "string - URL to access the rendered file",
+  "metadata": "object - Rendering metadata including camera position, center, and bounding box"
+}
+```
+
+**Headers:**
+- `X-Metadata`: JSON string containing rendering metadata (for direct file responses)
+
+## Data Models
+
+### DiagramPlan
+```json
+{
+  "plan": "string - Description of the diagram plan",
+  "molecule_list": [
+    {
+      "molecule": "string - Molecule name or formula",
+      "x": "float - X coordinate",
+      "y": "float - Y coordinate",
+      "width": "float (optional) - Width of molecule bounds",
+      "height": "float (optional) - Height of molecule bounds",
+      "label": "string (optional) - Display label",
+      "label_position": "string (optional) - Label position: above, below, left, right"
+    }
+  ],
+  "arrows": [
+    {
+      "start": "array[float, float] - Starting coordinates",
+      "end": "array[float, float] - Ending coordinates",
+      "text": "string (optional) - Arrow label text"
+    }
+  ],
+  "canvas_width": "integer - Canvas width in pixels",
+  "canvas_height": "integer - Canvas height in pixels"
+}
+```
+
+### YAML Graphic Schema
+The graphic routes use a YAML specification format with the following structure:
+
+```yaml
+meta:
+  title: "string - Diagram title"
+  version: "string - Version (e.g., '1.0.0')"
+
+canvas:
+  w: integer  # Width in pixels
+  h: integer  # Height in pixels
+  dpi: integer (optional)  # DPI setting
+
+cells:
+  - id: "string - Unique cell identifier"
+    type: "string - Cell type: TEXT, DIAGRAM, IMAGE_GEN, COMPUTE, GROUP"
+    bbox:
+      x: number  # X coordinate
+      y: number  # Y coordinate
+      w: number  # Width
+      h: number  # Height
+    # Additional properties based on cell type
+    nodes: []    # For DIAGRAM cells
+    edges: []    # For DIAGRAM cells
+```
+
+## Error Handling
+
+All endpoints return appropriate HTTP status codes:
+
+- `200` - Success
+- `400` - Bad Request (invalid input)
+- `404` - Not Found
+- `422` - Validation Error
+- `429` - Rate Limited
+- `500` - Internal Server Error
+
+Error responses include a `detail` field with a descriptive error message.
+
+## Environment Variables
+
+- `OPENAI_API_KEY` - Required for LLM-powered features
+- `ENVIRONMENT` - Set to "development" or "production" for CORS configuration
+- `PYMOL_QUIET` - Set to "1" for headless PyMOL operation
+- `PYMOL_HEADLESS` - Set to "1" for headless PyMOL operation
+
+## Rate Limiting
+
+The server implements rate limiting for external API calls, particularly when fetching molecular data from PubChem and other external services.
+
+## Caching
+
+The render endpoint implements caching to improve performance for repeated requests. Cached files are stored in `/tmp/moleculens_cache/`.
+
+## Security
+
+- All PyMOL commands are validated before execution to prevent code injection
+- CORS is configured based on environment settings
+- File uploads are validated and sanitized
+
+## Examples
+
+### Generate a Simple Diagram
+
+```bash
+curl -X POST "http://localhost:8000/graphic/make" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "brief": "Show water H2O splitting into hydrogen H2 and oxygen O2",
+    "width": 800,
+    "height": 400
+  }'
+```
+
+### Render a Protein Structure
+
+```bash
+curl -X POST "http://localhost:8000/render" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "description": "Show the structure of ubiquitin with cartoon representation",
+    "format": "image",
+    "ray_trace": true,
+    "resolution": [1920, 1080]
+  }'
+```
+
+### Fetch Protein Structure
+
+```bash
+curl -X POST "http://localhost:8000/rcsb/fetch-structure/" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "identifier": "1ubq",
+    "format": "pdb"
+  }'
+```
+
+### Validate Scientific Prompt
+
+```bash
+curl -X POST "http://localhost:8000/prompt/validate-scientific/" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Show me the structure of caffeine"
+  }'
+```

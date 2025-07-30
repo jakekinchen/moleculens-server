@@ -32,7 +32,13 @@ extend-select = [
     "PYI",   # stub-style purity
     "UP",    # pyupgrade (already on, but explicit)
 ]
-ignore = ["E501"]                         # Long lines already enforced by formatter
+ignore = [
+    "E501",   # Long lines already enforced by formatter
+    "UP007",  # Use X | Y for type annotations (Python 3.9 compatibility)
+    "UP006",  # Use list instead of List (Python 3.9 compatibility)
+    "UP035",  # typing.List is deprecated (Python 3.9 compatibility)
+    "UP045",  # Use X | None for type annotations (Python 3.9 compatibility)
+]
 extend-fixable = ["TCH", "PYI"]          # Allow auto-fixing type issues
 
 [tool.ruff.format]                        # Black parity

@@ -220,7 +220,6 @@ The Moleculens server already leverages PyMOL and RDKit to render molecular imag
 
 * Implemented a simple `RCSBAgent` that downloads PDB or mmCIF files from the RCSB repository.
 * Added a `/rcsb/fetch-structure/` endpoint returning the raw structure data.
-* Registered this agent in `AgentFactory` and extended `AgentType` with a `RCSB` option.
 * Created tests that stub heavy dependencies (RDKit, OpenAI) and validate both geometry and RCSB routes.
 * Pinned `httpx` to a compatible version so Starlette's `TestClient` works correctly during testing.
 
@@ -232,7 +231,6 @@ Following the initial integration of the RCSB agent, the back-end now exposes ad
 * Extended `api/routers/rcsb/routes.py` with two new endpoints:
   * `POST /rcsb/fetch-model/` accepts a UniProt ID and format (pdb or cif) and returns a predicted model downloaded from the AlphaFold DB.
   * `GET /rcsb/entry/{identifier}` returns metadata for a PDB entry by delegating to the Data API.
-* Added a default `AgentModelConfig` for the `rcsb` agent type to `agent_model_config.py` to ensure consistent registration in the factory.
 * Added `tests/test_rcsb_extensions.py` which stubs external dependencies and verifies the new endpoints.  These tests follow the pattern used for geometry and RCSB structure tests by injecting fake modules and patching agent methods to avoid network calls.
 * The original `fetch_structure` endpoint and tests continue to function unchanged.
 
@@ -281,7 +279,6 @@ Coding Guidelines for Moleculens Server
 - **Type check**: `mypy` (currently non-strict mode, ignores missing imports for pymol/rdkit/pubchempy)
 
 ## Code Style
-- **Imports**: Use absolute imports from project root (`from agent_management.agents.rcsb_agent import RCSBAgent`)
 - **Formatting**: Black + isort with black profile
 - **Types**: Use type hints with `typing` module (`Dict[str, Any]`, `Literal["pdb", "cif"]`)
 - **Classes**: PascalCase with docstrings (`class RCSBAgent:`)
@@ -293,7 +290,6 @@ Coding Guidelines for Moleculens Server
 - **Security**: Whitelist PyMOL commands, validate inputs, no secrets in logs
 
 ## Project Structure
-- `api/agent_management/`: AI agents and LLM services
 - `api/routers/`: FastAPI route handlers with Pydantic models
 - `api/tests/`: Unit/integration tests with fixtures
 - `api/utils/`: Shared utilities (cache, security, rate limiting)

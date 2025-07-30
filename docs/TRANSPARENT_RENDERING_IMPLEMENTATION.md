@@ -228,9 +228,9 @@ png output.png, dpi=300, ray=1
 
 1. **`api/utils/security.py`** - Enhanced command whitelist
 2. **`api/routers/render/routes.py`** - Enhanced RenderRequest model and rendering pipeline
-3. **`api/agent_management/pymol_templates.py`** - New transparent and publication quality templates
-4. **`api/agent_management/pymol_translator.py`** - Updated dispatch table
-5. **`api/agent_management/scene_spec.py`** - Enhanced with RenderingOptions and new operations
+3. **`api/pymol/pymol_templates.py`** - New transparent and publication quality templates
+4. **`api/pymol/pymol_translator.py`** - Updated dispatch table
+5. **`api/pymol/scene_spec.py`** - Enhanced with RenderingOptions and new operations
 
 ## 🔧 Technical Implementation
 

@@ -17,8 +17,6 @@ from api.llm.openai_provider import generate_structured
 from api.pymol.clients import PubChemClient
 from api.pymol.services.rdkit_utils import sdf_to_pdb_block
 
-# Diagram Pydantic models are imported from api.agent_management.models to avoid duplication
-
 # Instantiate the router AFTER all Pydantic models and necessary imports are defined
 router = APIRouter(
     prefix="/prompt",
