@@ -95,14 +95,14 @@ def _generate_2d_molecule_svg(spec: dict, width: int, height: int, transparent: 
     try:
         # Import RDKit drawing modules
         from rdkit import Chem
-        from rdkit.Chem import Draw, AllChem
+        from rdkit.Chem import AllChem
         from rdkit.Chem.Draw import rdMolDraw2D
-        
+
         # Extract input parameters
         input_data = spec.get("input", {})
         kind = input_data.get("kind", "smiles")
         value = input_data.get("value", "")
-        
+
         # Parse molecule based on input type
         mol = None
         if kind == "smiles":
@@ -115,36 +115,36 @@ def _generate_2d_molecule_svg(spec: dict, width: int, height: int, transparent: 
             # For PDB input, we'd need different parsing
             # For now, create placeholder
             pass
-            
+
         if mol is None:
             # Fallback to placeholder if molecule parsing fails
             return _generate_placeholder_svg(width, height, transparent, spec_id, f"Invalid {kind}: {value}")
-        
+
         # Generate 2D coordinates if not present
         if mol.GetNumConformers() == 0:
-            AllChem.Compute2DCoords(mol)
-        
+            AllChem.Compute2DCoords(mol)  # type: ignore[attr-defined]
+
         # Create SVG drawer
         drawer = rdMolDraw2D.MolDraw2DSVG(width, height)
-        
+
         # Configure drawing options
         opts = drawer.drawOptions()
         if transparent:
             opts.clearBackground = False  # Don't draw background
         else:
             opts.backgroundColour = (1, 1, 1, 1)  # White background
-            
+
         # Set font size based on image size
         opts.baseFontSize = max(12, min(24, width // 40))
-        
+
         # Draw the molecule
         drawer.DrawMolecule(mol)
         drawer.FinishDrawing()
-        
+
         # Get SVG content
         svg_content = drawer.GetDrawingText()
-        return svg_content.encode('utf-8')
-        
+        return svg_content.encode("utf-8")
+
     except Exception as e:
         # Log error and return placeholder
         print(f"Error generating 2D molecule depiction: {e}")
@@ -155,7 +155,7 @@ def _generate_placeholder_svg(width: int, height: int, transparent: bool, spec_i
     """Generate placeholder SVG when molecular rendering fails."""
     svg_bg = "none" if transparent else "white"
     display_msg = error_msg if error_msg else f"Moleculens Figure {spec_id[:8]}"
-    
+
     svg = (
         f"<svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{height}' viewBox='0 0 {width} {height}'>"
         f"<rect width='100%' height='100%' fill='{svg_bg}'/>"
@@ -163,7 +163,7 @@ def _generate_placeholder_svg(width: int, height: int, transparent: bool, spec_i
         f"{display_msg}"
         f"</text></svg>"
     )
-    return svg.encode('utf-8')
+    return svg.encode("utf-8")
 
 
 def _render_assets(spec: dict, spec_id: str) -> None:
@@ -174,7 +174,7 @@ def _render_assets(spec: dict, spec_id: str) -> None:
     width = int(spec.get("render", {}).get("width", 1024) or 1024)
     height = int(spec.get("render", {}).get("height", 768) or 768)
     transparent = bool(spec.get("render", {}).get("transparent", True))
-    
+
     # Generate 2D molecular depiction
     svg_content = _generate_2d_molecule_svg(spec, width, height, transparent, spec_id)
     _write_once(asset_dir / "2d.svg", svg_content)
@@ -195,15 +195,120 @@ def _render_assets(spec: dict, spec_id: str) -> None:
         print(f"PNG conversion failed for {spec_id}: {e}")
         pass
 
-    # 3D PNG placeholder (re-use SVG converted as a stand-in)
-    try:
-        if not (asset_dir / "3d.png").exists():
-            if (asset_dir / "2d.png").exists():
-                # Duplicate as a placeholder to satisfy key presence
+    # 3D PNG: attempt real pipeline; fallback to 2D duplicate if unavailable
+    def _fallback_duplicate_2d_as_3d() -> None:
+        try:
+            if not (asset_dir / "3d.png").exists() and (asset_dir / "2d.png").exists():
                 data = (asset_dir / "2d.png").read_bytes()
                 _write_once(asset_dir / "3d.png", data)
-    except Exception:
-        pass
+        except Exception:
+            pass
+
+    if not (asset_dir / "3d.png").exists():
+        try:
+            # Build a PDB block from inputs
+            input_obj = spec.get("input", {})
+            kind = input_obj.get("kind")
+            value = input_obj.get("value")
+            conformer_method = input_obj.get("conformer_method", "etkdg")
+
+            pdb_block: Optional[str] = None
+
+            if kind == "smiles":
+                try:
+                    from rdkit import Chem  # type: ignore
+                    from rdkit.Chem import AllChem  # type: ignore
+
+                    mol = Chem.MolFromSmiles(value)
+                    if mol is not None:
+                        mol = Chem.AddHs(mol)
+                        if conformer_method == "etkdg":
+                            AllChem.EmbedMolecule(mol, AllChem.ETKDG())  # type: ignore[attr-defined]
+                            try:
+                                AllChem.MMFFOptimizeMolecule(mol)  # type: ignore[attr-defined]
+                            except Exception:
+                                pass
+                        pdb_block = Chem.MolToPDBBlock(mol)
+                except Exception:
+                    pdb_block = None
+
+            elif kind == "pdb" and isinstance(value, str) and value:
+                # Treat as PDB identifier and fetch from RCSB
+                try:
+                    import requests  # type: ignore
+
+                    url = f"https://files.rcsb.org/download/{value.upper()}.pdb"
+                    resp = requests.get(url, timeout=20)
+                    if resp.ok and resp.text:
+                        pdb_block = resp.text
+                except Exception:
+                    pdb_block = None
+
+            # If we have a PDB block, render with PyMOL
+            if pdb_block:
+                try:
+                    import os as _os
+
+                    _os.environ.setdefault("PYMOL_QUIET", "1")
+                    _os.environ.setdefault("PYMOL_HEADLESS", "1")
+                    import pymol  # type: ignore
+
+                    if hasattr(pymol, "finish_launching"):
+                        pymol.finish_launching(["pymol", "-cq"])  # quiet, headless
+                    cmd = getattr(pymol, "cmd", None)
+                    if cmd is None:
+                        _fallback_duplicate_2d_as_3d()
+                    else:
+                        three_d = spec.get("3d", {}) or {}
+                        representation = str(three_d.get("representation", "licorice")).lower()
+                        bg = str(three_d.get("bg", "transparent")).lower()
+                        dpi = int(spec.get("render", {}).get("dpi", 300) or 300)
+
+                        cmd.reinitialize()
+                        if hasattr(cmd, "read_pdbstr"):
+                            cmd.read_pdbstr(pdb_block, "mol")
+                        else:
+                            tmp = asset_dir / "_tmp.pdb"
+                            tmp.write_text(pdb_block)
+                            cmd.load(str(tmp), "mol")
+                            try:
+                                tmp.unlink()
+                            except Exception:
+                                pass
+
+                        cmd.hide("everything")
+                        if "cartoon+licorice" in representation:
+                            cmd.show("cartoon", "mol")
+                            cmd.show("sticks", "mol")
+                        elif "surface" in representation:
+                            cmd.show("surface", "mol")
+                        else:
+                            cmd.show("sticks", "mol")
+                        cmd.orient("mol")
+
+                        # Background
+                        if transparent:
+                            cmd.set("ray_opaque_background", 0)
+                        if bg == "black":
+                            cmd.do("bg_color black")
+                        elif bg == "white":
+                            cmd.do("bg_color white")
+                        else:
+                            # transparent uses white canvas but non-opaque when saving
+                            cmd.do("bg_color white")
+
+                        try:
+                            cmd.ray(width, height)
+                        except Exception:
+                            pass
+                        out_path = asset_dir / "3d.png"
+                        cmd.png(str(out_path), dpi=dpi, ray=1)
+                except Exception:
+                    _fallback_duplicate_2d_as_3d()
+            else:
+                _fallback_duplicate_2d_as_3d()
+        except Exception:
+            _fallback_duplicate_2d_as_3d()
 
     # Meta JSON (write-once)
     meta = {
