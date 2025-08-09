@@ -1,0 +1,58 @@
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: fastapi_app
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../:/app
+    networks:
+      - ai_network
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2", "--timeout-keep-alive", "4000", "--reload"]
+    working_dir: /app/api
+    environment:
+      - PYTHONPATH=/app:/app/api
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    # Resource limits to prevent runaway containers
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # Logging configuration to prevent log files from growing too large
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+networks:
+  ai_network:
+    driver: bridge
+
+# Optional: Add a monitoring service
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_SCHEDULE=0 0 2 * * *  # Run at 2 AM daily
+      - WATCHTOWER_INCLUDE_STOPPED=true
+    networks:
+      - ai_network
