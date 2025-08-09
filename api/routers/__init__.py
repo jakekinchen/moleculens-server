@@ -1,4 +1,5 @@
 from . import graphic, prompt, rcsb, render
+from .figure.routes import router as figure_router
 
 # Note: geometry module doesn't exist, commented out
 # from .geometry.routes import router as geometry_router
@@ -8,4 +9,14 @@ from .rcsb.routes import router as rcsb_router
 from .render.routes import router as render_router
 
 # Expose all router subpackages for convenient access
-__all__ = ["prompt", "render", "rcsb", "graphic", "graphic_router", "prompt_router", "rcsb_router", "render_router"]
+__all__ = [
+    "prompt",
+    "render",
+    "rcsb",
+    "graphic",
+    "graphic_router",
+    "prompt_router",
+    "rcsb_router",
+    "render_router",
+    "figure_router",
+]

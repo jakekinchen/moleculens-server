@@ -10,6 +10,7 @@ The MoleculeLens Server provides four main route groups:
 - **`/prompt`** - Process molecular prompts and generate visualizations
 - **`/rcsb`** - Fetch protein structures and metadata from RCSB PDB
 - **`/render`** - Render 3D molecular structures using PyMOL
+- **`/v1/figure`** - Deterministic, content-addressed figure generation (FigureSpec v1)
 
 ## Getting Started
 
@@ -219,6 +220,97 @@ viewer.render();
 ```
 
 ## API Routes
+
+### 5. FigureSpec v1 (`/v1/figure`)
+
+Deterministic, content-addressed figure generation API. Produces stable `spec_id` for the same spec using canonical JSON and SHA-256, and serves immutable assets at content-addressed URLs.
+
+#### Endpoints
+- `POST /v1/figure`
+  - Body: FigureSpec v1 JSON
+  - Behavior:
+    - Normalize deterministically (see Canonicalization) and compute `spec_id = sha256(canonical_json)`
+    - If known, return current `{ spec_id, status, urls? }`
+    - Else, enqueue work and return quickly with `{ spec_id, status: "queued" }`
+  - 200 OK response:
+    ```json
+    { "spec_id": "<64-hex>", "status": "queued|processing|completed|failed", "urls": { "svg2d": "...", "png2d": "...", "png3d": "...", "glb": "...", "meta": "..." } }
+    ```
+- `GET /v1/figure/{spec_id}`
+  - Returns current `{ spec_id, status, urls? }` or 404 if unknown
+
+Status values: `queued | processing | completed | failed`
+
+#### FigureSpec v1 schema (shape)
+- Required top-level keys: `version`, `input`, `render`, `style_preset`, `annotations`, `"3d"` (the key must literally be `"3d"`)
+- `version`: `1`
+- `input`: `{ kind: "smiles"|"pdb"|"name", value: string, protonation_pH: number, conformer_method: "etkdg"|"none" }`
+- `render`: `{ modes: ["2d"|"3d"+], outputs: ["svg"|"png"+], width: int>0, height: int>0, transparent: boolean, dpi: int>0 }`
+- `style_preset`: string (e.g., `"nature-2025"`)
+- `annotations`: `{ functional_groups: boolean, charge_labels: "none"|"minimal"|"all", atom_numbering: boolean, scale_bar: boolean, legend: "none"|"auto" }`
+- `3d`: `{ representation: "cartoon+licorice"|"surface"|"licorice", bg: "transparent"|"black"|"white", camera: { target: "auto", distance: "auto"|number>0, azimuth: number, elevation: number }, lighting: "three_point_soft", quality: "raytrace_high" }`
+
+#### Deterministic spec_id (must match `@moleculens/chem`)
+Canonicalization rules:
+- Round all finite numbers to 6 decimal places
+- Recursively sort all object keys lexicographically
+- Preserve array order (but canonicalize elements)
+- Serialize JSON with no whitespace: separators (",", ":")
+
+Reference Python (used verbatim):
+```python
+import json, hashlib
+
+def _round(x):
+    if isinstance(x, float): return round(x, 6)
+    if isinstance(x, list): return [_round(i) for i in x]
+    if isinstance(x, dict): return {k: _round(x[k]) for k in sorted(x)}
+    return x
+
+def canonical_json(obj: dict) -> str:
+    return json.dumps(_round(obj), separators=(",", ":"), ensure_ascii=False)
+
+def spec_id(spec: dict) -> str:
+    return hashlib.sha256(canonical_json(spec).encode('utf-8')).hexdigest()
+```
+
+Important: The JSON key must be `"3d"` (not `_3d`). If any model layer uses an alias, it is re-emitted as `"3d"` before hashing.
+
+#### Assets and URLs (content-addressed)
+- Stored under:
+  - `figures/{spec_id}/2d.svg`
+  - `figures/{spec_id}/2d.png`
+  - `figures/{spec_id}/3d.png`
+  - `figures/{spec_id}/scene.glb`
+  - `figures/{spec_id}/meta.json`
+- Response `urls` keys: `svg2d`, `png2d`, `png3d`, `glb`, `meta` (absolute URLs)
+
+#### Operational notes
+- Idempotent: Posting the same spec returns the same `spec_id` and existing status/urls
+- Responds in <2s; heavy work is done asynchronously
+- Write-once assets: once produced, not mutated for the same `spec_id`
+- CORS: requests originate from our Next.js server via proxy
+
+#### Example
+POST request
+```json
+{
+  "version": 1,
+  "input": { "kind": "smiles", "value": "CC(=O)Oc1ccccc1C(=O)O", "protonation_pH": 7.4, "conformer_method": "none" },
+  "render": { "modes": ["2d","3d"], "outputs": ["svg","png"], "width": 1024, "height": 768, "transparent": true, "dpi": 300 },
+  "style_preset": "nature-2025",
+  "annotations": { "functional_groups": true, "charge_labels": "minimal", "atom_numbering": false, "scale_bar": true, "legend": "auto" },
+  "3d": { "representation": "cartoon+licorice", "bg": "transparent", "camera": { "target": "auto", "distance": "auto", "azimuth": 30, "elevation": 15 }, "lighting": "three_point_soft", "quality": "raytrace_high" }
+}
+```
+
+Possible responses
+```json
+{ "spec_id": "<64-hex>", "status": "queued" }
+```
+```json
+{ "spec_id": "<64-hex>", "status": "completed", "urls": { "svg2d": "https://cdn/.../2d.svg", "png2d": "https://cdn/.../2d.png", "png3d": "https://cdn/.../3d.png", "glb": "https://cdn/.../scene.glb", "meta": "https://cdn/.../meta.json" } }
+```
 
 ### 1. Graphic Routes (`/graphic`)
 

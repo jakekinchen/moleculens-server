@@ -76,6 +76,7 @@ app.include_router(routers.prompt.router)
 app.include_router(routers.render.router)
 app.include_router(routers.rcsb.router)
 app.include_router(routers.graphic.router)
+app.include_router(routers.figure_router)
 
 # Enhanced render endpoints for client integration
 try:
