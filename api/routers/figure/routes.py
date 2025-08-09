@@ -214,7 +214,7 @@ def _render_assets(spec: dict, spec_id: str) -> None:
             input_obj = spec.get("input", {})
             kind = input_obj.get("kind")
             value = input_obj.get("value")
-            conformer_method = input_obj.get("conformer_method", "etkdg")
+            # conformer_method is accepted at input-level but we always embed for 3D
 
             pdb_block: Optional[str] = None
 
@@ -226,18 +226,49 @@ def _render_assets(spec: dict, spec_id: str) -> None:
                     mol = Chem.MolFromSmiles(value)
                     if mol is not None:
                         mol = Chem.AddHs(mol)
-                        if conformer_method == "etkdg":
+                        # For 3D rendering we must have 3D coordinates regardless of conformer_method
+                        # Always attempt ETKDG embedding and MMFF optimization
+                        try:
                             AllChem.EmbedMolecule(mol, AllChem.ETKDG())  # type: ignore[attr-defined]
                             try:
                                 AllChem.MMFFOptimizeMolecule(mol)  # type: ignore[attr-defined]
                             except Exception:
                                 pass
+                        except Exception as e:
+                            errors.append(f"rdkit_embed_failed: {e}")
                         if mol.GetNumConformers() > 0:
                             pdb_block = Chem.MolToPDBBlock(mol)
                         else:
                             errors.append("rdkit_conformer_failed")
                 except Exception as e:
                     errors.append(f"rdkit_error: {e}")
+
+            elif kind == "name" and isinstance(value, str) and value:
+                # Resolve name via PubChem and fetch SDF, then convert to PDB
+                try:
+                    from api.pymol.services.pubchem import PubChemSearchService  # local import to avoid import cycle
+                    from api.pymol.services.rdkit_utils import sdf_to_pdb_block  # local import
+
+                    svc = PubChemSearchService()
+                    compounds = svc.search_with_fallbacks(value)
+                    if not compounds:
+                        errors.append("pubchem_no_results")
+                    else:
+                        cid = getattr(compounds[0], "cid", None)
+                        if not isinstance(cid, int):
+                            errors.append("pubchem_invalid_cid")
+                        else:
+                            sdf_text = svc.fetch_sdf(cid, "3d") or svc.fetch_sdf(cid, "2d")
+                            if not sdf_text:
+                                errors.append("pubchem_no_sdf")
+                            else:
+                                pdb_from_sdf = sdf_to_pdb_block(sdf_text)
+                                if pdb_from_sdf:
+                                    pdb_block = pdb_from_sdf
+                                else:
+                                    errors.append("sdf_to_pdb_failed")
+                except Exception as e:
+                    errors.append(f"pubchem_error: {e}")
 
             elif kind == "pdb" and isinstance(value, str) and value:
                 # Treat as PDB identifier and fetch from RCSB
