@@ -1,6 +1,6 @@
 FROM continuumio/miniconda3
 
-RUN conda install -y -c conda-forge python=3.9 pymol-open-source=3.1.0 assimp ffmpeg && conda clean -afy
+RUN conda install -y -c conda-forge python=3.9 pymol-open-source=3.1.0 assimp ffmpeg rdkit && conda clean -afy
 
 WORKDIR /app
 COPY api/requirements.txt /app/requirements.txt
