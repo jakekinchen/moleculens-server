@@ -4,7 +4,7 @@
 set -e
 
 PROJECT_DIR="/opt/hackathon-server/sci-vis-ai-server"
-WEBHOOK_SECRET="moleculens-webhook-secret-2024"
+WEBHOOK_SECRET="moleculens-webhook-secret-2025"
 
 echo "🔗 Setting up GitHub webhook system..."
 
