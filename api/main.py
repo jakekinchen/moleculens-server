@@ -4,8 +4,6 @@ import threading
 import types
 from pathlib import Path
 
-import pymol
-
 # Note: model registry needs to be located or created
 # from api.agent_management.model_config import register_models
 from fastapi import FastAPI
@@ -98,7 +96,21 @@ except ImportError:
 
 # ----- PyMOL ---------------------------------------------------------------
 try:
-    import pymol  # type: ignore
+    # Import the actual PyMOL library, not our local api.pymol module
+    import pymol as _pymol_lib  # type: ignore
+    # Check if it's the real PyMOL with finish_launching
+    if hasattr(_pymol_lib, 'finish_launching'):
+        pymol = _pymol_lib
+    else:
+        # It's pymol2 API, use different initialization
+        pymol = _pymol_lib
+        # For pymol2, we need to use pymol2.PyMOL() instead of finish_launching
+        def _pymol2_init(*args, **kwargs):
+            """Initialize PyMOL using pymol2 API."""
+            if not hasattr(pymol, '_initialized'):
+                pymol._initialized = True
+                # pymol2 auto-initializes, no explicit launch needed
+        pymol.finish_launching = _pymol2_init  # type: ignore
 except ModuleNotFoundError:
     pymol = types.ModuleType("pymol")
 
