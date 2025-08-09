@@ -90,36 +90,109 @@ def _write_once(path: Path, content: bytes) -> None:
     tmp.replace(path)
 
 
-def _render_assets(spec: dict, spec_id: str) -> None:
-    # Minimal, deterministic placeholders to satisfy contracts; heavy work can be replaced with real pipeline
-    asset_dir = _asset_dir(spec_id)
+def _generate_2d_molecule_svg(spec: dict, width: int, height: int, transparent: bool, spec_id: str) -> bytes:
+    """Generate actual 2D molecular depiction using RDKit."""
+    try:
+        # Import RDKit drawing modules
+        from rdkit import Chem
+        from rdkit.Chem import Draw, AllChem
+        from rdkit.Chem.Draw import rdMolDraw2D
+        
+        # Extract input parameters
+        input_data = spec.get("input", {})
+        kind = input_data.get("kind", "smiles")
+        value = input_data.get("value", "")
+        
+        # Parse molecule based on input type
+        mol = None
+        if kind == "smiles":
+            mol = Chem.MolFromSmiles(value)
+        elif kind == "name":
+            # For molecule names, we'd need to resolve to SMILES first
+            # For now, treat as SMILES if it looks like one, otherwise create placeholder
+            mol = Chem.MolFromSmiles(value)
+        elif kind == "pdb":
+            # For PDB input, we'd need different parsing
+            # For now, create placeholder
+            pass
+            
+        if mol is None:
+            # Fallback to placeholder if molecule parsing fails
+            return _generate_placeholder_svg(width, height, transparent, spec_id, f"Invalid {kind}: {value}")
+        
+        # Generate 2D coordinates if not present
+        if mol.GetNumConformers() == 0:
+            AllChem.Compute2DCoords(mol)
+        
+        # Create SVG drawer
+        drawer = rdMolDraw2D.MolDraw2DSVG(width, height)
+        
+        # Configure drawing options
+        opts = drawer.drawOptions()
+        if transparent:
+            opts.clearBackground = False  # Don't draw background
+        else:
+            opts.backgroundColour = (1, 1, 1, 1)  # White background
+            
+        # Set font size based on image size
+        opts.baseFontSize = max(12, min(24, width // 40))
+        
+        # Draw the molecule
+        drawer.DrawMolecule(mol)
+        drawer.FinishDrawing()
+        
+        # Get SVG content
+        svg_content = drawer.GetDrawingText()
+        return svg_content.encode('utf-8')
+        
+    except Exception as e:
+        # Log error and return placeholder
+        print(f"Error generating 2D molecule depiction: {e}")
+        return _generate_placeholder_svg(width, height, transparent, spec_id, f"Rendering error: {str(e)}")
 
-    # 2D SVG placeholder honoring width/height and transparency flag
-    width = int(spec.get("render", {}).get("width", 1024) or 1024)
-    height = int(spec.get("render", {}).get("height", 768) or 768)
-    transparent = bool(spec.get("render", {}).get("transparent", True))
+
+def _generate_placeholder_svg(width: int, height: int, transparent: bool, spec_id: str, error_msg: str = "") -> bytes:
+    """Generate placeholder SVG when molecular rendering fails."""
     svg_bg = "none" if transparent else "white"
+    display_msg = error_msg if error_msg else f"Moleculens Figure {spec_id[:8]}"
+    
     svg = (
         f"<svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{height}' viewBox='0 0 {width} {height}'>"
         f"<rect width='100%' height='100%' fill='{svg_bg}'/>"
-        f"<text x='{width // 2}' y='{height // 2}' dominant-baseline='middle' text-anchor='middle' font-family='Helvetica' font-size='24'>"
-        f"Moleculens Figure {spec_id[:8]}"  # deterministic label
+        f"<text x='{width // 2}' y='{height // 2}' dominant-baseline='middle' text-anchor='middle' font-family='Helvetica' font-size='16'>"
+        f"{display_msg}"
         f"</text></svg>"
-    ).encode()
-    _write_once(asset_dir / "2d.svg", svg)
+    )
+    return svg.encode('utf-8')
+
+
+def _render_assets(spec: dict, spec_id: str) -> None:
+    # Real molecular rendering pipeline replacing placeholders
+    asset_dir = _asset_dir(spec_id)
+
+    # Extract rendering parameters
+    width = int(spec.get("render", {}).get("width", 1024) or 1024)
+    height = int(spec.get("render", {}).get("height", 768) or 768)
+    transparent = bool(spec.get("render", {}).get("transparent", True))
+    
+    # Generate 2D molecular depiction
+    svg_content = _generate_2d_molecule_svg(spec, width, height, transparent, spec_id)
+    _write_once(asset_dir / "2d.svg", svg_content)
 
     # 2D PNG via cairosvg (optional dependency is present in requirements)
     try:
         import cairosvg  # type: ignore
 
         png_bytes = cairosvg.svg2png(
-            bytestring=svg,
+            bytestring=svg_content,  # Use the actual SVG content, not undefined 'svg'
             output_width=width,
             output_height=height,
             dpi=int(spec.get("render", {}).get("dpi", 300) or 300),
         )
         _write_once(asset_dir / "2d.png", png_bytes)
-    except Exception:
+    except Exception as e:
+        # Log the error for debugging
+        print(f"PNG conversion failed for {spec_id}: {e}")
         pass
 
     # 3D PNG placeholder (re-use SVG converted as a stand-in)
