@@ -198,7 +198,7 @@ deploy_application() {
     
     # Stop existing containers
     log "Stopping existing containers..."
-    docker-compose down --remove-orphans || true
+    cd /opt/hackathon-server/sci-vis-ai-server/api && docker-compose down --remove-orphans || true
     
     # Clean up stopped containers
     log "Cleaning up stopped containers..."
@@ -206,14 +206,14 @@ deploy_application() {
     
     # Build new containers
     log "Building new containers..."
-    if ! timeout $MAX_DEPLOY_TIME docker-compose build; then
+    if ! timeout $MAX_DEPLOY_TIME cd /opt/hackathon-server/sci-vis-ai-server/api && docker-compose build; then
         error "Docker build failed or timed out"
         return 1
     fi
     
     # Start new containers
     log "Starting new containers..."
-    if ! docker-compose up -d; then
+    if ! cd /opt/hackathon-server/sci-vis-ai-server/api && docker-compose up -d; then
         error "Failed to start containers"
         return 1
     fi
@@ -297,8 +297,8 @@ rollback_deployment() {
         if git reset --hard "$BACKUP_COMMIT"; then
             log "Redeploying previous version..."
             cd api
-            docker-compose down --remove-orphans || true
-            docker-compose up -d || true
+            cd /opt/hackathon-server/sci-vis-ai-server/api && docker-compose down --remove-orphans || true
+            cd /opt/hackathon-server/sci-vis-ai-server/api && docker-compose up -d || true
             
             # Wait a bit and check
             sleep 10
