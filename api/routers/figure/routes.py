@@ -167,50 +167,54 @@ def _generate_placeholder_svg(width: int, height: int, transparent: bool, spec_i
 
 
 def _render_assets(spec: dict, spec_id: str) -> None:
-    # Real molecular rendering pipeline replacing placeholders
+    # Real molecular rendering pipeline replacing placeholders, honoring modes
     asset_dir = _asset_dir(spec_id)
 
     # Extract rendering parameters
-    width = int(spec.get("render", {}).get("width", 1024) or 1024)
-    height = int(spec.get("render", {}).get("height", 768) or 768)
-    transparent = bool(spec.get("render", {}).get("transparent", True))
+    render_obj = spec.get("render", {}) or {}
+    modes = [str(m).lower() for m in (render_obj.get("modes") or [])]
+    want_2d = ("2d" in modes) or not modes  # default to 2D if modes not specified
+    want_3d = "3d" in modes
 
-    # Generate 2D molecular depiction
-    svg_content = _generate_2d_molecule_svg(spec, width, height, transparent, spec_id)
-    _write_once(asset_dir / "2d.svg", svg_content)
+    width = int(render_obj.get("width", 1024) or 1024)
+    height = int(render_obj.get("height", 768) or 768)
+    transparent = bool(render_obj.get("transparent", True))
+    dpi = int(render_obj.get("dpi", 300) or 300)
 
-    # 2D PNG via cairosvg (optional dependency is present in requirements)
-    try:
-        import cairosvg  # type: ignore
+    # Collect meta diagnostics
+    errors: list[str] = []
+    renderers: dict[str, str] = {}
 
-        png_bytes = cairosvg.svg2png(
-            bytestring=svg_content,  # Use the actual SVG content, not undefined 'svg'
-            output_width=width,
-            output_height=height,
-            dpi=int(spec.get("render", {}).get("dpi", 300) or 300),
-        )
-        _write_once(asset_dir / "2d.png", png_bytes)
-    except Exception as e:
-        # Log the error for debugging
-        print(f"PNG conversion failed for {spec_id}: {e}")
-        pass
+    # Generate 2D molecular depiction only if requested
+    if want_2d:
+        svg_content = _generate_2d_molecule_svg(spec, width, height, transparent, spec_id)
+        _write_once(asset_dir / "2d.svg", svg_content)
 
-    # 3D PNG: attempt real pipeline; fallback to 2D duplicate if unavailable
-    def _fallback_duplicate_2d_as_3d() -> None:
+        # 2D PNG via cairosvg
         try:
-            if not (asset_dir / "3d.png").exists() and (asset_dir / "2d.png").exists():
-                data = (asset_dir / "2d.png").read_bytes()
-                _write_once(asset_dir / "3d.png", data)
-        except Exception:
-            pass
+            import cairosvg  # type: ignore
 
-    if not (asset_dir / "3d.png").exists():
+            png_bytes = cairosvg.svg2png(
+                bytestring=svg_content,
+                output_width=width,
+                output_height=height,
+                dpi=dpi,
+            )
+            _write_once(asset_dir / "2d.png", png_bytes)
+            renderers["2d"] = "rdkit"
+        except Exception as e:
+            print(f"[{spec_id}] 2D PNG conversion failed: {e}")
+            errors.append(f"2d_png_error: {e}")
+
+    # 3D PNG generation only if requested; no silent 2D duplication
+    if want_3d:
+        three_d_ok = False
         try:
             # Build a PDB block from inputs
             input_obj = spec.get("input", {})
             kind = input_obj.get("kind")
             value = input_obj.get("value")
-            conformer_method = input_obj.get("conformer_method", "etkdg")
+            # conformer_method is accepted at input-level but we always embed for 3D
 
             pdb_block: Optional[str] = None
 
@@ -222,15 +226,49 @@ def _render_assets(spec: dict, spec_id: str) -> None:
                     mol = Chem.MolFromSmiles(value)
                     if mol is not None:
                         mol = Chem.AddHs(mol)
-                        if conformer_method == "etkdg":
+                        # For 3D rendering we must have 3D coordinates regardless of conformer_method
+                        # Always attempt ETKDG embedding and MMFF optimization
+                        try:
                             AllChem.EmbedMolecule(mol, AllChem.ETKDG())  # type: ignore[attr-defined]
                             try:
                                 AllChem.MMFFOptimizeMolecule(mol)  # type: ignore[attr-defined]
                             except Exception:
                                 pass
-                        pdb_block = Chem.MolToPDBBlock(mol)
-                except Exception:
-                    pdb_block = None
+                        except Exception as e:
+                            errors.append(f"rdkit_embed_failed: {e}")
+                        if mol.GetNumConformers() > 0:
+                            pdb_block = Chem.MolToPDBBlock(mol)
+                        else:
+                            errors.append("rdkit_conformer_failed")
+                except Exception as e:
+                    errors.append(f"rdkit_error: {e}")
+
+            elif kind == "name" and isinstance(value, str) and value:
+                # Resolve name via PubChem and fetch SDF, then convert to PDB
+                try:
+                    from api.pymol.services.pubchem import PubChemSearchService  # local import to avoid import cycle
+                    from api.pymol.services.rdkit_utils import sdf_to_pdb_block  # local import
+
+                    svc = PubChemSearchService()
+                    compounds = svc.search_with_fallbacks(value)
+                    if not compounds:
+                        errors.append("pubchem_no_results")
+                    else:
+                        cid = getattr(compounds[0], "cid", None)
+                        if not isinstance(cid, int):
+                            errors.append("pubchem_invalid_cid")
+                        else:
+                            sdf_text = svc.fetch_sdf(cid, "3d") or svc.fetch_sdf(cid, "2d")
+                            if not sdf_text:
+                                errors.append("pubchem_no_sdf")
+                            else:
+                                pdb_from_sdf = sdf_to_pdb_block(sdf_text)
+                                if pdb_from_sdf:
+                                    pdb_block = pdb_from_sdf
+                                else:
+                                    errors.append("sdf_to_pdb_failed")
+                except Exception as e:
+                    errors.append(f"pubchem_error: {e}")
 
             elif kind == "pdb" and isinstance(value, str) and value:
                 # Treat as PDB identifier and fetch from RCSB
@@ -241,8 +279,10 @@ def _render_assets(spec: dict, spec_id: str) -> None:
                     resp = requests.get(url, timeout=20)
                     if resp.ok and resp.text:
                         pdb_block = resp.text
-                except Exception:
-                    pdb_block = None
+                    else:
+                        errors.append(f"rcsb_fetch_failed: {resp.status_code}")
+                except Exception as e:
+                    errors.append(f"rcsb_error: {e}")
 
             # If we have a PDB block, render with PyMOL
             if pdb_block:
@@ -257,12 +297,11 @@ def _render_assets(spec: dict, spec_id: str) -> None:
                         pymol.finish_launching(["pymol", "-cq"])  # quiet, headless
                     cmd = getattr(pymol, "cmd", None)
                     if cmd is None:
-                        _fallback_duplicate_2d_as_3d()
+                        errors.append("pymol_cmd_missing")
                     else:
                         three_d = spec.get("3d", {}) or {}
                         representation = str(three_d.get("representation", "licorice")).lower()
                         bg = str(three_d.get("bg", "transparent")).lower()
-                        dpi = int(spec.get("render", {}).get("dpi", 300) or 300)
 
                         cmd.reinitialize()
                         if hasattr(cmd, "read_pdbstr"):
@@ -294,21 +333,29 @@ def _render_assets(spec: dict, spec_id: str) -> None:
                         elif bg == "white":
                             cmd.do("bg_color white")
                         else:
-                            # transparent uses white canvas but non-opaque when saving
                             cmd.do("bg_color white")
 
                         try:
                             cmd.ray(width, height)
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            errors.append(f"pymol_ray_error: {e}")
                         out_path = asset_dir / "3d.png"
-                        cmd.png(str(out_path), dpi=dpi, ray=1)
-                except Exception:
-                    _fallback_duplicate_2d_as_3d()
+                        try:
+                            cmd.png(str(out_path), dpi=dpi, ray=1)
+                            three_d_ok = True
+                            renderers["3d"] = "pymol"
+                        except Exception as e:
+                            errors.append(f"pymol_png_error: {e}")
+                except Exception as e:
+                    errors.append(f"pymol_error: {e}")
             else:
-                _fallback_duplicate_2d_as_3d()
-        except Exception:
-            _fallback_duplicate_2d_as_3d()
+                errors.append("no_pdb_block")
+        except Exception as e:
+            errors.append(f"3d_pipeline_error: {e}")
+
+        # Do not silently duplicate 2D into 3D. Only create 3d.png on success.
+        if not three_d_ok:
+            renderers["3d"] = "none"
 
     # Meta JSON (write-once)
     meta = {
@@ -319,6 +366,8 @@ def _render_assets(spec: dict, spec_id: str) -> None:
         "style_preset": spec.get("style_preset"),
         "annotations": spec.get("annotations", {}),
         "3d": spec.get("3d", {}),
+        "renderers": renderers,
+        "errors": errors,
     }
     _write_once(asset_dir / "meta.json", json.dumps(meta, separators=(",", ":")).encode("utf-8"))
 
