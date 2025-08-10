@@ -251,7 +251,7 @@ def _render_assets(spec: dict, spec_id: str) -> None:
 
                     _os.environ.setdefault("PYMOL_QUIET", "1")
                     _os.environ.setdefault("PYMOL_HEADLESS", "1")
-                    import pymol  # type: ignore
+                    from api.pymol import get_system_pymol; pymol = get_system_pymol()  # type: ignore
 
                     if hasattr(pymol, "finish_launching"):
                         pymol.finish_launching(["pymol", "-cq"])  # quiet, headless
