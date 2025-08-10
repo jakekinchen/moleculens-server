@@ -300,7 +300,7 @@ def _render_assets(spec: dict, spec_id: str) -> None:
                         errors.append("pymol_cmd_missing")
                     else:
                         three_d = spec.get("3d", {}) or {}
-                        representation = str(three_d.get("representation", "licorice")).lower()
+                        representation = str(three_d.get("representation", "surface")).lower()
                         bg = str(three_d.get("bg", "transparent")).lower()
 
                         cmd.reinitialize()
