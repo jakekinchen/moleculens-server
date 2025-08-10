@@ -111,7 +111,6 @@ def plan(
             response_model=YAMLResponse,
             system_prompt=PLANNER_SYSTEM_PROMPT,
             model_name=model_name,
-            max_tokens=2000,
             temperature=(0.0 if model_name.startswith("o") else 0.3),  # o* models use 0.0 instead of None
         )
 
