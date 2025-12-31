@@ -1,0 +1,60 @@
+# Production Docker Compose configuration
+# Requires external Postgres and infra_app network
+
+version: '3.8'
+
+services:
+  molecule-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    container_name: molecule-api
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - MOLECULE_CACHE_DIR=/var/molecule-cache
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-*}
+    volumes:
+      - ./var/cache:/var/molecule-cache:ro
+      - ./var/logs:/var/log/molecule
+    networks:
+      - infra_app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  molecule-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+    container_name: molecule-worker
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - MOLECULE_CACHE_DIR=/var/molecule-cache
+      - PSI_SCRATCH=/var/psi4_scratch
+      - PSI4_NUM_THREADS=${PSI4_NUM_THREADS:-3}
+      - PSI4_MEMORY_MB=${PSI4_MEMORY_MB:-4096}
+      - WORKER_POLL_SECONDS=${WORKER_POLL_SECONDS:-1}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./var/cache:/var/molecule-cache:rw
+      - ./var/psi4_scratch:/var/psi4_scratch:rw
+      - ./var/logs:/var/log/molecule
+    networks:
+      - infra_app
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+        reservations:
+          memory: 4G
+
+networks:
+  infra_app:
+    external: true
+    name: infra_app

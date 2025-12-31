@@ -1,0 +1,50 @@
+# Development Docker Compose override
+# Adds Postgres and exposes API port
+
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: molecule-postgres
+    environment:
+      POSTGRES_USER: moleculens
+      POSTGRES_PASSWORD: moleculens
+      POSTGRES_DB: moleculens
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U moleculens"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  molecule-api:
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://moleculens:moleculens@postgres:5432/moleculens
+      - LOG_LEVEL=DEBUG
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./var/cache:/var/molecule-cache:rw
+
+  molecule-worker:
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://moleculens:moleculens@postgres:5432/moleculens
+      - LOG_LEVEL=DEBUG
+
+networks:
+  infra_app:
+    external: false
+    name: infra_app
+
+volumes:
+  postgres_data:

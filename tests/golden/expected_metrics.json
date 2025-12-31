@@ -1,0 +1,34 @@
+{
+  "molecule": "water",
+  "atoms": 3,
+  "method": "scf",
+  "basis": "sto-3g",
+  "gridSpacing": 0.25,
+  "isovalue": 0.05,
+  "tolerances": {
+    "vertexCount": {
+      "min": 10,
+      "max": 10000
+    },
+    "triangleCount": {
+      "min": 10,
+      "max": 10000
+    },
+    "boundingBox": {
+      "minDimension": 0.5,
+      "maxDimension": 10.0
+    },
+    "energyHomo": {
+      "min": -20.0,
+      "max": 0.0,
+      "unit": "eV"
+    },
+    "energyLumo": {
+      "min": -5.0,
+      "max": 20.0,
+      "unit": "eV"
+    }
+  },
+  "expectedOrbitals": ["homo", "lumo"],
+  "expectedDensity": true
+}

@@ -1,8 +1,12 @@
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+
+# C extensions
 *.so
+
+# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -14,20 +18,16 @@ lib/
 lib64/
 parts/
 sdist/
-var/
 wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-*.pyo
-*.pyd
 
-# Virtual Environment
-.env
-.venv
-env/
+# Virtual environments
+.venv/
 venv/
 ENV/
+env/
 
 # IDE
 .idea/
@@ -41,29 +41,36 @@ ENV/
 .coverage
 htmlcov/
 .tox/
+.nox/
+.hypothesis/
+
+# Linting
+.ruff_cache/
 .mypy_cache/
+
+# Local env
+.env
+.env.local
+*.local
+
+# Cache and data directories (runtime)
+var/cache/*
+!var/cache/.gitkeep
+var/psi4_scratch/*
+!var/psi4_scratch/.gitkeep
+var/logs/*
+!var/logs/.gitkeep
+
+# Artifacts (CI generates these)
+artifacts/*
+!artifacts/.gitkeep
 
 # macOS
 .DS_Store
-.AppleDouble
-.LSOverride
-Thumbs.db
 
-# Docker
-Dockerfile
-docker-compose.override.yml
-.dockerignore
+# Secrets
+*.pem
+*.key
 
-# Generated files
-rendered.png
-test_diagram_output.svg
-test_geometry.html
-*.log
-api/static/scene_*.js
-api/static/scene_*.html
-static/scene_*.html
-static/scene_*.js
-
-# Cache
-*.cache
-.DS_Store
+# uv lock (regenerated)
+uv.lock

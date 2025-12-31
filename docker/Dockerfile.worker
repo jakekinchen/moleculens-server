@@ -1,0 +1,45 @@
+# Dockerfile for Moleculens Worker service
+# Based on psi4/psi4 image with additional Python dependencies
+
+FROM psi4/psi4:latest
+
+# Switch to root for installation
+USER root
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    libpq-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.local/bin:$PATH"
+
+# Set working directory
+WORKDIR /app
+
+# Copy project files
+COPY pyproject.toml ./
+COPY src/ ./src/
+
+# Install dependencies into the system/conda Python
+# The psi4 image uses conda, so we install into that environment
+RUN uv pip install --system -e .
+
+# Create directories with proper permissions
+RUN mkdir -p /var/molecule-cache /var/psi4_scratch /var/log/molecule \
+    && chmod -R 777 /var/molecule-cache /var/psi4_scratch /var/log/molecule
+
+# Set Psi4 scratch directory
+ENV PSI_SCRATCH=/var/psi4_scratch
+
+# Run worker process
+CMD ["python", "-m", "moleculens.worker.main"]

@@ -1,47 +1,94 @@
 [project]
 name = "moleculens-server"
-version = "0.1.0"
-description = "Add your description here"
+version = "1.0.0"
+description = "Production-ready FastAPI microservice for Psi4 cubeprop orbital/density overlays for Three.js"
 readme = "README.md"
-authors = [
-    { name = "Jake Kinchen", email = "jake.kinchen@onetier.com" }
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Moleculens Team" }]
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.6.0",
+    "sqlalchemy>=2.0.36",
+    "psycopg2-binary>=2.9.10",
+    "alembic>=1.14.0",
+    "numpy>=1.26.0",
+    "scikit-image>=0.24.0",
+    "httpx>=0.28.0",
+    "structlog>=24.4.0",
 ]
-requires-python = ">=3.9.6"
-dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.8.0",
+    "mypy>=1.13.0",
+    "docker>=7.1.0",
+    "matplotlib>=3.9.0",
+    "pillow>=11.0.0",
+]
+worker = [
+    # psi4 is installed via conda in worker image
+]
+
+[project.scripts]
+moleculens-api = "moleculens.api.main:run"
+moleculens-worker = "moleculens.worker.main:run"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[dependency-groups]
-lint = [
-    "ruff>=0.12.5",
-]
+[tool.hatch.build.targets.wheel]
+packages = ["src/moleculens"]
 
 [tool.ruff]
-# Universal settings
-target-version = "py39"              # Match project Python version
-line-length = 120                    # Match former Black config
-extend-exclude = ["migrations", "build", ".venv", "__pycache__"]
-fix = true                           # Auto-apply fixes on save / CI
+target-version = "py311"
+line-length = 100
+src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "N", "B"]  # PEP8, flakes, isort, pyupgrade, pep8-naming, bugbear
-extend-select = [
-    "TCH",   # type-checking completeness
-    "PYI",   # stub-style purity
-    "UP",    # pyupgrade (already on, but explicit)
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "ARG",    # flake8-unused-arguments
+    "SIM",    # flake8-simplify
 ]
 ignore = [
-    "E501",   # Long lines already enforced by formatter
-    "UP007",  # Use X | Y for type annotations (Python 3.9 compatibility)
-    "UP006",  # Use list instead of List (Python 3.9 compatibility)
-    "UP035",  # typing.List is deprecated (Python 3.9 compatibility)
-    "UP045",  # Use X | None for type annotations (Python 3.9 compatibility)
+    "E501",   # line too long (handled by formatter)
+    "B008",   # do not perform function calls in argument defaults
+    "ARG001", # unused function argument
 ]
-extend-fixable = ["TCH", "PYI"]          # Allow auto-fixing type issues
 
-[tool.ruff.format]                        # Black parity
-indent-style = "space"
+[tool.ruff.lint.isort]
+known-first-party = ["moleculens"]
+
+[tool.ruff.format]
 quote-style = "double"
-docstring-code-format = true
+indent-style = "space"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-v --tb=short"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+ignore_missing_imports = true

@@ -1,1 +1,1 @@
-# Test package
+"""Test suite for Moleculens server."""

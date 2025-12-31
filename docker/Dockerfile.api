@@ -1,0 +1,49 @@
+# Dockerfile for Moleculens API service
+# Lightweight Python image with FastAPI
+
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.local/bin:$PATH"
+
+# Create non-root user
+RUN useradd -m -u 1000 moleculens
+
+# Set working directory
+WORKDIR /app
+
+# Copy project files
+COPY pyproject.toml ./
+COPY src/ ./src/
+
+# Install dependencies with uv
+RUN uv pip install --system -e .
+
+# Create directories
+RUN mkdir -p /var/molecule-cache /var/log/molecule \
+    && chown -R moleculens:moleculens /var/molecule-cache /var/log/molecule
+
+# Switch to non-root user
+USER moleculens
+
+# Expose port
+EXPOSE 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Run API server
+CMD ["uvicorn", "moleculens.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
