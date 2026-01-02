@@ -68,7 +68,15 @@ def worker_loop() -> None:
 
             # Extract parameters
             params = job.request_params
-            job_type = params.get("job_type", "orbital")
+
+            # Detect job type - check explicit type first, then fallback markers
+            job_type = params.get("job_type")
+            if job_type is None:
+                # Check for electrostatics marker set by electrostatics_routes
+                if params.get("basis") == "electrostatics" or params.get("orbitals") == ["electrostatics"]:
+                    job_type = "electrostatics"
+                else:
+                    job_type = "orbital"
 
             # Set up output directory
             output_dir = settings.molecule_cache_dir / job.cache_key
