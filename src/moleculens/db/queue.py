@@ -363,6 +363,25 @@ class JobQueue:
                 error=error_message[:200],
             )
 
+    def _update_job_params(self, job_id: str, params: dict[str, Any]) -> None:
+        """Update job request parameters.
+
+        Used to add additional parameters after job creation.
+
+        Args:
+            job_id: Job ID
+            params: Parameters to merge into request_params
+        """
+        with db_session() as session:
+            job = session.get(Job, job_id)
+            if job is None:
+                return
+
+            # Merge new params into existing
+            current_params = job.request_params or {}
+            current_params.update(params)
+            job.request_params = current_params
+
     def get_cache_entry(self, cache_key: str) -> CacheEntry | None:
         """Get cache entry by key."""
         with db_session() as session:

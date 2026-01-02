@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from moleculens import __version__
+from moleculens.api.electrostatics_routes import router as electrostatics_router
 from moleculens.api.routes import router
 from moleculens.core import get_logger, settings, setup_logging
 from moleculens.db import init_db
@@ -35,6 +36,7 @@ def create_app() -> FastAPI:
 
     # Include routes
     app.include_router(router)
+    app.include_router(electrostatics_router)
 
     @app.on_event("startup")
     async def startup_event() -> None:

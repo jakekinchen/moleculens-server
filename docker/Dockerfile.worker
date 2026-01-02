@@ -19,6 +19,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
+# Install xTB and RDKit for electrostatics computation
+# xTB provides GFN2-xTB charges, RDKit provides Gasteiger fallback
+RUN conda install -y -c conda-forge xtb rdkit \
+    && conda clean -afy
+
 # Install uv
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 ENV PATH="/root/.local/bin:$PATH"

@@ -7,6 +7,10 @@ import signal
 import time
 import uuid
 
+from moleculens.compute.electrostatics import (
+    ElectrostaticsComputationError,
+    run_electrostatics_computation,
+)
 from moleculens.compute.psi4_runner import Psi4ComputationError, run_psi4_computation
 from moleculens.core import get_logger, settings, setup_logging
 from moleculens.db import JobQueue, init_db
@@ -64,12 +68,7 @@ def worker_loop() -> None:
 
             # Extract parameters
             params = job.request_params
-            sdf_content = params["sdf_content"]
-            method = params["method"]
-            basis = params["basis"]
-            grid_spacing = params["grid_spacing"]
-            isovalue = params["isovalue"]
-            orbitals = params["orbitals"]
+            job_type = params.get("job_type", "orbital")
 
             # Set up output directory
             output_dir = settings.molecule_cache_dir / job.cache_key
@@ -80,17 +79,37 @@ def worker_loop() -> None:
             scratch_dir.mkdir(parents=True, exist_ok=True)
 
             try:
-                # Run computation
-                result = run_psi4_computation(
-                    sdf_content=sdf_content,
-                    method=method,
-                    basis=basis,
-                    grid_spacing=grid_spacing,
-                    isovalue=isovalue,
-                    orbitals=orbitals,
-                    output_dir=output_dir,
-                    scratch_dir=scratch_dir,
-                )
+                if job_type == "electrostatics":
+                    # Run electrostatics computation
+                    surface_params = params.get("surface", {})
+                    potential_params = params.get("potential", {})
+
+                    result = run_electrostatics_computation(
+                        sdf_content=params["sdf_content"],
+                        charge=params.get("charge", 0),
+                        multiplicity=params.get("multiplicity", 1),
+                        method=params.get("method", "xtb-gfn2"),
+                        grid_spacing=surface_params.get("grid_spacing", 0.25),
+                        probe_radius=surface_params.get("probe_radius", 1.4),
+                        padding=surface_params.get("padding", 3.0),
+                        softening_epsilon=potential_params.get("softening_epsilon", 0.3),
+                        clamp_percentiles=tuple(
+                            potential_params.get("clamp_percentiles", [5.0, 95.0])
+                        ),
+                        output_dir=output_dir,
+                    )
+                else:
+                    # Run Psi4 orbital computation
+                    result = run_psi4_computation(
+                        sdf_content=params["sdf_content"],
+                        method=params["method"],
+                        basis=params["basis"],
+                        grid_spacing=params["grid_spacing"],
+                        isovalue=params["isovalue"],
+                        orbitals=params["orbitals"],
+                        output_dir=output_dir,
+                        scratch_dir=scratch_dir,
+                    )
 
                 # Mark job complete
                 job_queue.complete_job(
@@ -103,10 +122,11 @@ def worker_loop() -> None:
                 logger.info(
                     "Job completed successfully",
                     job_id=job.id[:12],
+                    job_type=job_type,
                     compute_time_ms=result.compute_time_ms,
                 )
 
-            except Psi4ComputationError as e:
+            except (Psi4ComputationError, ElectrostaticsComputationError) as e:
                 logger.error("Computation failed", job_id=job.id[:12], error=str(e))
                 job_queue.fail_job(job.id, str(e))
 
