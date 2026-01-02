@@ -21,8 +21,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install xTB and RDKit for electrostatics computation
 # xTB provides GFN2-xTB charges, RDKit provides Gasteiger fallback
-RUN conda install -y -c conda-forge xtb rdkit \
-    && conda clean -afy
+# Note: psi4 image has conda installed but not in PATH - use /opt/conda/bin
+RUN /opt/conda/bin/conda install -y -c conda-forge xtb rdkit \
+    && /opt/conda/bin/conda clean -afy
 
 # Install uv
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
