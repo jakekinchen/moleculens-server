@@ -19,14 +19,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Install RDKit for electrostatics (Gasteiger charges)
-# xTB requires Fortran compiler and is complex to build - Gasteiger is sufficient for ESP
-RUN /opt/conda/bin/pip install rdkit
-
-# Install uv
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-ENV PATH="/root/.local/bin:$PATH"
-
 # Set working directory
 WORKDIR /app
 
@@ -34,9 +26,9 @@ WORKDIR /app
 COPY pyproject.toml README.md ./
 COPY src/ ./src/
 
-# Install dependencies into the system/conda Python
-# The psi4 image uses conda, so we install into that environment
-RUN uv pip install --system -e .
+# Install dependencies + RDKit for electrostatics (Gasteiger charges)
+# xTB requires Fortran compiler and is complex to build - Gasteiger is sufficient for ESP
+RUN /opt/conda/bin/pip install -e . rdkit
 
 # Create directories with proper permissions
 RUN mkdir -p /var/molecule-cache /var/psi4_scratch /var/log/molecule \
