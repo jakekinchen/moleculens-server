@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install RDKit for electrostatics (Gasteiger charges)
 # xTB requires Fortran compiler and is complex to build - Gasteiger is sufficient for ESP
-RUN pip install rdkit
+RUN /opt/conda/bin/pip install rdkit
 
 # Install uv
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
