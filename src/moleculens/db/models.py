@@ -35,9 +35,11 @@ class Job(Base):
     # Cache key for deduplication and artifact storage
     cache_key: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
 
-    # Job status
+    # Job status - use native_enum=False to use string values directly
     status: Mapped[JobStatus] = mapped_column(
-        Enum(JobStatus), default=JobStatus.PENDING, nullable=False
+        Enum(JobStatus, values_callable=lambda e: [x.value for x in e]),
+        default=JobStatus.PENDING,
+        nullable=False,
     )
 
     # Request parameters (stored as JSON)
