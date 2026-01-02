@@ -187,13 +187,14 @@ def _calculate_xtb_subprocess(
         )
 
 
-def calculate_charges_gasteiger(molecule: SDFMolecule) -> ChargeResult:
+def calculate_charges_gasteiger(molecule: SDFMolecule, sdf_content: str | None = None) -> ChargeResult:
     """Calculate Gasteiger charges using RDKit.
 
     This is the fallback when xTB is not available.
 
     Args:
         molecule: Parsed SDF molecule
+        sdf_content: Original SDF content for RDKit parsing (optional)
 
     Returns:
         ChargeResult with Gasteiger charges and computed dipole
@@ -204,22 +205,40 @@ def calculate_charges_gasteiger(molecule: SDFMolecule) -> ChargeResult:
     except ImportError as e:
         raise ImportError("RDKit required for Gasteiger charges") from e
 
-    # Build RDKit molecule from atoms (simple approach)
     positions = np.array([[a.x, a.y, a.z] for a in molecule.atoms])
 
-    # Create editable molecule
-    mol = Chem.RWMol()
-    conf = Chem.Conformer(molecule.num_atoms)
+    # Try parsing the SDF directly if content is provided
+    mol = None
+    if sdf_content:
+        try:
+            mol = Chem.MolFromMolBlock(sdf_content, sanitize=True, removeHs=False)
+        except Exception:
+            mol = None
 
-    for i, atom in enumerate(molecule.atoms):
-        rdatom = Chem.Atom(_element_to_number(atom.symbol))
-        mol.AddAtom(rdatom)
-        conf.SetAtomPosition(i, (atom.x, atom.y, atom.z))
+    # Fallback: build molecule from atoms with simple connectivity
+    if mol is None:
+        mol = Chem.RWMol()
+        conf = Chem.Conformer(molecule.num_atoms)
 
-    mol.AddConformer(conf, assignId=True)
+        for i, atom in enumerate(molecule.atoms):
+            rdatom = Chem.Atom(_element_to_number(atom.symbol))
+            mol.AddAtom(rdatom)
+            conf.SetAtomPosition(i, (atom.x, atom.y, atom.z))
+
+        mol.AddConformer(conf, assignId=True)
+
+        # Try to sanitize - if it fails, continue anyway
+        try:  # noqa: SIM105
+            Chem.SanitizeMol(mol)
+        except Exception:
+            pass  # Continue without sanitization
 
     # Compute Gasteiger charges
-    AllChem.ComputeGasteigerCharges(mol)
+    try:
+        AllChem.ComputeGasteigerCharges(mol)
+    except Exception:
+        # Fall back to simple electronegativity-based charges
+        return _compute_simple_charges(molecule)
 
     charges = np.array(
         [
@@ -245,6 +264,48 @@ def calculate_charges_gasteiger(molecule: SDFMolecule) -> ChargeResult:
         dipole_magnitude=float(np.linalg.norm(dipole_debye)),
         dipole_origin=origin,
         charge_model="rdkit-gasteiger",
+        convention="physics",
+    )
+
+
+def _compute_simple_charges(molecule: SDFMolecule) -> ChargeResult:
+    """Compute simple electronegativity-based charges.
+
+    This is a fallback when RDKit Gasteiger fails.
+    Uses simple Pauling electronegativity differences.
+    """
+    # Pauling electronegativities
+    electronegativities = {
+        "H": 2.20, "C": 2.55, "N": 3.04, "O": 3.44, "F": 3.98,
+        "P": 2.19, "S": 2.58, "Cl": 3.16, "Br": 2.96, "I": 2.66,
+        "Li": 0.98, "Na": 0.93, "K": 0.82, "Mg": 1.31, "Ca": 1.00,
+        "Fe": 1.83, "Zn": 1.65, "Cu": 1.90,
+    }
+
+    positions = np.array([[a.x, a.y, a.z] for a in molecule.atoms])
+
+    # Assign small charges based on electronegativity relative to carbon
+    c_en = 2.55
+    charges = np.array([
+        (c_en - electronegativities.get(a.symbol.capitalize(), c_en)) * 0.1
+        for a in molecule.atoms
+    ])
+
+    # Normalize to neutral molecule
+    charges = charges - charges.mean()
+
+    # Compute dipole
+    dipole_e_angstrom = np.sum(charges[:, np.newaxis] * positions, axis=0)
+    dipole_debye = dipole_e_angstrom * DEBYE_PER_E_ANGSTROM
+
+    origin = positions.mean(axis=0)
+
+    return ChargeResult(
+        charges=charges,
+        dipole_vector=dipole_debye,
+        dipole_magnitude=float(np.linalg.norm(dipole_debye)),
+        dipole_origin=origin,
+        charge_model="simple-electronegativity",
         convention="physics",
     )
 

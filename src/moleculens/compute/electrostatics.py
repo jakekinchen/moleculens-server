@@ -124,7 +124,7 @@ def run_electrostatics_computation(
         # Fall back to Gasteiger
         logger.info("Using Gasteiger charges (xTB not available or failed)")
         try:
-            charge_result = calculate_charges_gasteiger(molecule)
+            charge_result = calculate_charges_gasteiger(molecule, sdf_content)
         except ImportError as e:
             raise ElectrostaticsComputationError(
                 "Neither xTB nor RDKit available for charge calculation"
