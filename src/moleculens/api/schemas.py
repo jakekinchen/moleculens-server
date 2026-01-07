@@ -288,3 +288,105 @@ class ElectrostaticsJobResponse(BaseModel):
     compute_time_ms: float | None = Field(default=None, alias="computeTimeMs")
 
     model_config = {"populate_by_name": True}
+
+# =============================================================================
+# Conformer Schemas
+# =============================================================================
+
+
+class ConformerParams(BaseModel):
+    """Parameters for conformer generation."""
+
+    method: str = Field(
+        default="etkdg_v3",
+        description="Embedding method (etkdg_v3, etkdg_v2, etkdg)",
+        pattern=r"^[a-zA-Z0-9_-]+$",
+    )
+    opt: str = Field(
+        default="uff",
+        description="Optimization method (uff, mmff, none)",
+        pattern=r"^[a-zA-Z0-9_-]+$",
+    )
+    max_attempts: int = Field(default=10, ge=1, le=100, alias="maxAttempts")
+    max_opt_iters: int = Field(default=200, ge=0, le=2000, alias="maxOptIters")
+    add_hs: bool = Field(default=False, alias="addHs")
+
+    model_config = {"populate_by_name": True}
+
+    @field_validator("method")
+    @classmethod
+    def normalize_method(cls, v: str) -> str:
+        return v.lower()
+
+    @field_validator("opt")
+    @classmethod
+    def normalize_opt(cls, v: str) -> str:
+        v = v.lower()
+        if v in ("off", "false", "no"):
+            return "none"
+        return v
+
+
+class ConformerRequest(BaseModel):
+    """Request schema for conformer computation."""
+
+    molblock2d: str = Field(
+        ...,
+        description="2D molblock/SDF content with atom ordering",
+        min_length=10,
+    )
+    params: ConformerParams = Field(default_factory=ConformerParams)
+    wait_ms: int = Field(
+        default=0,
+        ge=0,
+        le=10000,
+        description="Max time to wait for job completion",
+        alias="waitMs",
+    )
+    geom_version: str = Field(
+        ...,
+        min_length=1,
+        description="Geometry cache version",
+        alias="geomVersion",
+    )
+
+    model_config = {"populate_by_name": True}
+
+
+class ConformerTimingMs(BaseModel):
+    """Timing information for conformer computation."""
+
+    embed: float | None = None
+    opt: float | None = None
+    total: float | None = None
+
+
+class ConformerMeta(BaseModel):
+    """Metadata for conformer computation."""
+
+    method: str
+    opt: str
+    max_attempts: int = Field(alias="maxAttempts")
+    max_opt_iters: int = Field(alias="maxOptIters")
+    add_hs: bool = Field(alias="addHs")
+    geom_version: str = Field(alias="geomVersion")
+    quality: str
+    has_metal: bool = Field(alias="hasMetal")
+    embed_status: str = Field(alias="embedStatus")
+    opt_status: str = Field(alias="optStatus")
+
+    model_config = {"populate_by_name": True}
+
+
+class ConformerJobResponse(BaseModel):
+    """Response schema for conformer job status/result."""
+
+    status: Literal["pending", "done", "failed"]
+    cache_key: str = Field(alias="cacheKey")
+    job_id: str | None = Field(default=None, alias="jobId")
+    sdf3d: str | None = None
+    meta: ConformerMeta | None = None
+    timing_ms: ConformerTimingMs | None = Field(default=None, alias="timingMs")
+    error_message: str | None = Field(default=None, alias="errorMessage")
+
+    model_config = {"populate_by_name": True}

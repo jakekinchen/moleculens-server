@@ -7,6 +7,10 @@ import signal
 import time
 import uuid
 
+from moleculens.compute.conformers import (
+    ConformerComputationError,
+    run_conformer_computation,
+)
 from moleculens.compute.electrostatics import (
     ElectrostaticsComputationError,
     run_electrostatics_computation,
@@ -106,6 +110,22 @@ def worker_loop() -> None:
                         ),
                         output_dir=output_dir,
                     )
+                elif job_type == "conformer":
+                    conformer_params = params.get("params", {})
+                    molblock2d = params.get("molblock2d")
+                    if not molblock2d:
+                        raise ConformerComputationError("Missing molblock2d for conformer job")
+
+                    result = run_conformer_computation(
+                        molblock2d=molblock2d,
+                        method=conformer_params.get("method", "etkdg_v3"),
+                        opt=conformer_params.get("opt", "none"),
+                        max_attempts=conformer_params.get("max_attempts", 10),
+                        max_opt_iters=conformer_params.get("max_opt_iters", 200),
+                        add_hs=conformer_params.get("add_hs", False),
+                        geom_version=params.get("geom_version", "unknown"),
+                        output_dir=output_dir,
+                    )
                 else:
                     # Run Psi4 orbital computation
                     result = run_psi4_computation(
@@ -134,7 +154,7 @@ def worker_loop() -> None:
                     compute_time_ms=result.compute_time_ms,
                 )
 
-            except (Psi4ComputationError, ElectrostaticsComputationError) as e:
+            except (Psi4ComputationError, ElectrostaticsComputationError, ConformerComputationError) as e:
                 logger.error("Computation failed", job_id=job.id[:12], error=str(e))
                 job_queue.fail_job(job.id, str(e))
 

@@ -71,6 +71,35 @@ GET /v1/orbitals/jobs/{jobId}
 GET /v1/orbitals/artifacts/{cacheKey}/{filename}
 ```
 
+### Submit Conformer
+```http
+POST /v1/conformers/compute
+Content-Type: application/json
+
+{
+  "molblock2d": "...",
+  "params": {
+    "method": "etkdg_v3",
+    "opt": "uff",
+    "maxAttempts": 10,
+    "maxOptIters": 200,
+    "addHs": false
+  },
+  "waitMs": 800,
+  "geomVersion": "2026-01-07_v1"
+}
+```
+
+### Poll Conformer Job Status
+```http
+GET /v1/conformers/jobs/{jobId}
+```
+
+### Download Conformer Artifact
+```http
+GET /v1/conformers/artifacts/{cacheKey}/structure.sdf
+```
+
 ## Response Format
 
 ```json

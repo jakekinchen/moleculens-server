@@ -224,6 +224,72 @@ class JobQueue:
             logger.info("Created new job", job_id=job_id[:12], cache_key=cache_key[:12])
             return job_id, False
 
+    def submit_job_with_cache_key(
+        self,
+        cache_key: str,
+        request_params: dict[str, Any],
+    ) -> tuple[str, bool]:
+        """Submit a new computation job with an explicit cache key.
+
+        Args:
+            cache_key: Pre-computed cache key
+            request_params: Job request parameters to store
+
+        Returns:
+            Tuple of (job_id, is_cached)
+        """
+        with db_session() as session:
+            # Check for cached result
+            cache_entry = session.get(CacheEntry, cache_key)
+            if cache_entry is not None:
+                # Update hit count
+                cache_entry.hit_count += 1
+                cache_entry.last_accessed_at = datetime.now(UTC)
+
+                existing_job = session.execute(
+                    select(Job)
+                    .where(Job.cache_key == cache_key)
+                    .where(Job.status == JobStatus.DONE)
+                    .limit(1)
+                ).scalar_one_or_none()
+
+                if existing_job:
+                    logger.info(
+                        "Returning cached result",
+                        cache_key=cache_key[:12],
+                        job_id=existing_job.id[:12],
+                    )
+                    return existing_job.id, True
+
+            # Check for pending/running job with same cache key
+            pending_job = session.execute(
+                select(Job)
+                .where(Job.cache_key == cache_key)
+                .where(Job.status.in_([JobStatus.PENDING, JobStatus.QUEUED, JobStatus.RUNNING]))
+                .limit(1)
+            ).scalar_one_or_none()
+
+            if pending_job:
+                logger.info(
+                    "Found pending job for cache key",
+                    cache_key=cache_key[:12],
+                    job_id=pending_job.id[:12],
+                )
+                return pending_job.id, False
+
+            # Create new job
+            job_id = str(uuid.uuid4())
+            job = Job(
+                id=job_id,
+                cache_key=cache_key,
+                status=JobStatus.PENDING,
+                request_params=request_params,
+            )
+            session.add(job)
+
+            logger.info("Created new job", job_id=job_id[:12], cache_key=cache_key[:12])
+            return job_id, False
+
     def get_job(self, job_id: str) -> Job | None:
         """Get job by ID."""
         with db_session() as session:
