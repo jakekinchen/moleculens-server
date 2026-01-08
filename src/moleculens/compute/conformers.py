@@ -44,7 +44,6 @@ def _build_etkdg_params(all_chem: Any, method: str, max_attempts: int) -> tuple[
     else:
         params = all_chem.ETKDG()
         method_norm = "etkdg"
-    params.maxAttempts = max_attempts
     return params, method_norm
 
 
@@ -138,10 +137,14 @@ def run_conformer_computation(
     quality = "planar_fallback"
 
     t0 = time.time()
-    embed_result = AllChem.EmbedMolecule(mol, params)
-    if embed_result != 0:
-        params.useRandomCoords = True
+    embed_result = 1
+    for attempt in range(max_attempts):
+        if attempt > 0:
+            params.useRandomCoords = True
+            mol.RemoveAllConformers()
         embed_result = AllChem.EmbedMolecule(mol, params)
+        if embed_result == 0:
+            break
     timings["embed"] = (time.time() - t0) * 1000
 
     if embed_result == 0:
