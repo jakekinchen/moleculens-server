@@ -47,6 +47,47 @@ def _job_status_to_response(job_status: JobStatus) -> str:
     return "pending"
 
 
+def _log_conformer_result(
+    job: Any,
+    cache_key: str,
+    meta: ConformerMeta | None,
+    timing: ConformerTimingMs | None,
+) -> None:
+    if meta is None:
+        return
+
+    already_logged = False
+    try:
+        already_logged = bool(job.request_params.get("conformer_log_emitted"))
+    except Exception:
+        already_logged = False
+
+    if already_logged:
+        return
+
+    embed_ms = timing.embed if timing else None
+    opt_ms = timing.opt if timing else None
+
+    logger.info(
+        "Conformer job result",
+        cache_key=cache_key,
+        has_metal=meta.has_metal,
+        quality=meta.quality,
+        embed_ms=embed_ms,
+        opt_ms=opt_ms,
+        planar_fallback=meta.quality == "planar_fallback",
+    )
+
+    try:
+        job_queue._update_job_params(job.id, {"conformer_log_emitted": True})
+    except Exception as e:
+        logger.warning(
+            "Failed to mark conformer log emitted",
+            cache_key=cache_key[:12],
+            error=str(e),
+        )
+
+
 def _load_conformer_result(
     cache_key: str,
     result_meta: dict[str, Any] | None,
@@ -102,6 +143,7 @@ def _build_conformer_response(job: Any, cache_key: str) -> ConformerJobResponse:
             response.sdf3d = sdf3d
             response.meta = meta
             response.timing_ms = timing
+            _log_conformer_result(job, cache_key, meta, timing)
         else:
             response.status = "failed"
             response.error_message = "Conformer result missing"
