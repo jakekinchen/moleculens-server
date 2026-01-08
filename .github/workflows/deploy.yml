@@ -40,14 +40,26 @@ jobs:
             docker compose -f docker-compose.yml build
             docker compose -f docker-compose.yml up -d
             
-            # Wait for health check
-            sleep 10
-            curl -f http://localhost:8000/health || exit 1
+            # Wait for health check with retry loop (up to 60 seconds)
+            echo Waiting for API to become healthy...
+            for i in {1..12}; do
+              if curl -sf http://localhost:8000/health > /dev/null 2>&1; then
+                echo Health check passed!
+                break
+              fi
+              if [ \$i -eq 12 ]; then
+                echo Health check failed after 60 seconds
+                docker compose logs molecule-api --tail=50
+                exit 1
+              fi
+              echo \"Attempt \$i/12 - waiting 5s...\"
+              sleep 5
+            done
             
             # Clean up old images
             docker image prune -f
             
-            echo Deployment complete
+            echo Deployment complete!
           "
 
       - name: Notify on failure
