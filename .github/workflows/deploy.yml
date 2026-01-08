@@ -41,13 +41,14 @@ jobs:
             docker compose -f docker-compose.yml up -d
             
             # Wait for health check with retry loop (up to 60 seconds)
+            # Use docker exec since port 8000 is not mapped to host
             echo Waiting for API to become healthy...
-            for i in {1..12}; do
-              if curl -sf http://localhost:8000/health > /dev/null 2>&1; then
-                echo Health check passed!
+            for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+              if docker exec molecule-api curl -sf http://localhost:8000/health > /dev/null 2>&1; then
+                echo Health check passed\!
                 break
               fi
-              if [ \$i -eq 12 ]; then
+              if [ \"\$i\" = \"12\" ]; then
                 echo Health check failed after 60 seconds
                 docker compose logs molecule-api --tail=50
                 exit 1
@@ -59,7 +60,7 @@ jobs:
             # Clean up old images
             docker image prune -f
             
-            echo Deployment complete!
+            echo Deployment complete\!
           "
 
       - name: Notify on failure
