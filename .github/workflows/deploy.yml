@@ -28,29 +28,28 @@ jobs:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
         run: |
-          ssh -i ~/.ssh/deploy_key ${DEPLOY_USER}@${DEPLOY_HOST} << 'EOF'
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "${DEPLOY_USER}@${DEPLOY_HOST}" "
             set -e
-
             cd ${DEPLOY_PATH}
-
+            
             # Pull latest code
             git fetch origin main
             git reset --hard origin/main
-
+            
             # Build and deploy
             docker compose -f docker-compose.yml build
             docker compose -f docker-compose.yml up -d
-
+            
             # Wait for health check
             sleep 10
             curl -f http://localhost:8000/health || exit 1
-
+            
             # Clean up old images
             docker image prune -f
-
-            echo "Deployment complete"
-          EOF
+            
+            echo Deployment complete
+          "
 
       - name: Notify on failure
         if: failure()
-        run: echo "Deployment failed! Check logs for details."
+        run: echo "Deployment failed\! Check logs for details."
