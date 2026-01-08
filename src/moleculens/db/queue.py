@@ -444,7 +444,7 @@ class JobQueue:
                 return
 
             # Merge new params into existing
-            current_params = job.request_params or {}
+            current_params = dict(job.request_params or {})
             current_params.update(params)
             job.request_params = current_params
 
