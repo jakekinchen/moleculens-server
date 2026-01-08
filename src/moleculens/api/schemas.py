@@ -289,6 +289,7 @@ class ElectrostaticsJobResponse(BaseModel):
 
     model_config = {"populate_by_name": True}
 
+
 # =============================================================================
 # Conformer Schemas
 # =============================================================================

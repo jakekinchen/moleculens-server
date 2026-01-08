@@ -9,7 +9,7 @@ import gzip
 import json
 import time
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 import numpy as np
@@ -242,7 +242,7 @@ class TestGoldenExample:
     def _generate_preview_images(
         self,
         orbitals: dict[str, Any],
-        density: Optional[dict[str, Any]],
+        density: dict[str, Any] | None,
         artifacts_dir: Path,
     ) -> None:
         """Generate simple 2D projection preview images."""

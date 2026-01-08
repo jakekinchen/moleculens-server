@@ -187,7 +187,9 @@ def _calculate_xtb_subprocess(
         )
 
 
-def calculate_charges_gasteiger(molecule: SDFMolecule, sdf_content: str | None = None) -> ChargeResult:
+def calculate_charges_gasteiger(
+    molecule: SDFMolecule, sdf_content: str | None = None
+) -> ChargeResult:
     """Calculate Gasteiger charges using RDKit.
 
     This is the fallback when xTB is not available.
@@ -276,20 +278,36 @@ def _compute_simple_charges(molecule: SDFMolecule) -> ChargeResult:
     """
     # Pauling electronegativities
     electronegativities = {
-        "H": 2.20, "C": 2.55, "N": 3.04, "O": 3.44, "F": 3.98,
-        "P": 2.19, "S": 2.58, "Cl": 3.16, "Br": 2.96, "I": 2.66,
-        "Li": 0.98, "Na": 0.93, "K": 0.82, "Mg": 1.31, "Ca": 1.00,
-        "Fe": 1.83, "Zn": 1.65, "Cu": 1.90,
+        "H": 2.20,
+        "C": 2.55,
+        "N": 3.04,
+        "O": 3.44,
+        "F": 3.98,
+        "P": 2.19,
+        "S": 2.58,
+        "Cl": 3.16,
+        "Br": 2.96,
+        "I": 2.66,
+        "Li": 0.98,
+        "Na": 0.93,
+        "K": 0.82,
+        "Mg": 1.31,
+        "Ca": 1.00,
+        "Fe": 1.83,
+        "Zn": 1.65,
+        "Cu": 1.90,
     }
 
     positions = np.array([[a.x, a.y, a.z] for a in molecule.atoms])
 
     # Assign small charges based on electronegativity relative to carbon
     c_en = 2.55
-    charges = np.array([
-        (c_en - electronegativities.get(a.symbol.capitalize(), c_en)) * 0.1
-        for a in molecule.atoms
-    ])
+    charges = np.array(
+        [
+            (c_en - electronegativities.get(a.symbol.capitalize(), c_en)) * 0.1
+            for a in molecule.atoms
+        ]
+    )
 
     # Normalize to neutral molecule
     charges = charges - charges.mean()

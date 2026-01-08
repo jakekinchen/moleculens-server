@@ -77,7 +77,9 @@ def worker_loop() -> None:
             job_type = params.get("job_type")
             if job_type is None:
                 # Check for electrostatics marker set by electrostatics_routes
-                if params.get("basis") == "electrostatics" or params.get("orbitals") == ["electrostatics"]:
+                if params.get("basis") == "electrostatics" or params.get("orbitals") == [
+                    "electrostatics"
+                ]:
                     job_type = "electrostatics"
                 else:
                     job_type = "orbital"
@@ -154,7 +156,11 @@ def worker_loop() -> None:
                     compute_time_ms=result.compute_time_ms,
                 )
 
-            except (Psi4ComputationError, ElectrostaticsComputationError, ConformerComputationError) as e:
+            except (
+                Psi4ComputationError,
+                ElectrostaticsComputationError,
+                ConformerComputationError,
+            ) as e:
                 logger.error("Computation failed", job_id=job.id[:12], error=str(e))
                 job_queue.fail_job(job.id, str(e))
 
