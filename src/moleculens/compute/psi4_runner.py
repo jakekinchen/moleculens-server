@@ -133,13 +133,17 @@ def run_psi4_computation(
 
     # Get orbital energies
     epsilon = wfn.epsilon_a()
-    homo_energy = float(epsilon.get(homo_idx - 1))  # 0-indexed for epsilon
-    lumo_energy = float(epsilon.get(lumo_idx - 1)) if lumo_idx <= epsilon.dim() else None
 
     # Convert to eV (1 Hartree = 27.211386 eV)
     HARTREE_TO_EV = 27.211386
-    homo_energy_ev = homo_energy * HARTREE_TO_EV
-    lumo_energy_ev = lumo_energy * HARTREE_TO_EV if lumo_energy else None
+
+    def orbital_energy_ev(index: int) -> float | None:
+        if index <= 0 or index > epsilon.dim():
+            return None
+        try:
+            return float(epsilon.get(index - 1)) * HARTREE_TO_EV
+        except Exception:
+            return None
 
     # Configure cubeprop
     # Grid spacing conversion: Angstrom to Bohr
@@ -226,11 +230,9 @@ def run_psi4_computation(
 
             orbital_data: dict[str, Any] = {"isovalue": isovalue}
 
-            # Get orbital energy
-            if orb_name == "homo":
-                orbital_data["energyEv"] = homo_energy_ev
-            elif orb_name == "lumo" and lumo_energy_ev is not None:
-                orbital_data["energyEv"] = lumo_energy_ev
+            energy_ev = orbital_energy_ev(idx)
+            if energy_ev is not None:
+                orbital_data["energyEv"] = energy_ev
 
             # Add mesh data
             if meshes.get("positive"):
