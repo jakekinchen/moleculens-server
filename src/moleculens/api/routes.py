@@ -16,12 +16,32 @@ from moleculens.api.schemas import (
     OrbitalResponse,
 )
 from moleculens.core import get_logger, settings
-from moleculens.db import JobQueue, JobStatus, get_db_engine
+from moleculens.db import Job, JobQueue, JobStatus, get_db_engine
 
 logger = get_logger(__name__)
 
 router = APIRouter()
 job_queue = JobQueue()
+
+
+def _missing_result_error(cache_key: str) -> str:
+    return f"Cached result missing for cache key {cache_key[:12]}"
+
+
+def _load_or_invalidate_done_result(job: Job) -> ComputeResult | None:
+    """Load a completed result or invalidate the stale cache entry."""
+    result = _load_result(job.cache_key, job.result_meta)
+    if result is not None:
+        return result
+
+    error_message = _missing_result_error(job.cache_key)
+    logger.warning(
+        "Completed job missing result payload; invalidating cache",
+        job_id=job.id[:12],
+        cache_key=job.cache_key[:12],
+    )
+    job_queue.invalidate_cache_key(job.cache_key, error_message)
+    return None
 
 
 @router.get("/health", response_model=HealthResponse)
@@ -90,7 +110,50 @@ async def compute_orbitals(request: ComputeRequest) -> JobResponse:
 
     # If cached or done, load result
     if job.status == JobStatus.DONE:
-        response.result = _load_result(job.cache_key, job.result_meta)
+        result = _load_or_invalidate_done_result(job)
+        if result is None:
+            retry_job_id, retry_is_cached = job_queue.submit_job(
+                sdf_content=request.sdf_content,
+                method=request.method,
+                basis=request.basis,
+                grid_spacing=request.grid_spacing,
+                isovalue=request.isovalue,
+                orbitals=request.orbitals,
+                inchi_key=request.inchi_key,
+            )
+            retry_job = job_queue.get_job(retry_job_id)
+            if retry_job is None:
+                raise HTTPException(status_code=500, detail="Job not found after cache recovery")
+
+            response = JobResponse(
+                cached=retry_is_cached,
+                jobId=retry_job.id,
+                status=retry_job.status.value,  # type: ignore[arg-type]
+                cacheKey=retry_job.cache_key,
+                createdAt=retry_job.created_at.isoformat() if retry_job.created_at else None,
+            )
+
+            if retry_job.status == JobStatus.DONE:
+                retry_result = _load_or_invalidate_done_result(retry_job)
+                if retry_result is None:
+                    return JobResponse(
+                        cached=False,
+                        jobId=retry_job.id,
+                        status="error",
+                        cacheKey=retry_job.cache_key,
+                        createdAt=retry_job.created_at.isoformat()
+                        if retry_job.created_at
+                        else None,
+                        computeTimeMs=retry_job.compute_time_ms,
+                        errorMessage=_missing_result_error(retry_job.cache_key),
+                    )
+
+                response.result = retry_result
+                response.compute_time_ms = retry_job.compute_time_ms
+
+            return response
+
+        response.result = result
         response.compute_time_ms = job.compute_time_ms
 
     return response
@@ -113,7 +176,19 @@ async def get_job_status(job_id: str) -> JobResponse:
     )
 
     if job.status == JobStatus.DONE:
-        response.result = _load_result(job.cache_key, job.result_meta)
+        result = _load_or_invalidate_done_result(job)
+        if result is None:
+            return JobResponse(
+                cached=False,
+                jobId=job.id,
+                status="error",
+                cacheKey=job.cache_key,
+                createdAt=job.created_at.isoformat() if job.created_at else None,
+                computeTimeMs=job.compute_time_ms,
+                errorMessage=_missing_result_error(job.cache_key),
+            )
+
+        response.result = result
     elif job.status == JobStatus.ERROR:
         response.error_message = job.error_message
 

@@ -19,12 +19,32 @@ from moleculens.api.schemas import (
     UnitsResponse,
 )
 from moleculens.core import get_logger, settings
-from moleculens.db import JobQueue, JobStatus
+from moleculens.db import Job, JobQueue, JobStatus
 
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/v1/electrostatics", tags=["electrostatics"])
 job_queue = JobQueue()
+
+
+def _missing_electrostatics_result_error(cache_key: str) -> str:
+    return f"Cached result missing for cache key {cache_key[:12]}"
+
+
+def _load_or_invalidate_electrostatics_result(job: Job) -> ElectrostaticsResult | None:
+    """Load a completed electrostatics result or invalidate the stale cache entry."""
+    result = _load_electrostatics_result(job.cache_key, job.result_meta)
+    if result is not None:
+        return result
+
+    error_message = _missing_electrostatics_result_error(job.cache_key)
+    logger.warning(
+        "Completed electrostatics job missing result payload; invalidating cache",
+        job_id=job.id[:12],
+        cache_key=job.cache_key[:12],
+    )
+    job_queue.invalidate_cache_key(job.cache_key, error_message)
+    return None
 
 
 def _compute_electrostatics_cache_key(
@@ -140,7 +160,64 @@ async def compute_electrostatics(request: ElectrostaticsRequest) -> Electrostati
 
     # If cached or done, load result
     if job.status == JobStatus.DONE:
-        response.result = _load_electrostatics_result(cache_key, job.result_meta)
+        result = _load_or_invalidate_electrostatics_result(job)
+        if result is None:
+            retry_job_id, retry_is_cached = job_queue.submit_job(
+                sdf_content=request.sdf_content,
+                method=request.method,
+                basis="electrostatics",
+                grid_spacing=request.surface.grid_spacing,
+                isovalue=0.0,
+                orbitals=["electrostatics"],
+                inchi_key=request.inchi_key,
+                geometry_hash=cache_key,
+            )
+            retry_job = job_queue.get_job(retry_job_id)
+            if retry_job is None:
+                raise HTTPException(status_code=500, detail="Job not found after cache recovery")
+
+            job_queue._update_job_params(
+                retry_job_id,
+                {
+                    "job_type": "electrostatics",
+                    "sdf_content": request.sdf_content,
+                    "charge": request.charge,
+                    "multiplicity": request.multiplicity,
+                    "method": request.method,
+                    "surface": surface_params,
+                    "potential": potential_params,
+                },
+            )
+
+            response = ElectrostaticsJobResponse(
+                cached=retry_is_cached,
+                jobId=retry_job.id,
+                status=retry_job.status.value,  # type: ignore[arg-type]
+                cacheKey=retry_job.cache_key,
+                createdAt=retry_job.created_at.isoformat() if retry_job.created_at else None,
+            )
+
+            if retry_job.status == JobStatus.DONE:
+                retry_result = _load_or_invalidate_electrostatics_result(retry_job)
+                if retry_result is None:
+                    return ElectrostaticsJobResponse(
+                        cached=False,
+                        jobId=retry_job.id,
+                        status="error",
+                        cacheKey=retry_job.cache_key,
+                        createdAt=retry_job.created_at.isoformat()
+                        if retry_job.created_at
+                        else None,
+                        computeTimeMs=retry_job.compute_time_ms,
+                        errorMessage=_missing_electrostatics_result_error(retry_job.cache_key),
+                    )
+
+                response.result = retry_result
+                response.compute_time_ms = retry_job.compute_time_ms
+
+            return response
+
+        response.result = result
         response.compute_time_ms = job.compute_time_ms
 
     return response
@@ -163,7 +240,19 @@ async def get_electrostatics_job(job_id: str) -> ElectrostaticsJobResponse:
     )
 
     if job.status == JobStatus.DONE:
-        response.result = _load_electrostatics_result(job.cache_key, job.result_meta)
+        result = _load_or_invalidate_electrostatics_result(job)
+        if result is None:
+            return ElectrostaticsJobResponse(
+                cached=False,
+                jobId=job.id,
+                status="error",
+                cacheKey=job.cache_key,
+                createdAt=job.created_at.isoformat() if job.created_at else None,
+                computeTimeMs=job.compute_time_ms,
+                errorMessage=_missing_electrostatics_result_error(job.cache_key),
+            )
+
+        response.result = result
     elif job.status == JobStatus.ERROR:
         response.error_message = job.error_message
 
