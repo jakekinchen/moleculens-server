@@ -119,6 +119,89 @@ class JobQueue:
         """
         self.cache_dir = cache_dir or settings.molecule_cache_dir
 
+    def _required_artifact_paths(self, artifact_paths: list[str]) -> list[str]:
+        """Return the minimum artifact set required for a cache entry to be reusable."""
+        result_manifests = [path for path in artifact_paths if path.endswith("result.json")]
+        return result_manifests or artifact_paths
+
+    def _cache_artifacts_exist(self, cache_key: str, artifact_paths: list[str]) -> bool:
+        """Check whether the required cache artifacts still exist on disk."""
+        required_paths = self._required_artifact_paths(artifact_paths)
+        if not required_paths:
+            return False
+
+        cache_root = self.cache_dir / cache_key
+        return all((cache_root / path).exists() for path in required_paths)
+
+    def _invalidate_cache_key(self, session: Session, cache_key: str, error_message: str) -> None:
+        """Invalidate a cache entry and mark stale completed jobs as failed."""
+        cache_entry = session.get(CacheEntry, cache_key)
+        if cache_entry is not None:
+            session.delete(cache_entry)
+
+        stale_jobs = (
+            session.execute(
+                select(Job).where(Job.cache_key == cache_key).where(Job.status == JobStatus.DONE)
+            )
+            .scalars()
+            .all()
+        )
+
+        invalidated_jobs = 0
+        for stale_job in stale_jobs:
+            stale_job.status = JobStatus.ERROR
+            stale_job.error_message = error_message
+            stale_job.completed_at = datetime.now(UTC)
+            invalidated_jobs += 1
+
+        logger.warning(
+            "Invalidated stale cache entry",
+            cache_key=cache_key[:12],
+            invalidated_jobs=invalidated_jobs,
+            reason=error_message[:200],
+        )
+
+    def invalidate_cache_key(self, cache_key: str, error_message: str) -> None:
+        """Public wrapper for invalidating a corrupt cache entry."""
+        with db_session() as session:
+            self._invalidate_cache_key(session, cache_key, error_message)
+
+    def _reuse_cached_job_if_valid(
+        self, session: Session, cache_key: str
+    ) -> tuple[str, bool] | None:
+        """Return a reusable cached job if its artifacts still exist."""
+        cache_entry = session.get(CacheEntry, cache_key)
+        if cache_entry is None:
+            return None
+
+        cache_error = f"Cached result missing for cache key {cache_key[:12]}"
+        if not self._cache_artifacts_exist(cache_key, cache_entry.artifact_paths):
+            self._invalidate_cache_key(session, cache_key, cache_error)
+            return None
+
+        cache_entry.hit_count += 1
+        cache_entry.last_accessed_at = datetime.now(UTC)
+
+        existing_job = session.execute(
+            select(Job)
+            .where(Job.cache_key == cache_key)
+            .where(Job.status == JobStatus.DONE)
+            .limit(1)
+        ).scalar_one_or_none()
+
+        if existing_job is None:
+            return None
+
+        if existing_job.result_meta is None:
+            existing_job.result_meta = cache_entry.result_meta
+
+        logger.info(
+            "Returning cached result",
+            cache_key=cache_key[:12],
+            job_id=existing_job.id[:12],
+        )
+        return existing_job.id, True
+
     def submit_job(
         self,
         sdf_content: str,
@@ -164,28 +247,9 @@ class JobQueue:
         )
 
         with db_session() as session:
-            # Check for cached result
-            cache_entry = session.get(CacheEntry, cache_key)
-            if cache_entry is not None:
-                # Update hit count
-                cache_entry.hit_count += 1
-                cache_entry.last_accessed_at = datetime.now(UTC)
-
-                # Find or create job pointing to cache
-                existing_job = session.execute(
-                    select(Job)
-                    .where(Job.cache_key == cache_key)
-                    .where(Job.status == JobStatus.DONE)
-                    .limit(1)
-                ).scalar_one_or_none()
-
-                if existing_job:
-                    logger.info(
-                        "Returning cached result",
-                        cache_key=cache_key[:12],
-                        job_id=existing_job.id[:12],
-                    )
-                    return existing_job.id, True
+            cached_job = self._reuse_cached_job_if_valid(session, cache_key)
+            if cached_job is not None:
+                return cached_job
 
             # Check for pending/running job with same cache key
             pending_job = session.execute(
@@ -239,27 +303,9 @@ class JobQueue:
             Tuple of (job_id, is_cached)
         """
         with db_session() as session:
-            # Check for cached result
-            cache_entry = session.get(CacheEntry, cache_key)
-            if cache_entry is not None:
-                # Update hit count
-                cache_entry.hit_count += 1
-                cache_entry.last_accessed_at = datetime.now(UTC)
-
-                existing_job = session.execute(
-                    select(Job)
-                    .where(Job.cache_key == cache_key)
-                    .where(Job.status == JobStatus.DONE)
-                    .limit(1)
-                ).scalar_one_or_none()
-
-                if existing_job:
-                    logger.info(
-                        "Returning cached result",
-                        cache_key=cache_key[:12],
-                        job_id=existing_job.id[:12],
-                    )
-                    return existing_job.id, True
+            cached_job = self._reuse_cached_job_if_valid(session, cache_key)
+            if cached_job is not None:
+                return cached_job
 
             # Check for pending/running job with same cache key
             pending_job = session.execute(
