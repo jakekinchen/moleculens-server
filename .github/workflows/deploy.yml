@@ -29,20 +29,25 @@ jobs:
           DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
         run: |
-          printf '%s\n' "$DEPLOY_ENV" | ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "${DEPLOY_USER}@${DEPLOY_HOST}" "cat > '${DEPLOY_PATH}/.env'"
+          SSH_OPTS="-i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=4"
 
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no "${DEPLOY_USER}@${DEPLOY_HOST}" "
+          printf '%s\n' "$DEPLOY_ENV" | timeout 60 ssh $SSH_OPTS "${DEPLOY_USER}@${DEPLOY_HOST}" "cat > '${DEPLOY_PATH}/.env'"
+
+          timeout 2700 ssh $SSH_OPTS "${DEPLOY_USER}@${DEPLOY_HOST}" "
             set -euo pipefail
             cd ${DEPLOY_PATH}
             
             # Pull latest code
+            echo [deploy] starting in \$(pwd)
             git fetch origin main
             git reset --hard origin/main
+            echo [deploy] using commit \$(git rev-parse --short HEAD)
             
             # Build and deploy
-            docker compose --env-file .env build molecule-api molecule-worker
+            docker compose --env-file .env build --progress plain molecule-api molecule-worker
             docker rm -f molecule-api molecule-worker >/dev/null 2>&1 || true
             docker compose --env-file .env up -d --no-build molecule-api molecule-worker
+            docker compose --env-file .env ps
             
             # Wait for health check with retry loop (up to 60 seconds)
             # Use docker exec since port 8000 is not mapped to host
