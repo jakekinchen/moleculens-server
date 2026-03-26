@@ -1,5 +1,6 @@
 """Unit tests for stale cache invalidation and job recovery."""
 
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -69,6 +70,24 @@ def _seed_done_job(
         )
 
     return job_id, cache_key
+
+
+def _age_active_job(
+    job_id: str,
+    *,
+    status: JobStatus,
+    seconds_ago: int,
+) -> None:
+    """Age an active job so stale-job recovery paths can be exercised."""
+    with queue_module.db_session() as session:
+        job = session.get(Job, job_id)
+        assert job is not None
+        timestamp = datetime.now(UTC) - timedelta(seconds=seconds_ago)
+        job.status = status
+        job.created_at = timestamp
+        job.started_at = timestamp if status == JobStatus.RUNNING else None
+        job.completed_at = None
+        job.error_message = None
 
 
 def test_submit_job_reuses_valid_cache_and_restores_missing_result_meta(
@@ -159,3 +178,69 @@ async def test_get_job_status_reports_error_for_done_job_with_missing_result(
     assert stale_job is not None
     assert stale_job.status == JobStatus.ERROR
     assert isolated_job_queue.get_cache_entry(cache_key) is None
+
+
+def test_submit_job_replaces_stale_pending_job(
+    isolated_job_queue: JobQueue,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(queue_module.settings, "job_stale_seconds", 60)
+
+    stale_job_id, is_cached = isolated_job_queue.submit_job(
+        sdf_content="not-used",
+        method="scf",
+        basis="sto-3g",
+        grid_spacing=0.25,
+        isovalue=0.05,
+        orbitals=["homo"],
+        geometry_hash="geom-pending-stale",
+    )
+    assert is_cached is False
+
+    _age_active_job(stale_job_id, status=JobStatus.PENDING, seconds_ago=120)
+
+    new_job_id, is_cached = isolated_job_queue.submit_job(
+        sdf_content="not-used",
+        method="scf",
+        basis="sto-3g",
+        grid_spacing=0.25,
+        isovalue=0.05,
+        orbitals=["homo"],
+        geometry_hash="geom-pending-stale",
+    )
+
+    assert is_cached is False
+    assert new_job_id != stale_job_id
+
+    stale_job = isolated_job_queue.get_job(stale_job_id)
+    assert stale_job is not None
+    assert stale_job.status == JobStatus.ERROR
+    assert stale_job.error_message == "Stale pending job auto-cleared after 60s without completion"
+
+
+def test_submit_job_with_cache_key_replaces_stale_running_job(
+    isolated_job_queue: JobQueue,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(queue_module.settings, "job_stale_seconds", 60)
+
+    stale_job_id, is_cached = isolated_job_queue.submit_job_with_cache_key(
+        cache_key="cache-key-running-stale",
+        request_params={"kind": "electrostatics"},
+    )
+    assert is_cached is False
+
+    _age_active_job(stale_job_id, status=JobStatus.RUNNING, seconds_ago=120)
+
+    new_job_id, is_cached = isolated_job_queue.submit_job_with_cache_key(
+        cache_key="cache-key-running-stale",
+        request_params={"kind": "electrostatics"},
+    )
+
+    assert is_cached is False
+    assert new_job_id != stale_job_id
+
+    stale_job = isolated_job_queue.get_job(stale_job_id)
+    assert stale_job is not None
+    assert stale_job.status == JobStatus.ERROR
+    assert stale_job.error_message == "Stale running job auto-cleared after 60s without completion"

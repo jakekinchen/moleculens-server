@@ -8,7 +8,7 @@ import json
 import uuid
 from collections.abc import Generator
 from contextlib import contextmanager
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -118,6 +118,64 @@ class JobQueue:
             cache_dir: Directory for artifact caching
         """
         self.cache_dir = cache_dir or settings.molecule_cache_dir
+
+    def _active_job_is_stale(self, job: Job) -> bool:
+        """Return whether an active job has exceeded the stale threshold."""
+        if job.status not in {JobStatus.PENDING, JobStatus.QUEUED, JobStatus.RUNNING}:
+            return False
+
+        reference_time = job.started_at or job.created_at
+        if reference_time is None:
+            return False
+        if reference_time.tzinfo is None:
+            reference_time = reference_time.replace(tzinfo=UTC)
+
+        return reference_time <= datetime.now(UTC) - timedelta(seconds=settings.job_stale_seconds)
+
+    def _mark_active_job_stale(self, job: Job) -> None:
+        """Mark an active job as stale so a fresh replacement can be created."""
+        original_status = job.status.value
+        job.status = JobStatus.ERROR
+        job.completed_at = datetime.now(UTC)
+        job.error_message = (
+            f"Stale {original_status} job auto-cleared after "
+            f"{settings.job_stale_seconds}s without completion"
+        )
+
+        logger.warning(
+            "Auto-cleared stale active job",
+            job_id=job.id[:12],
+            cache_key=job.cache_key[:12],
+            previous_status=original_status,
+        )
+
+    def _get_reusable_active_job_id(self, session: Session, cache_key: str) -> str | None:
+        """Return a fresh active job for a cache key, clearing stale ones first."""
+        active_jobs = (
+            session.execute(
+                select(Job)
+                .where(Job.cache_key == cache_key)
+                .where(Job.status.in_([JobStatus.PENDING, JobStatus.QUEUED, JobStatus.RUNNING]))
+                .order_by(Job.created_at.desc())
+            )
+            .scalars()
+            .all()
+        )
+
+        for active_job in active_jobs:
+            if self._active_job_is_stale(active_job):
+                self._mark_active_job_stale(active_job)
+                continue
+
+            logger.info(
+                "Found active job for cache key",
+                cache_key=cache_key[:12],
+                job_id=active_job.id[:12],
+                status=active_job.status.value,
+            )
+            return active_job.id
+
+        return None
 
     def _required_artifact_paths(self, artifact_paths: list[str]) -> list[str]:
         """Return the minimum artifact set required for a cache entry to be reusable."""
@@ -251,21 +309,9 @@ class JobQueue:
             if cached_job is not None:
                 return cached_job
 
-            # Check for pending/running job with same cache key
-            pending_job = session.execute(
-                select(Job)
-                .where(Job.cache_key == cache_key)
-                .where(Job.status.in_([JobStatus.PENDING, JobStatus.QUEUED, JobStatus.RUNNING]))
-                .limit(1)
-            ).scalar_one_or_none()
-
-            if pending_job:
-                logger.info(
-                    "Found pending job for cache key",
-                    cache_key=cache_key[:12],
-                    job_id=pending_job.id[:12],
-                )
-                return pending_job.id, False
+            active_job_id = self._get_reusable_active_job_id(session, cache_key)
+            if active_job_id:
+                return active_job_id, False
 
             # Create new job
             job_id = str(uuid.uuid4())
@@ -307,21 +353,9 @@ class JobQueue:
             if cached_job is not None:
                 return cached_job
 
-            # Check for pending/running job with same cache key
-            pending_job = session.execute(
-                select(Job)
-                .where(Job.cache_key == cache_key)
-                .where(Job.status.in_([JobStatus.PENDING, JobStatus.QUEUED, JobStatus.RUNNING]))
-                .limit(1)
-            ).scalar_one_or_none()
-
-            if pending_job:
-                logger.info(
-                    "Found pending job for cache key",
-                    cache_key=cache_key[:12],
-                    job_id=pending_job.id[:12],
-                )
-                return pending_job.id, False
+            active_job_id = self._get_reusable_active_job_id(session, cache_key)
+            if active_job_id:
+                return active_job_id, False
 
             # Create new job
             job_id = str(uuid.uuid4())
@@ -370,28 +404,36 @@ class JobQueue:
             Claimed job or None if no jobs available
         """
         with db_session() as session:
-            # Use raw SQL for FOR UPDATE SKIP LOCKED
-            result = session.execute(
-                text("""
-                    SELECT id FROM jobs
-                    WHERE status = 'pending'
-                    ORDER BY created_at ASC
-                    LIMIT 1
-                    FOR UPDATE SKIP LOCKED
-                """)
-            ).fetchone()
+            while True:
+                # Use raw SQL for FOR UPDATE SKIP LOCKED
+                result = session.execute(
+                    text("""
+                        SELECT id FROM jobs
+                        WHERE status = 'pending'
+                        ORDER BY created_at ASC
+                        LIMIT 1
+                        FOR UPDATE SKIP LOCKED
+                    """)
+                ).fetchone()
 
-            if result is None:
-                return None
+                if result is None:
+                    return None
 
-            job_id = result[0]
-            job = session.get(Job, job_id)
+                job_id = result[0]
+                job = session.get(Job, job_id)
+                if job is None:
+                    continue
 
-            if job:
+                if self._active_job_is_stale(job):
+                    self._mark_active_job_stale(job)
+                    session.flush()
+                    continue
+
                 job.status = JobStatus.RUNNING
                 job.started_at = datetime.now(UTC)
                 job.worker_id = worker_id
                 job.attempt_count += 1
+                session.flush()
 
                 logger.info(
                     "Claimed job",
@@ -402,8 +444,6 @@ class JobQueue:
 
                 session.expunge(job)
                 return job
-
-            return None
 
     def complete_job(
         self,

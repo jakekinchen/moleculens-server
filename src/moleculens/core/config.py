@@ -27,8 +27,8 @@ class Settings(BaseSettings):
     log_dir: Path = Path("/var/log/molecule")
 
     # Psi4 configuration
-    psi4_num_threads: int = 3
-    psi4_memory_mb: int = 4096
+    psi4_num_threads: int = 1
+    psi4_memory_mb: int = 512
 
     # Worker configuration
     worker_poll_seconds: float = 1.0
@@ -40,7 +40,7 @@ class Settings(BaseSettings):
 
     # Job queue configuration
     max_retries: int = 3
-    job_stale_seconds: int = 3600  # Consider job stale after 1 hour
+    job_stale_seconds: int = 900  # Consider job stale after 15 minutes
 
     @field_validator("allowed_origins", mode="before")
     @classmethod
