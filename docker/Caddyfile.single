@@ -1,0 +1,27 @@
+{
+  email {$ACME_EMAIL}
+}
+
+{$MOLECULENS_DOMAIN} {
+  encode gzip
+
+  handle /health {
+    reverse_proxy molecule-api:8000
+  }
+
+  handle /v1/* {
+    reverse_proxy molecule-api:8000
+  }
+
+  handle /orbitals/* {
+    reverse_proxy molecule-api:8000
+  }
+
+  handle {
+    respond 404
+  }
+}
+
+:80 {
+  redir https://{http.request.host}{uri} 308
+}

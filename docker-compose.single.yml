@@ -1,0 +1,85 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: molecule-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-moleculens}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-moleculens}
+    volumes:
+      - ./var/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-moleculens} -d ${POSTGRES_DB:-moleculens}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  molecule-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    container_name: molecule-api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-moleculens}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-moleculens}
+      MOLECULE_CACHE_DIR: /var/molecule-cache
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-*}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./var/cache:/var/molecule-cache:ro
+      - ./var/logs:/var/log/molecule
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  molecule-worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+    container_name: molecule-worker
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-moleculens}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-moleculens}
+      MOLECULE_CACHE_DIR: /var/molecule-cache
+      PSI_SCRATCH: /var/psi4_scratch
+      PSI4_NUM_THREADS: ${PSI4_NUM_THREADS:-1}
+      PSI4_MEMORY_MB: ${PSI4_MEMORY_MB:-512}
+      WORKER_POLL_SECONDS: ${WORKER_POLL_SECONDS:-2}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./var/cache:/var/molecule-cache:rw
+      - ./var/psi4_scratch:/var/psi4_scratch:rw
+      - ./var/logs:/var/log/molecule
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: molecule-caddy
+    restart: unless-stopped
+    depends_on:
+      molecule-api:
+        condition: service_healthy
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL}
+      MOLECULENS_DOMAIN: ${MOLECULENS_DOMAIN:-api.moleculens.com}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./docker/Caddyfile.single:/etc/caddy/Caddyfile:ro
+      - molecule-caddy-data:/data
+      - molecule-caddy-config:/config
+
+volumes:
+  molecule-caddy-data:
+  molecule-caddy-config:
