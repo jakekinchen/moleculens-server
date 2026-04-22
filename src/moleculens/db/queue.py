@@ -16,7 +16,7 @@ from sqlalchemy import create_engine, select, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from moleculens.core import get_logger, settings
+from moleculens.core import cache_metrics, get_logger, settings
 from moleculens.db.models import Base, CacheEntry, Job, JobStatus
 
 logger = get_logger(__name__)
@@ -152,6 +152,29 @@ def _cache_log_context_from_request_params(request_params: dict[str, Any]) -> di
     )
 
 
+def _record_cache_event(
+    event: str,
+    *,
+    log_context: dict[str, Any] | None = None,
+    job_type: str | None = None,
+) -> None:
+    context = log_context or {}
+    resolved_job_type = job_type
+    if resolved_job_type is None and isinstance(context.get("job_type"), str):
+        resolved_job_type = str(context["job_type"])
+
+    cache_identity_source = (
+        str(context["cache_identity_source"])
+        if isinstance(context.get("cache_identity_source"), str)
+        else None
+    )
+    cache_metrics.record(
+        event=event,
+        job_type=resolved_job_type,
+        cache_identity_source=cache_identity_source,
+    )
+
+
 class JobQueue:
     """Postgres-based job queue with caching support."""
 
@@ -225,6 +248,7 @@ class JobQueue:
                 status=active_job.status.value,
                 **(log_context or {}),
             )
+            _record_cache_event("active_reuse", log_context=log_context)
             return active_job.id
 
         return None
@@ -264,18 +288,24 @@ class JobQueue:
             stale_job.completed_at = datetime.now(UTC)
             invalidated_jobs += 1
 
+        job_types = sorted(
+            {
+                str((stale_job.request_params or {}).get("job_type") or "orbital")
+                for stale_job in stale_jobs
+            }
+        )
+
         logger.warning(
             "Invalidated stale cache entry",
             cache_event="invalidate",
             cache_key=cache_key[:12],
             invalidated_jobs=invalidated_jobs,
-            job_types=sorted(
-                {
-                    str((stale_job.request_params or {}).get("job_type") or "orbital")
-                    for stale_job in stale_jobs
-                }
-            ),
+            job_types=job_types,
             reason=error_message[:200],
+        )
+        _record_cache_event(
+            "invalidate",
+            job_type=job_types[0] if len(job_types) == 1 else None,
         )
 
     def invalidate_cache_key(self, cache_key: str, error_message: str) -> None:
@@ -323,6 +353,7 @@ class JobQueue:
             job_id=existing_job.id[:12],
             **(log_context or {}),
         )
+        _record_cache_event("hit", log_context=log_context)
         return existing_job.id, True
 
     def submit_job(
@@ -427,6 +458,7 @@ class JobQueue:
                 cache_key=cache_key[:12],
                 **log_context,
             )
+            _record_cache_event("miss", log_context=log_context)
             return job_id, False
 
     def submit_job_with_cache_key(
@@ -478,6 +510,7 @@ class JobQueue:
                 cache_key=cache_key[:12],
                 **log_context,
             )
+            _record_cache_event("miss", log_context=log_context)
             return job_id, False
 
     def get_job(self, job_id: str) -> Job | None:

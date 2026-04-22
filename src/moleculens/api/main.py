@@ -8,7 +8,7 @@ from moleculens import __version__
 from moleculens.api.conformers_routes import router as conformers_router
 from moleculens.api.electrostatics_routes import router as electrostatics_router
 from moleculens.api.routes import router
-from moleculens.core import get_logger, settings, setup_logging
+from moleculens.core import cache_metrics, get_logger, settings, setup_logging
 from moleculens.db import init_db
 
 logger = get_logger(__name__)
@@ -48,6 +48,7 @@ def create_app() -> FastAPI:
             version=__version__,
             log_level=settings.log_level,
         )
+        cache_metrics.reset()
         init_db()
 
     return app

@@ -9,9 +9,15 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from moleculens.api import electrostatics_routes, routes
+from moleculens.core.cache_metrics import cache_metrics
 from moleculens.db import queue as queue_module
 from moleculens.db.models import Base, CacheEntry, Job, JobStatus
 from moleculens.db.queue import JobQueue
+
+
+@pytest.fixture(autouse=True)
+def reset_cache_metrics_registry() -> None:
+    cache_metrics.reset()
 
 
 @pytest.fixture
@@ -278,6 +284,37 @@ def test_submit_job_stores_client_cache_identity_metadata(
     assert job.request_params["cache_identity_source"] == "client_cache_key"
 
 
+def test_cache_metrics_record_miss_and_hit(isolated_job_queue: JobQueue) -> None:
+    job_id, cache_key = _seed_done_job(
+        isolated_job_queue,
+        geometry_hash="geom-observe",
+        result_meta=None,
+        artifact_paths=["result.json"],
+    )
+
+    cache_root = isolated_job_queue.cache_dir / cache_key
+    cache_root.mkdir()
+    (cache_root / "result.json").write_text('{"orbitals": {}, "meta": {"method": "scf"}}')
+
+    reused_job_id, is_cached = isolated_job_queue.submit_job(
+        sdf_content="not-used",
+        method="scf",
+        basis="sto-3g",
+        grid_spacing=0.25,
+        isovalue=0.05,
+        orbitals=["homo"],
+        geometry_hash="geom-observe",
+    )
+
+    assert is_cached is True
+    assert reused_job_id == job_id
+
+    snapshot = cache_metrics.snapshot()
+    assert snapshot["events"] == {"hit": 1, "miss": 1}
+    assert snapshot["job_types"]["orbital"] == {"hit": 1, "miss": 1}
+    assert snapshot["identity_sources"]["geometry_hash"] == {"hit": 1, "miss": 1}
+
+
 @pytest.mark.asyncio
 async def test_compute_orbitals_forwards_client_cache_key(
     monkeypatch: pytest.MonkeyPatch,
@@ -345,6 +382,31 @@ async def test_compute_electrostatics_returns_persisted_cache_key(
         water_sdf
     ).geometry_hash()
     assert captured["request_params"]["cache_identity_source"] == "geometry_hash"
+
+
+@pytest.mark.asyncio
+async def test_cache_metrics_endpoint_returns_snapshot(
+    isolated_job_queue: JobQueue,
+) -> None:
+    job_id, is_cached = isolated_job_queue.submit_job(
+        sdf_content="not-used",
+        method="scf",
+        basis="sto-3g",
+        grid_spacing=0.25,
+        isovalue=0.05,
+        orbitals=["homo"],
+        geometry_hash="geom-metrics-endpoint",
+    )
+
+    assert is_cached is False
+    assert job_id
+
+    response = await routes.get_cache_metrics()
+
+    assert response.total_events == 1
+    assert response.events == {"miss": 1}
+    assert response.job_types == {"orbital": {"miss": 1}}
+    assert response.identity_sources == {"geometry_hash": {"miss": 1}}
 
 
 def test_submit_job_replaces_stale_pending_job(

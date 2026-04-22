@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse
 
 from moleculens import __version__
 from moleculens.api.schemas import (
+    CacheMetricsResponse,
     ComputeRequest,
     ComputeResult,
     ComputeResultMeta,
@@ -15,7 +16,7 @@ from moleculens.api.schemas import (
     MeshDataResponse,
     OrbitalResponse,
 )
-from moleculens.core import get_logger, settings
+from moleculens.core import cache_metrics, get_logger, settings
 from moleculens.db import Job, JobQueue, JobStatus, get_db_engine
 
 logger = get_logger(__name__)
@@ -72,6 +73,12 @@ async def health_check() -> HealthResponse:
         database=db_ok,
         cacheDir=cache_ok,
     )
+
+
+@router.get("/metrics/cache", response_model=CacheMetricsResponse)
+async def get_cache_metrics() -> CacheMetricsResponse:
+    """Return in-process cache metrics for the current API instance."""
+    return CacheMetricsResponse(**cache_metrics.snapshot())
 
 
 @router.post("/v1/orbitals/compute", response_model=JobResponse)

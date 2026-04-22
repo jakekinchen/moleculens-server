@@ -135,6 +135,20 @@ class HealthResponse(BaseModel):
     model_config = {"populate_by_name": True}
 
 
+class CacheMetricsResponse(BaseModel):
+    """In-process cache metrics snapshot."""
+
+    started_at: str = Field(alias="startedAt")
+    recorded_at: str = Field(alias="recordedAt")
+    uptime_seconds: float = Field(alias="uptimeSeconds")
+    total_events: int = Field(alias="totalEvents")
+    events: dict[str, int]
+    job_types: dict[str, dict[str, int]] = Field(alias="jobTypes")
+    identity_sources: dict[str, dict[str, int]] = Field(alias="identitySources")
+
+    model_config = {"populate_by_name": True}
+
+
 # =============================================================================
 # Electrostatics Schemas
 # =============================================================================
