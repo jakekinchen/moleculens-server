@@ -199,6 +199,7 @@ async def compute_conformer(request: ConformerRequest) -> ConformerJobResponse:
             cache_key=cache_key,
             request_params={
                 "job_type": "conformer",
+                "cache_identity_source": "explicit_cache_key",
                 "molblock2d": request.molblock2d,
                 "params": params,
                 "geom_version": request.geom_version,

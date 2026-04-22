@@ -96,8 +96,10 @@ async def compute_electrostatics(request: ElectrostaticsRequest) -> Electrostati
 
     try:
         molecule_identity = request.client_cache_key
+        cache_identity_source = "client_cache_key"
         if molecule_identity is None:
             molecule_identity = parse_sdf(request.sdf_content).geometry_hash()
+            cache_identity_source = "geometry_hash"
 
         cache_key = _compute_electrostatics_cache_key(
             molecule_identity=molecule_identity,
@@ -119,7 +121,8 @@ async def compute_electrostatics(request: ElectrostaticsRequest) -> Electrostati
             "isovalue": 0.0,
             "orbitals": ["electrostatics"],
             "inchi_key": request.inchi_key,
-            "cache_identity": cache_key,
+            "cache_identity": molecule_identity,
+            "cache_identity_source": cache_identity_source,
             "surface": surface_params,
             "potential": potential_params,
         }

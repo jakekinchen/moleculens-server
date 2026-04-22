@@ -235,6 +235,49 @@ def test_submit_job_reuses_explicit_cache_identity(isolated_job_queue: JobQueue)
     assert first_job_id == second_job_id
 
 
+def test_submit_job_stores_geometry_cache_identity_metadata(
+    isolated_job_queue: JobQueue,
+) -> None:
+    job_id, is_cached = isolated_job_queue.submit_job(
+        sdf_content="not-used",
+        method="scf",
+        basis="sto-3g",
+        grid_spacing=0.25,
+        isovalue=0.05,
+        orbitals=["homo"],
+        geometry_hash="geom-a",
+    )
+
+    assert is_cached is False
+
+    job = isolated_job_queue.get_job(job_id)
+    assert job is not None
+    assert job.request_params["cache_identity"] == "geom-a"
+    assert job.request_params["cache_identity_source"] == "geometry_hash"
+
+
+def test_submit_job_stores_client_cache_identity_metadata(
+    isolated_job_queue: JobQueue,
+) -> None:
+    job_id, is_cached = isolated_job_queue.submit_job(
+        sdf_content="not-used",
+        method="scf",
+        basis="sto-3g",
+        grid_spacing=0.25,
+        isovalue=0.05,
+        orbitals=["homo"],
+        cache_identity="client-cache-key",
+        geometry_hash="geom-a",
+    )
+
+    assert is_cached is False
+
+    job = isolated_job_queue.get_job(job_id)
+    assert job is not None
+    assert job.request_params["cache_identity"] == "client-cache-key"
+    assert job.request_params["cache_identity_source"] == "client_cache_key"
+
+
 @pytest.mark.asyncio
 async def test_compute_orbitals_forwards_client_cache_key(
     monkeypatch: pytest.MonkeyPatch,
@@ -298,7 +341,10 @@ async def test_compute_electrostatics_returns_persisted_cache_key(
     response = await electrostatics_routes.compute_electrostatics(request)
 
     assert response.cache_key == "persisted-cache-key"
-    assert captured["cache_key"] == captured["request_params"]["cache_identity"]
+    assert captured["request_params"]["cache_identity"] == electrostatics_routes.parse_sdf(
+        water_sdf
+    ).geometry_hash()
+    assert captured["request_params"]["cache_identity_source"] == "geometry_hash"
 
 
 def test_submit_job_replaces_stale_pending_job(

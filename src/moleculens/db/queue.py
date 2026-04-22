@@ -103,6 +103,55 @@ def compute_cache_key(
     return hashlib.sha256(content.encode()).hexdigest()
 
 
+def _truncate_for_log(value: str | None, length: int = 12) -> str | None:
+    if value is None:
+        return None
+    return value[:length]
+
+
+def _build_cache_log_context(
+    *,
+    job_type: str,
+    cache_identity_source: str | None = None,
+    molecule_identity: str | None = None,
+    method: str | None = None,
+    basis: str | None = None,
+    orbitals: list[str] | None = None,
+) -> dict[str, Any]:
+    context: dict[str, Any] = {"job_type": job_type}
+    if cache_identity_source is not None:
+        context["cache_identity_source"] = cache_identity_source
+    if molecule_identity is not None:
+        context["molecule_identity"] = _truncate_for_log(molecule_identity)
+    if method is not None:
+        context["method"] = method.lower()
+    if basis is not None:
+        context["basis"] = basis.lower()
+    if orbitals:
+        context["orbitals"] = sorted(orbitals)
+    return context
+
+
+def _cache_log_context_from_request_params(request_params: dict[str, Any]) -> dict[str, Any]:
+    orbitals = request_params.get("orbitals")
+    log_orbitals = orbitals if isinstance(orbitals, list) else None
+    method = request_params.get("method")
+    basis = request_params.get("basis")
+    cache_identity = request_params.get("cache_identity")
+    cache_identity_source = request_params.get("cache_identity_source")
+
+    return _build_cache_log_context(
+        job_type=str(request_params.get("job_type") or "unknown"),
+        cache_identity_source=(
+            str(cache_identity_source) if isinstance(cache_identity_source, str) else None
+        ),
+        molecule_identity=str(cache_identity) if isinstance(cache_identity, str) else None,
+        method=str(method) if isinstance(method, str) else None,
+        basis=str(basis) if isinstance(basis, str) else None,
+        orbitals=[str(orb) for orb in log_orbitals] if log_orbitals is not None else None,
+    )
+
+
 class JobQueue:
     """Postgres-based job queue with caching support."""
 
@@ -144,7 +193,13 @@ class JobQueue:
             previous_status=original_status,
         )
 
-    def _get_reusable_active_job_id(self, session: Session, cache_key: str) -> str | None:
+    def _get_reusable_active_job_id(
+        self,
+        session: Session,
+        cache_key: str,
+        *,
+        log_context: dict[str, Any] | None = None,
+    ) -> str | None:
         """Return a fresh active job for a cache key, clearing stale ones first."""
         active_jobs = (
             session.execute(
@@ -163,10 +218,12 @@ class JobQueue:
                 continue
 
             logger.info(
-                "Found active job for cache key",
+                "Cache miss reused active job",
+                cache_event="active_reuse",
                 cache_key=cache_key[:12],
                 job_id=active_job.id[:12],
                 status=active_job.status.value,
+                **(log_context or {}),
             )
             return active_job.id
 
@@ -209,8 +266,15 @@ class JobQueue:
 
         logger.warning(
             "Invalidated stale cache entry",
+            cache_event="invalidate",
             cache_key=cache_key[:12],
             invalidated_jobs=invalidated_jobs,
+            job_types=sorted(
+                {
+                    str((stale_job.request_params or {}).get("job_type") or "orbital")
+                    for stale_job in stale_jobs
+                }
+            ),
             reason=error_message[:200],
         )
 
@@ -220,7 +284,11 @@ class JobQueue:
             self._invalidate_cache_key(session, cache_key, error_message)
 
     def _reuse_cached_job_if_valid(
-        self, session: Session, cache_key: str
+        self,
+        session: Session,
+        cache_key: str,
+        *,
+        log_context: dict[str, Any] | None = None,
     ) -> tuple[str, bool] | None:
         """Return a reusable cached job if its artifacts still exist."""
         cache_entry = session.get(CacheEntry, cache_key)
@@ -249,9 +317,11 @@ class JobQueue:
             existing_job.result_meta = cache_entry.result_meta
 
         logger.info(
-            "Returning cached result",
+            "Cache hit",
+            cache_event="hit",
             cache_key=cache_key[:12],
             job_id=existing_job.id[:12],
+            **(log_context or {}),
         )
         return existing_job.id, True
 
@@ -294,6 +364,15 @@ class JobQueue:
         molecule_identity = cache_identity or geometry_hash
         if molecule_identity is None:
             raise ValueError("A cache identity or geometry hash is required")
+        cache_identity_source = "client_cache_key" if cache_identity is not None else "geometry_hash"
+        log_context = _build_cache_log_context(
+            job_type="orbital",
+            cache_identity_source=cache_identity_source,
+            molecule_identity=molecule_identity,
+            method=method,
+            basis=basis,
+            orbitals=orbitals,
+        )
 
         cache_key = compute_cache_key(
             molecule_identity=molecule_identity,
@@ -305,11 +384,19 @@ class JobQueue:
         )
 
         with db_session() as session:
-            cached_job = self._reuse_cached_job_if_valid(session, cache_key)
+            cached_job = self._reuse_cached_job_if_valid(
+                session,
+                cache_key,
+                log_context=log_context,
+            )
             if cached_job is not None:
                 return cached_job
 
-            active_job_id = self._get_reusable_active_job_id(session, cache_key)
+            active_job_id = self._get_reusable_active_job_id(
+                session,
+                cache_key,
+                log_context=log_context,
+            )
             if active_job_id:
                 return active_job_id, False
 
@@ -327,12 +414,19 @@ class JobQueue:
                     "isovalue": isovalue,
                     "orbitals": orbitals,
                     "inchi_key": inchi_key,
-                    "cache_identity": cache_identity,
+                    "cache_identity": molecule_identity,
+                    "cache_identity_source": cache_identity_source,
                 },
             )
             session.add(job)
 
-            logger.info("Created new job", job_id=job_id[:12], cache_key=cache_key[:12])
+            logger.info(
+                "Cache miss queued new job",
+                cache_event="miss",
+                job_id=job_id[:12],
+                cache_key=cache_key[:12],
+                **log_context,
+            )
             return job_id, False
 
     def submit_job_with_cache_key(
@@ -349,12 +443,21 @@ class JobQueue:
         Returns:
             Tuple of (job_id, is_cached)
         """
+        log_context = _cache_log_context_from_request_params(request_params)
         with db_session() as session:
-            cached_job = self._reuse_cached_job_if_valid(session, cache_key)
+            cached_job = self._reuse_cached_job_if_valid(
+                session,
+                cache_key,
+                log_context=log_context,
+            )
             if cached_job is not None:
                 return cached_job
 
-            active_job_id = self._get_reusable_active_job_id(session, cache_key)
+            active_job_id = self._get_reusable_active_job_id(
+                session,
+                cache_key,
+                log_context=log_context,
+            )
             if active_job_id:
                 return active_job_id, False
 
@@ -368,7 +471,13 @@ class JobQueue:
             )
             session.add(job)
 
-            logger.info("Created new job", job_id=job_id[:12], cache_key=cache_key[:12])
+            logger.info(
+                "Cache miss queued new job",
+                cache_event="miss",
+                job_id=job_id[:12],
+                cache_key=cache_key[:12],
+                **log_context,
+            )
             return job_id, False
 
     def get_job(self, job_id: str) -> Job | None:
