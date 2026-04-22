@@ -165,6 +165,23 @@ function decodeMesh(meshData) {
 | WORKER_POLL_SECONDS | 1 | Worker poll interval |
 | ALLOWED_ORIGINS | * | CORS allowed origins |
 | LOG_LEVEL | INFO | Logging level |
+| METRICS_AUTH_USER | metrics | Basic auth username for `GET /metrics/cache` |
+| METRICS_AUTH_PASSWORD_HASH | unset | BCrypt hash for the metrics route password |
+
+The cache metrics endpoint is intended for operator use, not anonymous public access. In the single-box Caddy deployment it is exposed at `https://api.moleculens.com/metrics/cache` only after HTTP basic auth succeeds.
+
+Generate a password hash with Caddy and add it to your `.env` before deploying:
+
+```bash
+docker exec molecule-caddy caddy hash-password --plaintext 'choose-a-strong-password'
+```
+
+Then query it with:
+
+```bash
+curl -u "$METRICS_AUTH_USER:your-plaintext-password" \
+  https://api.moleculens.com/metrics/cache
+```
 
 ## Architecture
 

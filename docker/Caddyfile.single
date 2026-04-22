@@ -5,6 +5,16 @@
 {$MOLECULENS_DOMAIN} {
   encode gzip
 
+  @cache_metrics path /metrics/cache
+  handle @cache_metrics {
+    # The fallback credentials are intentionally unusable so the route stays protected
+    # even when auth env vars are missing in a fresh single-box deploy.
+    basic_auth {
+      {$METRICS_AUTH_USER:metrics-disabled} {$METRICS_AUTH_PASSWORD_HASH:$2a$14$t7DZmWSfWNUTytUZ6TNZ8.v7An6Ez8.WIL3.gvuEMAoSExEuM32l6}
+    }
+    reverse_proxy molecule-api:8000
+  }
+
   handle /health {
     reverse_proxy molecule-api:8000
   }
