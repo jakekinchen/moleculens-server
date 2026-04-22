@@ -69,34 +69,29 @@ def init_db() -> None:
 
 
 def compute_cache_key(
-    geometry_hash: str,
+    molecule_identity: str,
     method: str,
     basis: str,
     grid_spacing: float,
     isovalue: float,
     orbitals: list[str],
-    inchi_key: str | None = None,
 ) -> str:
     """Compute stable cache key from computation parameters.
 
     Args:
-        geometry_hash: Hash of molecular geometry
+        molecule_identity: Stable identifier for the requested molecular pose
         method: Computational method (e.g., 'scf', 'b3lyp')
         basis: Basis set (e.g., 'sto-3g', '6-31g*')
         grid_spacing: Grid spacing in Angstrom
         isovalue: Isosurface value
         orbitals: List of orbital types to compute
-        inchi_key: Optional InChIKey for deduplication
 
     Returns:
         64-character hex cache key
     """
-    # Use InChIKey if provided, otherwise geometry hash
-    mol_id = inchi_key if inchi_key else geometry_hash
-
     # Build deterministic string
     params = {
-        "mol_id": mol_id,
+        "molecule_identity": molecule_identity,
         "method": method.lower(),
         "basis": basis.lower().replace("*", "star"),
         "grid_spacing": f"{grid_spacing:.4f}",
@@ -269,6 +264,7 @@ class JobQueue:
         isovalue: float,
         orbitals: list[str],
         inchi_key: str | None = None,
+        cache_identity: str | None = None,
         geometry_hash: str | None = None,
     ) -> tuple[str, bool]:
         """Submit a new computation job or return cached result.
@@ -281,27 +277,31 @@ class JobQueue:
             isovalue: Isosurface value
             orbitals: List of orbital types
             inchi_key: Optional InChIKey
+            cache_identity: Optional precomputed cache identity for the requested pose
             geometry_hash: Pre-computed geometry hash
 
         Returns:
             Tuple of (job_id, is_cached)
         """
         # Compute cache key
-        if geometry_hash is None:
+        if geometry_hash is None and cache_identity is None:
             # Parse SDF to get geometry hash
             from moleculens.compute.sdf_parser import parse_sdf
 
             mol = parse_sdf(sdf_content)
             geometry_hash = mol.geometry_hash()
 
+        molecule_identity = cache_identity or geometry_hash
+        if molecule_identity is None:
+            raise ValueError("A cache identity or geometry hash is required")
+
         cache_key = compute_cache_key(
-            geometry_hash=geometry_hash,
+            molecule_identity=molecule_identity,
             method=method,
             basis=basis,
             grid_spacing=grid_spacing,
             isovalue=isovalue,
             orbitals=orbitals,
-            inchi_key=inchi_key,
         )
 
         with db_session() as session:
@@ -327,6 +327,7 @@ class JobQueue:
                     "isovalue": isovalue,
                     "orbitals": orbitals,
                     "inchi_key": inchi_key,
+                    "cache_identity": cache_identity,
                 },
             )
             session.add(job)

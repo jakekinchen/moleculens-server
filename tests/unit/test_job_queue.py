@@ -2,12 +2,13 @@
 
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from moleculens.api import routes
+from moleculens.api import electrostatics_routes, routes
 from moleculens.db import queue as queue_module
 from moleculens.db.models import Base, CacheEntry, Job, JobStatus
 from moleculens.db.queue import JobQueue
@@ -178,6 +179,126 @@ async def test_get_job_status_reports_error_for_done_job_with_missing_result(
     assert stale_job is not None
     assert stale_job.status == JobStatus.ERROR
     assert isolated_job_queue.get_cache_entry(cache_key) is None
+
+
+def test_submit_job_does_not_reuse_by_inchi_key_alone(isolated_job_queue: JobQueue) -> None:
+    first_job_id, first_cached = isolated_job_queue.submit_job(
+        sdf_content="not-used",
+        method="scf",
+        basis="sto-3g",
+        grid_spacing=0.25,
+        isovalue=0.05,
+        orbitals=["homo"],
+        inchi_key="SAME-INCHI",
+        geometry_hash="geom-a",
+    )
+    second_job_id, second_cached = isolated_job_queue.submit_job(
+        sdf_content="not-used",
+        method="scf",
+        basis="sto-3g",
+        grid_spacing=0.25,
+        isovalue=0.05,
+        orbitals=["homo"],
+        inchi_key="SAME-INCHI",
+        geometry_hash="geom-b",
+    )
+
+    assert first_cached is False
+    assert second_cached is False
+    assert first_job_id != second_job_id
+
+
+def test_submit_job_reuses_explicit_cache_identity(isolated_job_queue: JobQueue) -> None:
+    first_job_id, first_cached = isolated_job_queue.submit_job(
+        sdf_content="not-used",
+        method="scf",
+        basis="sto-3g",
+        grid_spacing=0.25,
+        isovalue=0.05,
+        orbitals=["homo"],
+        cache_identity="client-cache-key",
+        geometry_hash="geom-a",
+    )
+    second_job_id, second_cached = isolated_job_queue.submit_job(
+        sdf_content="not-used",
+        method="scf",
+        basis="sto-3g",
+        grid_spacing=0.25,
+        isovalue=0.05,
+        orbitals=["homo"],
+        cache_identity="client-cache-key",
+        geometry_hash="geom-b",
+    )
+
+    assert first_cached is False
+    assert second_cached is False
+    assert first_job_id == second_job_id
+
+
+@pytest.mark.asyncio
+async def test_compute_orbitals_forwards_client_cache_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, object] = {}
+
+    class StubQueue:
+        def submit_job(self, **kwargs: object) -> tuple[str, bool]:
+            captured.update(kwargs)
+            return "job-1", False
+
+        def get_job(self, job_id: str) -> SimpleNamespace:
+            return SimpleNamespace(
+                id=job_id,
+                status=JobStatus.PENDING,
+                cache_key="server-cache-key",
+                created_at=datetime.now(UTC),
+                compute_time_ms=None,
+            )
+
+    monkeypatch.setattr(routes, "job_queue", StubQueue())
+
+    request = routes.ComputeRequest(
+        sdf_content="water\n  test\n\n  1  0  0  0  0  0  0  0  0  0  0999 V2000\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\nM  END\n$$",
+        clientCacheKey="client-cache-key",
+    )
+
+    response = await routes.compute_orbitals(request)
+
+    assert response.cache_key == "server-cache-key"
+    assert captured["cache_identity"] == "client-cache-key"
+
+
+@pytest.mark.asyncio
+async def test_compute_electrostatics_returns_persisted_cache_key(
+    monkeypatch: pytest.MonkeyPatch,
+    water_sdf: str,
+) -> None:
+    captured: dict[str, object] = {}
+
+    class StubQueue:
+        def submit_job_with_cache_key(
+            self, *, cache_key: str, request_params: dict[str, object]
+        ) -> tuple[str, bool]:
+            captured["cache_key"] = cache_key
+            captured["request_params"] = request_params
+            return "job-1", False
+
+        def get_job(self, job_id: str) -> SimpleNamespace:
+            return SimpleNamespace(
+                id=job_id,
+                status=JobStatus.PENDING,
+                cache_key="persisted-cache-key",
+                created_at=datetime.now(UTC),
+                compute_time_ms=None,
+            )
+
+    monkeypatch.setattr(electrostatics_routes, "job_queue", StubQueue())
+
+    request = electrostatics_routes.ElectrostaticsRequest(sdfContent=water_sdf)
+    response = await electrostatics_routes.compute_electrostatics(request)
+
+    assert response.cache_key == "persisted-cache-key"
+    assert captured["cache_key"] == captured["request_params"]["cache_identity"]
 
 
 def test_submit_job_replaces_stale_pending_job(

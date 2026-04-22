@@ -90,6 +90,7 @@ async def compute_orbitals(request: ComputeRequest) -> JobResponse:
             isovalue=request.isovalue,
             orbitals=request.orbitals,
             inchi_key=request.inchi_key,
+            cache_identity=request.client_cache_key,
         )
     except Exception as e:
         logger.error("Failed to submit job", error=str(e))
@@ -120,6 +121,7 @@ async def compute_orbitals(request: ComputeRequest) -> JobResponse:
                 isovalue=request.isovalue,
                 orbitals=request.orbitals,
                 inchi_key=request.inchi_key,
+                cache_identity=request.client_cache_key,
             )
             retry_job = job_queue.get_job(retry_job_id)
             if retry_job is None:

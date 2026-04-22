@@ -44,6 +44,11 @@ class ComputeRequest(BaseModel):
         description="Optional InChIKey for cache deduplication",
         alias="inchiKey",
     )
+    client_cache_key: str | None = Field(
+        default=None,
+        description="Optional client-provided cache key",
+        alias="clientCacheKey",
+    )
 
     model_config = {"populate_by_name": True}
 

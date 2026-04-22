@@ -50,10 +50,22 @@ class SDFMolecule:
         """Compute a stable hash of the geometry for caching."""
         import hashlib
 
-        # Round coordinates to avoid floating point variations
+        def _normalize_coordinate(value: float) -> float:
+            rounded = round(value, 6)
+            return 0.0 if rounded == -0.0 else rounded
+
+        # Canonicalize atom order so equivalent SDFs reuse the same cache entry.
         data = []
-        for atom in self.atoms:
-            data.append(f"{atom.symbol}:{atom.x:.6f}:{atom.y:.6f}:{atom.z:.6f}")
+        for symbol, x, y, z in sorted(
+            (
+                atom.symbol,
+                _normalize_coordinate(atom.x),
+                _normalize_coordinate(atom.y),
+                _normalize_coordinate(atom.z),
+            )
+            for atom in self.atoms
+        ):
+            data.append(f"{symbol}:{x:.6f}:{y:.6f}:{z:.6f}")
         content = "|".join(data)
         return hashlib.sha256(content.encode()).hexdigest()[:16]
 

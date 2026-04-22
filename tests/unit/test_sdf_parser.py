@@ -47,6 +47,27 @@ class TestSDFParser:
         assert mol1.geometry_hash() == mol2.geometry_hash()
         assert len(mol1.geometry_hash()) == 16  # Truncated SHA256
 
+    def test_geometry_hash_ignores_atom_order(self) -> None:
+        """Equivalent geometries should hash the same even if atom order changes."""
+        mol1 = SDFMolecule(
+            name="water-a",
+            atoms=[
+                Atom("O", 0.0, 0.0, 0.0),
+                Atom("H", 0.7586, 0.0, 0.5043),
+                Atom("H", -0.7586, 0.0, 0.5043),
+            ],
+        )
+        mol2 = SDFMolecule(
+            name="water-b",
+            atoms=[
+                Atom("H", -0.7586, 0.0, 0.5043),
+                Atom("O", 0.0, 0.0, 0.0),
+                Atom("H", 0.7586, 0.0, 0.5043),
+            ],
+        )
+
+        assert mol1.geometry_hash() == mol2.geometry_hash()
+
     def test_parse_error_empty(self) -> None:
         """Test error on empty input."""
         with pytest.raises(SDFParseError):
