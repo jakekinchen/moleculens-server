@@ -71,6 +71,8 @@ services:
     environment:
       ACME_EMAIL: ${ACME_EMAIL}
       MOLECULENS_DOMAIN: ${MOLECULENS_DOMAIN:-api.moleculens.com}
+      METRICS_AUTH_USER: ${METRICS_AUTH_USER:-}
+      METRICS_AUTH_PASSWORD_HASH: ${METRICS_AUTH_PASSWORD_HASH:-}
     ports:
       - "80:80"
       - "443:443"

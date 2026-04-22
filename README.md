@@ -176,6 +176,13 @@ Generate a password hash with Caddy and add it to your `.env` before deploying:
 docker exec molecule-caddy caddy hash-password --plaintext 'choose-a-strong-password'
 ```
 
+In `.env`, quote the bcrypt hash so Docker Compose preserves the `$` characters:
+
+```bash
+METRICS_AUTH_USER=metrics
+METRICS_AUTH_PASSWORD_HASH='$2a$14$...'
+```
+
 Then query it with:
 
 ```bash
