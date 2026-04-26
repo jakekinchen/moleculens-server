@@ -77,9 +77,6 @@ jobs:
       - name: Install dependencies
         run: uv sync --extra dev
 
-      - name: Create network
-        run: docker network create infra_app || true
-
       - name: Build Docker images
         run: |
           docker compose -f docker-compose.yml -f docker-compose.dev.yml build
