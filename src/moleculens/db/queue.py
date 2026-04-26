@@ -395,7 +395,9 @@ class JobQueue:
         molecule_identity = cache_identity or geometry_hash
         if molecule_identity is None:
             raise ValueError("A cache identity or geometry hash is required")
-        cache_identity_source = "client_cache_key" if cache_identity is not None else "geometry_hash"
+        cache_identity_source = (
+            "client_cache_key" if cache_identity is not None else "geometry_hash"
+        )
         log_context = _build_cache_log_context(
             job_type="orbital",
             cache_identity_source=cache_identity_source,

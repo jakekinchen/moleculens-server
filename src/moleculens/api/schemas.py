@@ -12,6 +12,7 @@ class ComputeRequest(BaseModel):
         ...,
         description="3D SDF file content with atom coordinates",
         min_length=10,
+        alias="sdfContent",
     )
     method: str = Field(
         default="scf",

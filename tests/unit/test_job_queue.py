@@ -378,9 +378,10 @@ async def test_compute_electrostatics_returns_persisted_cache_key(
     response = await electrostatics_routes.compute_electrostatics(request)
 
     assert response.cache_key == "persisted-cache-key"
-    assert captured["request_params"]["cache_identity"] == electrostatics_routes.parse_sdf(
-        water_sdf
-    ).geometry_hash()
+    assert (
+        captured["request_params"]["cache_identity"]
+        == electrostatics_routes.parse_sdf(water_sdf).geometry_hash()
+    )
     assert captured["request_params"]["cache_identity_source"] == "geometry_hash"
 
 

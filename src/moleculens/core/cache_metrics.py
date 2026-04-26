@@ -62,4 +62,3 @@ class CacheMetrics:
 
 
 cache_metrics = CacheMetrics()
-
