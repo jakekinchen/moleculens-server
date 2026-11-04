@@ -1,0 +1,87 @@
+{
+  "observedAt": "2026-11-04T04:01:17.113126+00:00",
+  "runtime": {
+    "observedAt": "2026-11-04T04:01:17.113126+00:00",
+    "ready": {
+      "cacheDir": true,
+      "database": true,
+      "status": "healthy",
+      "version": "go-2"
+    },
+    "containers": {
+      "moleculens-vps1-short-1": {
+        "image": "sha256:18bfc72609c3edf4232843d30066bf5c03432b764ec8301f393fb2bbfbbcc3f8",
+        "running": true,
+        "oomKilled": false
+      },
+      "moleculens-vps1-api-1": {
+        "image": "sha256:cabeb6d6e30617fde35c45be5d7deec9207bec1195994d447783bb1991fada7f",
+        "running": true,
+        "oomKilled": false
+      },
+      "moleculens-vps1-chemistry-1": {
+        "image": "sha256:18bfc72609c3edf4232843d30066bf5c03432b764ec8301f393fb2bbfbbcc3f8",
+        "running": true,
+        "oomKilled": false
+      },
+      "moleculens-vps1-caddy-1": {
+        "image": "sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d",
+        "running": true,
+        "oomKilled": false
+      },
+      "moleculens-vps1-postgres-1": {
+        "image": "sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777",
+        "running": true,
+        "oomKilled": false
+      }
+    },
+    "queueCounts": "done|25\nerror|6",
+    "activeJobs": 0,
+    "timers": {
+      "moleculens-database-backup.timer": "enabled",
+      "moleculens-artifact-gc.timer": "enabled"
+    },
+    "rootFreeBytes": 19907457024,
+    "passed": true
+  },
+  "finalWorkerNativeSmoke": {
+    "conformer": {
+      "jobId": "g_ef584fe36137214c7d5b25bccfa3cc56",
+      "seconds": 3.274004925000554,
+      "quality": "optimized",
+      "freshNativeResult": true,
+      "cacheReuseVerified": true
+    },
+    "naming": {
+      "displayName": "heptan-1-ol",
+      "verified": true,
+      "opsinStatus": "matched",
+      "seconds": 4.5526668679995055
+    },
+    "passed": true
+  },
+  "largestConformerReplay": {
+    "atoms": 785,
+    "legacyJobId": "54dab9cd-de73-470e-975e-999b24780b1a",
+    "jobId": "g_bdebe6b66d1cbfd7a76f7fa681bcf2fe",
+    "startedAt": "2026-11-04T01:55:07.456923+00:00",
+    "finishedAt": "2026-11-04T03:55:08.576873+00:00",
+    "status": "failed",
+    "errorMessage": "adapter process: context deadline exceeded",
+    "passed": false,
+    "containerOOMEvents": {
+      "moleculens-vps1-short-1": 0,
+      "moleculens-vps1-api-1": 0,
+      "moleculens-vps1-chemistry-1": 0,
+      "moleculens-vps1-caddy-1": 0,
+      "moleculens-vps1-postgres-1": 0
+    },
+    "limit": "Very large fresh conformers remain unqualified; saved historical results remain readable."
+  },
+  "backendMergedRevision": "27931a359543dea2a409a2641619df7846ba7722",
+  "frontendMergedRevision": "a56e1a23fc36391dfc94b74703c9e2ad443b9c8b",
+  "frontendMainDeployment": "dpl_77fKWVTXuNLtTMR9gcuKD14xGka4",
+  "hetznerRetirement": "Awaiting action-time confirmation; old API and worker remain stopped.",
+  "localQualificationVM": "stopped",
+  "brevUsed": false
+}
