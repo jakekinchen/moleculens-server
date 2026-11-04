@@ -1,0 +1,100 @@
+The files belonging to this database system will be owned by user "postgres".
+This user must also own the server process.
+
+The database cluster will be initialized with locale "en_US.utf8".
+The default text search configuration will be set to "english".
+
+Data page checksums are disabled.
+
+fixing permissions on existing directory /var/lib/postgresql/data ... ok
+creating subdirectories ... ok
+selecting dynamic shared memory implementation ... posix
+selecting default max_connections ... 100
+selecting default shared_buffers ... 128MB
+selecting default time zone ... UTC
+creating configuration files ... ok
+running bootstrap script ... ok
+/bin/sh: locale: not found
+2026-11-03 20:17:06.977 UTC [34] WARNING:  no usable system locales were found
+performing post-bootstrap initialization ... ok
+syncing data to disk ... ok
+
+initdb: warning: enabling "trust" authentication for local connections
+initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+
+Success. You can now start the database server using:
+
+    /usr/local/bin/pg_ctl -D /var/lib/postgresql/data -l logfile start
+
+waiting for server to start....2026-11-03 20:17:08.783 UTC [51] LOG:  starting PostgreSQL 16.14 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+2026-11-03 20:17:08.784 UTC [51] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-11-03 20:17:08.867 UTC [54] LOG:  database system was shut down at 2026-11-03 20:17:08 UTC
+2026-11-03 20:17:08.878 UTC [51] LOG:  database system is ready to accept connections
+ done
+server started
+CREATE DATABASE
+
+
+/usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+
+waiting for server to shut down....2026-11-03 20:17:09.476 UTC [51] LOG:  received fast shutdown request
+2026-11-03 20:17:09.477 UTC [51] LOG:  aborting any active transactions
+2026-11-03 20:17:09.562 UTC [51] LOG:  background worker "logical replication launcher" (PID 57) exited with exit code 1
+2026-11-03 20:17:09.563 UTC [52] LOG:  shutting down
+2026-11-03 20:17:09.564 UTC [52] LOG:  checkpoint starting: shutdown immediate
+2026-11-03 20:17:09.592 UTC [52] LOG:  checkpoint complete: wrote 926 buffers (22.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.012 s, sync=0.013 s, total=0.029 s; sync files=301, longest=0.007 s, average=0.001 s; distance=4283 kB, estimate=4283 kB; lsn=0/1925DA0, redo lsn=0/1925DA0
+2026-11-03 20:17:09.662 UTC [51] LOG:  database system is shut down
+ done
+server stopped
+
+PostgreSQL init process complete; ready for start up.
+
+2026-11-03 20:17:09.863 UTC [1] LOG:  starting PostgreSQL 16.14 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+2026-11-03 20:17:09.866 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-11-03 20:17:09.866 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-11-03 20:17:09.868 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-11-03 20:17:09.874 UTC [67] LOG:  database system was shut down at 2026-11-03 20:17:09 UTC
+2026-11-03 20:17:09.884 UTC [1] LOG:  database system is ready to accept connections
+2026-11-03 20:17:37.079 UTC [65] LOG:  checkpoint starting: immediate force wait
+2026-11-03 20:17:37.363 UTC [65] LOG:  checkpoint complete: wrote 1023 buffers (25.0%); 0 WAL file(s) added, 0 removed, 1 recycled; write=0.083 s, sync=0.108 s, total=0.283 s; sync files=388, longest=0.085 s, average=0.001 s; distance=9079 kB, estimate=9079 kB; lsn=0/2204400, redo lsn=0/2203CE0
+2026-11-03 20:17:38.261 UTC [176] FATAL:  terminating connection due to administrator command
+2026-11-03 20:17:38.370 UTC [65] LOG:  checkpoint starting: immediate force wait
+2026-11-03 20:17:38.469 UTC [65] LOG:  checkpoint complete: wrote 930 buffers (22.7%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.084 s, sync=0.010 s, total=0.099 s; sync files=305, longest=0.002 s, average=0.001 s; distance=4288 kB, estimate=8600 kB; lsn=0/2633F38, redo lsn=0/2633F00
+2026-11-03 20:17:39.383 UTC [65] LOG:  checkpoint starting: immediate force wait
+2026-11-03 20:17:39.573 UTC [65] LOG:  checkpoint complete: wrote 927 buffers (22.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.094 s, sync=0.094 s, total=0.190 s; sync files=309, longest=0.060 s, average=0.001 s; distance=4586 kB, estimate=8199 kB; lsn=0/2AEB9F8, redo lsn=0/2AAEA10
+2026-11-03 20:17:40.774 UTC [256] FATAL:  sorry, too many clients already
+2026-11-03 20:17:41.166 UTC [258] FATAL:  sorry, too many clients already
+2026-11-03 20:17:41.774 UTC [259] FATAL:  sorry, too many clients already
+2026-11-03 20:17:42.674 UTC [261] FATAL:  sorry, too many clients already
+2026-11-03 20:17:43.563 UTC [263] FATAL:  sorry, too many clients already
+2026-11-03 20:17:44.565 UTC [272] FATAL:  sorry, too many clients already
+2026-11-03 20:17:46.970 UTC [279] FATAL:  sorry, too many clients already
+2026-11-03 20:17:48.760 UTC [1] LOG:  server process (PID 192) was terminated by signal 9: Killed
+2026-11-03 20:17:48.760 UTC [1] DETAIL:  Failed process was running: DROP DATABASE "mltest_bcea5bc86ec7bcf44e2cb0bb2690f3a9" WITH (FORCE)
+2026-11-03 20:17:49.266 UTC [1] LOG:  terminating any other active server processes
+2026-11-03 20:17:49.567 UTC [286] LOG:  PID 192 in cancel request did not match any process
+2026-11-03 20:17:49.573 UTC [287] LOG:  PID 265 in cancel request did not match any process
+2026-11-03 20:17:49.676 UTC [1] LOG:  all server processes terminated; reinitializing
+2026-11-03 20:17:49.760 UTC [288] LOG:  database system was interrupted; last known up at 2026-11-03 20:17:39 UTC
+2026-11-03 20:17:49.762 UTC [292] LOG:  PID 161 in cancel request did not match any process
+2026-11-03 20:17:49.870 UTC [293] FATAL:  the database system is in recovery mode
+2026-11-03 20:17:49.871 UTC [294] FATAL:  the database system is in recovery mode
+2026-11-03 20:17:49.958 UTC [296] FATAL:  the database system is in recovery mode
+2026-11-03 20:17:49.978 UTC [298] FATAL:  the database system is in recovery mode
+2026-11-03 20:17:50.064 UTC [300] FATAL:  the database system is in recovery mode
+2026-11-03 20:17:50.086 UTC [302] FATAL:  the database system is in recovery mode
+2026-11-03 20:17:50.093 UTC [288] LOG:  database system was not properly shut down; automatic recovery in progress
+2026-11-03 20:17:50.161 UTC [288] LOG:  redo starts at 0/2AAEA10
+2026-11-03 20:17:50.167 UTC [305] FATAL:  the database system is not yet accepting connections
+2026-11-03 20:17:50.167 UTC [305] DETAIL:  Consistent recovery state has not been yet reached.
+2026-11-03 20:17:50.170 UTC [306] FATAL:  the database system is not yet accepting connections
+2026-11-03 20:17:50.170 UTC [306] DETAIL:  Consistent recovery state has not been yet reached.
+2026-11-03 20:17:50.262 UTC [288] WARNING:  could not open directory "base/16549": No such file or directory
+2026-11-03 20:17:50.262 UTC [288] CONTEXT:  WAL redo at 0/2AEBAF0 for Database/DROP: dir 1663/16549
+2026-11-03 20:17:50.262 UTC [288] WARNING:  some useless files may be left behind in old database directory "base/16549"
+2026-11-03 20:17:50.262 UTC [288] CONTEXT:  WAL redo at 0/2AEBAF0 for Database/DROP: dir 1663/16549
+2026-11-03 20:17:50.263 UTC [288] LOG:  invalid record length at 0/2AED240: expected at least 24, got 0
+2026-11-03 20:17:50.263 UTC [288] LOG:  redo done at 0/2AED218 system usage: CPU: user: 0.00 s, system: 0.00 s, elapsed: 0.10 s
+2026-11-03 20:17:50.267 UTC [289] LOG:  checkpoint starting: end-of-recovery immediate wait
+2026-11-03 20:17:50.280 UTC [289] LOG:  checkpoint complete: wrote 79 buffers (1.9%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.005 s, sync=0.004 s, total=0.013 s; sync files=62, longest=0.002 s, average=0.001 s; distance=250 kB, estimate=250 kB; lsn=0/2AED240, redo lsn=0/2AED240
+2026-11-03 20:17:50.287 UTC [1] LOG:  database system is ready to accept connections

@@ -1,0 +1,39 @@
+[
+  {
+    "case": "density-only",
+    "jobId": "g_8e6cd6d7100ae426668f8ed809ffda4d",
+    "meta": {
+      "basis": "sto-3g",
+      "charge": 0,
+      "computeTimeMs": 1280.655860900879,
+      "densityIsovalue": 0.02,
+      "gridSpacingAngstrom": 0.25,
+      "method": "scf",
+      "multiplicity": 1,
+      "psi4NumThreads": 1,
+      "totalEnergy": -74.94596800299193
+    },
+    "densityVertices": 430,
+    "energiesEv": {}
+  },
+  {
+    "case": "charge-two",
+    "jobId": "g_e07b6736839eddc2829bb96eb747c889",
+    "meta": {
+      "basis": "sto-3g",
+      "charge": 2,
+      "computeTimeMs": 1334.0330123901367,
+      "densityIsovalue": 0.013,
+      "gridSpacingAngstrom": 0.25,
+      "method": "scf",
+      "multiplicity": 1,
+      "psi4NumThreads": 1,
+      "totalEnergy": -73.57457364354977
+    },
+    "densityVertices": null,
+    "energiesEv": {
+      "homo": -45.471176726956294,
+      "lumo": -27.161868939265805
+    }
+  }
+]

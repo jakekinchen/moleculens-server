@@ -1,0 +1,17 @@
+{
+  "states": {
+    "error": 2,
+    "done": 21
+  },
+  "failures": [
+    {
+      "kind": "nomenclature",
+      "reason": "adapter process: context deadline exceeded"
+    },
+    {
+      "kind": "nomenclature",
+      "reason": "adapter process: context deadline exceeded"
+    }
+  ],
+  "note": "Two naming deadline failures are from initial 0.5-CPU tuning runs; final workload passed. No pending or running jobs at cleanup."
+}

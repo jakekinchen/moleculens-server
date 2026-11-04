@@ -1,0 +1,7 @@
+FROM gcr.io/distroless/static-debian12@sha256:52dcfbabb7457ea47c82f6e13af8c8a4a1d9f7b0145142b3ecab20f2b888411d
+COPY build/moleculens-linux /moleculens
+ENV GOMEMLIMIT=384MiB
+USER 65532:65532
+EXPOSE 8000
+ENTRYPOINT ["/moleculens"]
+CMD ["api", "--artifacts", "/var/go-artifacts", "--legacy-artifacts", "/var/legacy-artifacts"]

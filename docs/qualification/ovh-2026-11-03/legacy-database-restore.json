@@ -1,0 +1,17 @@
+{
+  "database": "legacycheck_e42f66e49d884b7c",
+  "dumpSHA256": "78caa1a6208e732c1792b67fd6eb49f1b5915e9f2dcf389b8f84209fde04bb39",
+  "tables": {
+    "jobs": {
+      "rows": 448,
+      "sha256": "0c992bf026cb84a2ff1f6119727fc4ba6334bf48db94989f744c5ef6a501cbb4"
+    },
+    "cache_entries": {
+      "rows": 439,
+      "sha256": "3e01a4b4ef4c3a5cbbd9631fe6190dcc5ebaf02cf383d40063298fcb68e32272"
+    }
+  },
+  "databaseRestorePassed": true,
+  "historicalArtifactsRestored": false,
+  "scope": "Original PostgreSQL dump restored into a separate database on OVH; every public job/cache row matches the source observation byte for byte. Artifact archive verification and final production drain remain separate."
+}

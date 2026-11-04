@@ -1,0 +1,17 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.11.14, pytest-9.0.2, pluggy-1.6.0
+rootdir: /Users/kelly/Developer/moleculens-server-go
+configfile: pyproject.toml
+plugins: anyio-4.12.0, asyncio-1.3.0, cov-7.0.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+collected 61 items
+
+tests/unit/test_correctness_regressions.py ..............                [ 22%]
+tests/unit/test_cube_parser.py .......                                   [ 34%]
+tests/unit/test_job_queue.py .............                               [ 55%]
+tests/unit/test_marching_cubes.py .......                                [ 67%]
+tests/unit/test_nomenclature.py .........                                [ 81%]
+tests/unit/test_sdf_parser.py ..........                                 [ 98%]
+tests/integration/test_legacy_postgres.py .                              [100%]
+
+============================== 61 passed in 1.53s ==============================

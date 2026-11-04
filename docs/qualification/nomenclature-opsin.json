@@ -1,0 +1,90 @@
+{
+  "caseCount": 398,
+  "categories": {
+    "acids": 8,
+    "alcohols": 5,
+    "alkanes": 7,
+    "alkenes_alkynes": 6,
+    "api": 1,
+    "bridges": 21,
+    "charged": 3,
+    "composite_bridges": 4,
+    "fallback_smiles": 1,
+    "fused_multiplicity": 2,
+    "fused_parents": 120,
+    "guardrail_metal": 3,
+    "guardrail_mixture": 1,
+    "guardrail_salt": 2,
+    "haloalkanes": 3,
+    "heteroatom_substituents": 5,
+    "heterocycle": 2,
+    "heterocycles": 44,
+    "imines": 6,
+    "ketones": 3,
+    "moleculens_catalog": 20,
+    "name_builder": 1,
+    "nitro": 2,
+    "numbering": 1,
+    "oxyacids": 9,
+    "p13_additive": 3,
+    "p13_conjunctive": 17,
+    "p13_multiplicative": 2,
+    "p13_replacement": 4,
+    "p13_substitutive": 7,
+    "p13_subtractive": 3,
+    "polycycles": 9,
+    "polycyclic_descriptors": 4,
+    "polyfunctional_fragments": 10,
+    "principal_group_breadth": 17,
+    "replacement_parents": 33,
+    "stereochemistry": 3,
+    "substituents": 6
+  },
+  "corpusVersion": 1,
+  "durationSeconds": 137.913,
+  "failures": [
+    {
+      "category": "replacement_parents",
+      "displayName": "chloride",
+      "id": "openclatura-replacement_parents-017",
+      "kind": "opsin_non_match",
+      "smiles": "[ClH]",
+      "status": "mismatched"
+    }
+  ],
+  "gates": {
+    "corpusSize": {
+      "actual": 398,
+      "passed": true,
+      "required": "300-500"
+    },
+    "guardrailRecall": {
+      "actual": 1.0,
+      "passed": true,
+      "required": 1.0
+    },
+    "opsinMatchRate": {
+      "actual": 0.997449,
+      "measured": true,
+      "passed": true,
+      "required": 0.95
+    },
+    "supportedNameRate": {
+      "actual": 1.0,
+      "passed": true,
+      "required": 0.9
+    }
+  },
+  "guardrailRecall": 1.0,
+  "opsinMatchRate": 0.997449,
+  "opsinStatuses": {
+    "matched": 391,
+    "mismatched": 1
+  },
+  "outcomes": {
+    "guarded": 6,
+    "named": 392
+  },
+  "supportedNameRate": 1.0,
+  "verifyOpsin": true
+}

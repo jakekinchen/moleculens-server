@@ -48,27 +48,42 @@ def _build_etkdg_params(all_chem: Any, method: str, max_attempts: int) -> tuple[
 
 
 def _has_metal(chem: Any, mol: Any) -> bool:
-    try:
-        periodic_table = chem.GetPeriodicTable()
-    except Exception:
-        return False
-
-    for atom in mol.GetAtoms():
-        try:
-            if periodic_table.IsMetal(atom.GetAtomicNum()):
-                return True
-        except Exception:
-            return False
-    return False
+    # RDKit has no PeriodicTable.IsMetal. Conservatively skip optimization
+    # outside the nonmetal/metalloid set instead of treating lookup failure as safe.
+    nonmetals = {
+        1,
+        2,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        14,
+        15,
+        16,
+        17,
+        18,
+        32,
+        33,
+        34,
+        35,
+        36,
+        51,
+        52,
+        53,
+        54,
+        85,
+        86,
+        117,
+        118,
+    }
+    return any(a.GetAtomicNum() not in nonmetals for a in mol.GetAtoms())
 
 
 def _ensure_planar_coords(chem: Any, mol: Any) -> None:
     if mol.GetNumConformers() == 0:
-        conf = chem.Conformer(mol.GetNumAtoms())
-        for idx in range(mol.GetNumAtoms()):
-            conf.SetAtomPosition(idx, (0.0, 0.0, 0.0))
-        mol.AddConformer(conf, assignId=True)
-        return
+        raise ConformerComputationError("No valid planar coordinates remain")
 
     conf = mol.GetConformer()
     for idx in range(mol.GetNumAtoms()):
@@ -100,6 +115,7 @@ def run_conformer_computation(
     add_hs: bool = False,
     geom_version: str = "v1",
     output_dir: Path | None = None,
+    seed: int = 0,
 ) -> ConformerResult:
     """Generate a 3D conformer from a 2D molblock.
 
@@ -122,7 +138,9 @@ def run_conformer_computation(
     if opt_norm in ("off", "false", "no"):
         opt_norm = "none"
 
+    original_conformer = Chem.Conformer(mol.GetConformer()) if mol.GetNumConformers() else None
     params, method_norm = _build_etkdg_params(AllChem, method, max_attempts)
+    params.randomSeed = seed
 
     logger.info(
         "Starting conformer computation",
@@ -162,7 +180,14 @@ def run_conformer_computation(
                 timings["opt"] = (time.time() - t0) * 1000
         quality = "optimized" if opt_status == "optimized" else "embedded"
     else:
+        if original_conformer is None:
+            raise ConformerComputationError("Embedding failed and no input depiction exists")
+        mol.RemoveAllConformers()
+        mol.AddConformer(original_conformer, assignId=True)
         _ensure_planar_coords(Chem, mol)
+        positions = mol.GetConformer().GetPositions()
+        if mol.GetNumAtoms() > 1 and all((p == positions[0]).all() for p in positions):
+            raise ConformerComputationError("Embedding failed and input coordinates are degenerate")
         if add_hs:
             mol = Chem.AddHs(mol, addCoords=True)
             _ensure_planar_coords(Chem, mol)

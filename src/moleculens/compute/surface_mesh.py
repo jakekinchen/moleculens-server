@@ -38,8 +38,6 @@ VDW_RADII: dict[str, float] = {
     "Se": 1.90,
 }
 
-DEFAULT_VDW_RADIUS = 1.70  # Default for unknown elements
-
 
 @dataclass
 class MolecularSurfaceMesh:
@@ -54,7 +52,9 @@ class MolecularSurfaceMesh:
 
 def get_vdw_radius(symbol: str) -> float:
     """Get van der Waals radius for an element."""
-    return VDW_RADII.get(symbol.capitalize(), DEFAULT_VDW_RADIUS)
+    if symbol not in VDW_RADII:
+        raise ValueError(f"No qualified van der Waals radius for {symbol}")
+    return VDW_RADII[symbol]
 
 
 def generate_molecular_surface(
@@ -81,6 +81,14 @@ def generate_molecular_surface(
     if n_atoms == 0:
         raise ValueError("No atoms provided")
 
+    if (
+        not np.isfinite(atom_positions).all()
+        or len(atom_symbols) != n_atoms
+        or not 0.1 <= grid_spacing <= 1.0
+        or not 0 <= probe_radius <= 5
+        or not 1 <= padding <= 10
+    ):
+        raise ValueError("Invalid surface parameters")
     # Get vdW radii for each atom
     radii = np.array([get_vdw_radius(s) + probe_radius for s in atom_symbols])
 
@@ -97,10 +105,9 @@ def generate_molecular_surface(
     max_grid_size = 200
     if max(nx, ny, nz) > max_grid_size:
         scale = max_grid_size / max(nx, ny, nz)
-        nx = int(nx * scale)
-        ny = int(ny * scale)
-        nz = int(nz * scale)
-        grid_spacing = (max_coords[0] - min_coords[0]) / (nx - 1)
+        nx = max(2, int(nx * scale))
+        ny = max(2, int(ny * scale))
+        nz = max(2, int(nz * scale))
 
     # Create coordinate arrays
     x = np.linspace(min_coords[0], max_coords[0], nx)
@@ -129,7 +136,7 @@ def generate_molecular_surface(
 
     # Extract isosurface at SDF = 0
     try:
-        spacing = (grid_spacing, grid_spacing, grid_spacing)
+        spacing = tuple((max_coords - min_coords) / (np.array([nx, ny, nz]) - 1))
         verts, faces, _, _ = measure.marching_cubes(
             sdf,
             level=0.0,

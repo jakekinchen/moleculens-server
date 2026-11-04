@@ -1,0 +1,65 @@
+{
+  "dockerReportedStoredLayerBytes": [
+    {
+      "Id": "sha256:8a5608c6b4d068e1970e621c644eec069c1cab4726dfbec69b6cb0e458dc7e14",
+      "RepoTags": [
+        "moleculens-go-worker:vps1-candidate"
+      ],
+      "Size": 4718679423,
+      "SharedSize": 4693226932,
+      "Containers": 2
+    },
+    {
+      "Id": "sha256:a54c9f890d208e0a0a4b06f7b1c1096847d695ecc32250bac38930ec96f62574",
+      "RepoTags": [
+        "moleculens-go-api:vps1-candidate"
+      ],
+      "Size": 31544426,
+      "SharedSize": 6171599,
+      "Containers": 1
+    },
+    {
+      "Id": "sha256:a1b340861ed2deb3469423a04f392c63ae90f4f292c14dec6c51f5752949af60",
+      "RepoTags": [
+        "moleculens-go-worker:candidate"
+      ],
+      "Size": 4718675479,
+      "SharedSize": 4693226932,
+      "Containers": 0
+    },
+    {
+      "Id": "sha256:249252444c1e6bc6bac090ad81854d82a826758c1841b435adf945ec02798619",
+      "RepoTags": [
+        "moleculens-go-api:candidate"
+      ],
+      "Size": 31540558,
+      "SharedSize": 6171599,
+      "Containers": 0
+    },
+    {
+      "Id": "sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d",
+      "RepoTags": [
+        "caddy:2.10.2-alpine",
+        "caddy@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d"
+      ],
+      "Size": 83188615,
+      "SharedSize": 32,
+      "Containers": 1
+    },
+    {
+      "Id": "sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777",
+      "RepoTags": [
+        "postgres:16.14-alpine",
+        "postgres@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777"
+      ],
+      "Size": 419579913,
+      "SharedSize": 0,
+      "Containers": 1
+    }
+  ],
+  "currentStackImageStorageUpperBoundBytes": 5252992377,
+  "retainedRollbackIncrementBytes": 50817506,
+  "currentPlusRollbackUpperBoundBytes": 5303809883,
+  "allRetainedDevelopmentImageLayerBytes": 7016140389,
+  "scope": "Docker system/df measures stored unpacked/shared image data. The stack sums its four image sizes conservatively; old API/worker add only layers not already shared. This excludes historical production databases/artifacts."
+}

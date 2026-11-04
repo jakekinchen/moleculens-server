@@ -85,14 +85,14 @@ def worker_loop() -> None:
                     job_type = "orbital"
 
             # Set up output directory
-            output_dir = settings.molecule_cache_dir / job.cache_key
-            output_dir.mkdir(parents=True, exist_ok=True)
+            output_dir = settings.molecule_cache_dir / job.cache_key / job.attempt_token
 
             # Set up scratch directory for this job
-            scratch_dir = settings.psi_scratch / job.id
-            scratch_dir.mkdir(parents=True, exist_ok=True)
+            scratch_dir = settings.psi_scratch / job.id / job.attempt_token
 
             try:
+                output_dir.mkdir(parents=True, exist_ok=False)
+                scratch_dir.mkdir(parents=True, exist_ok=False)
                 if job_type == "electrostatics":
                     # Run electrostatics computation
                     surface_params = params.get("surface", {})
@@ -125,6 +125,7 @@ def worker_loop() -> None:
                         max_attempts=conformer_params.get("max_attempts", 10),
                         max_opt_iters=conformer_params.get("max_opt_iters", 200),
                         add_hs=conformer_params.get("add_hs", False),
+                        seed=conformer_params.get("seed", 0),
                         geom_version=params.get("geom_version", "unknown"),
                         output_dir=output_dir,
                     )
@@ -139,6 +140,9 @@ def worker_loop() -> None:
                         orbitals=params["orbitals"],
                         output_dir=output_dir,
                         scratch_dir=scratch_dir,
+                        charge=params.get("charge", 0),
+                        multiplicity=params.get("multiplicity", 1),
+                        density_isovalue=params.get("density_isovalue", 0.01),
                     )
 
                 # Mark job complete
@@ -147,6 +151,7 @@ def worker_loop() -> None:
                     result_meta=result.meta,
                     artifact_paths=result.artifact_files,
                     compute_time_ms=result.compute_time_ms,
+                    attempt_token=job.attempt_token,
                 )
 
                 logger.info(
@@ -154,6 +159,7 @@ def worker_loop() -> None:
                     job_id=job.id[:12],
                     job_type=job_type,
                     compute_time_ms=result.compute_time_ms,
+                    attempt_token=job.attempt_token,
                 )
 
             except (
@@ -162,11 +168,13 @@ def worker_loop() -> None:
                 ConformerComputationError,
             ) as e:
                 logger.error("Computation failed", job_id=job.id[:12], error=str(e))
-                job_queue.fail_job(job.id, str(e))
+                job_queue.fail_job(job.id, str(e), attempt_token=job.attempt_token)
 
             except Exception as e:
                 logger.exception("Unexpected error processing job", job_id=job.id[:12])
-                job_queue.fail_job(job.id, f"Unexpected error: {e}")
+                job_queue.fail_job(
+                    job.id, f"Unexpected error: {e}", attempt_token=job.attempt_token
+                )
 
             finally:
                 # Clean up job-specific scratch directory

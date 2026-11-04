@@ -1,0 +1,12 @@
+{
+  "source": "Live old HTTPS API on Hetzner",
+  "target": "New OVH Go HTTPS API",
+  "historicalIDsCompared": 448,
+  "completedResultsCompared": 439,
+  "errorRowsCompared": 9,
+  "failures": [],
+  "passed": true,
+  "maximumPairedReadSeconds": 0.11691252599939617,
+  "preservedOutputRollupSHA256": "32af2743a18ccc52ad1cfce87ddd0e685c0f56646ef654f898b791153cb0f5e0",
+  "scope": "Compares every historical ID/status/error, previously exposed timestamps/timings, completed geometries/meshes/energies/dipoles and metadata. Extra stored fields and omission of optional null fields are allowed; every previously exposed non-null scientific value must match exactly."
+}

@@ -1,0 +1,3192 @@
+{
+  "version": 1,
+  "description": "Initial MolecuLens nomenclature rollout corpus",
+  "openclaturaVersion": "0.1.2",
+  "methodology": "Curated MolecuLens catalog, fallback, stereochemistry, charged, and guardrail cases plus the locked Openclatura round-trip corpus, deduplicated by canonical isomeric SMILES.",
+  "cases": [
+    {
+      "id": "moleculens-water",
+      "label": "Water",
+      "smiles": "O",
+      "category": "moleculens_catalog",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-ethanol",
+      "label": "Ethanol",
+      "smiles": "CCO",
+      "category": "moleculens_catalog",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-glucose",
+      "label": "Glucose",
+      "smiles": "OCC1OC(O)C(O)C(O)C1O",
+      "category": "moleculens_catalog",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-sucrose",
+      "label": "Sucrose",
+      "smiles": "OCC1OC(OC2(CO)OC(CO)C(O)C2O)C(O)C(O)C1O",
+      "category": "moleculens_catalog",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-aspirin",
+      "label": "Aspirin",
+      "smiles": "CC(=O)Oc1ccccc1C(=O)O",
+      "category": "moleculens_catalog",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-acetaminophen",
+      "label": "Acetaminophen",
+      "smiles": "CC(=O)Nc1ccc(O)cc1",
+      "category": "moleculens_catalog",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-ibuprofen",
+      "label": "Ibuprofen",
+      "smiles": "CC(C)Cc1ccc(C(C)C(=O)O)cc1",
+      "category": "moleculens_catalog",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-caffeine",
+      "label": "Caffeine",
+      "smiles": "Cn1c(=O)c2c(ncn2C)n(C)c1=O",
+      "category": "moleculens_catalog",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-benzene",
+      "label": "Benzene",
+      "smiles": "c1ccccc1",
+      "category": "moleculens_catalog",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-acetic-acid",
+      "label": "Acetic Acid",
+      "smiles": "CC(=O)O",
+      "category": "moleculens_catalog",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-citric-acid",
+      "label": "Citric Acid",
+      "smiles": "O=C(O)CC(O)(CC(=O)O)C(=O)O",
+      "category": "moleculens_catalog",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-lactic-acid",
+      "label": "Lactic Acid",
+      "smiles": "CC(O)C(=O)O",
+      "category": "moleculens_catalog",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-urea",
+      "label": "Urea",
+      "smiles": "NC(N)=O",
+      "category": "moleculens_catalog",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-glycine",
+      "label": "Glycine",
+      "smiles": "NCC(=O)O",
+      "category": "moleculens_catalog",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-dopamine",
+      "label": "Dopamine",
+      "smiles": "NCCc1ccc(O)c(O)c1",
+      "category": "moleculens_catalog",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-serotonin",
+      "label": "Serotonin",
+      "smiles": "NCCc1c[nH]c2ccc(O)cc12",
+      "category": "moleculens_catalog",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-cholesterol",
+      "label": "Cholesterol",
+      "smiles": "CC(C)CCCC(C)C1CCC2C3CC=C4CC(O)CCC4(C)C3CCC12C",
+      "category": "moleculens_catalog",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-salicylic-acid",
+      "label": "Salicylic Acid",
+      "smiles": "O=C(O)c1ccccc1O",
+      "category": "moleculens_catalog",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-penicillin-g",
+      "label": "Penicillin G",
+      "smiles": "CC1(C)SC2C(NC(=O)Cc3ccccc3)C(=O)N2C1C(=O)O",
+      "category": "moleculens_catalog",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-n-phenylacetamide",
+      "label": "N Phenylacetamide",
+      "smiles": "CC(=O)Nc1ccccc1",
+      "category": "name_builder",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-l-alanine",
+      "label": "L Alanine",
+      "smiles": "C[C@H](N)C(=O)O",
+      "category": "stereochemistry",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-benzyl-alcohol",
+      "label": "Benzyl Alcohol",
+      "smiles": "c1ccccc1CO",
+      "category": "moleculens_catalog",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-2-3-dimethylbutane",
+      "label": "2 3 Dimethylbutane",
+      "smiles": "CC(C)C(C)C",
+      "category": "fallback_smiles",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-acetate",
+      "label": "Acetate",
+      "smiles": "CC(=O)[O-]",
+      "category": "charged",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-methylammonium",
+      "label": "Methylammonium",
+      "smiles": "C[NH3+]",
+      "category": "charged",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-nitrobenzene",
+      "label": "Nitrobenzene",
+      "smiles": "[O-][N+](=O)c1ccccc1",
+      "category": "charged",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-chiral-halide",
+      "label": "Chiral Halide",
+      "smiles": "F[C@H](Cl)Br",
+      "category": "stereochemistry",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-trans-2-butene",
+      "label": "Trans 2 Butene",
+      "smiles": "C/C=C/C",
+      "category": "stereochemistry",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-pyridine",
+      "label": "Pyridine",
+      "smiles": "n1ccccc1",
+      "category": "heterocycle",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-imidazole",
+      "label": "Imidazole",
+      "smiles": "c1ncc[nH]1",
+      "category": "heterocycle",
+      "expected": "supported",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-sodium-chloride",
+      "label": "Sodium Chloride",
+      "smiles": "[Na+].[Cl-]",
+      "category": "guardrail_salt",
+      "expected": "guarded",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-ammonium-chloride",
+      "label": "Ammonium Chloride",
+      "smiles": "[NH4+].[Cl-]",
+      "category": "guardrail_salt",
+      "expected": "guarded",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-ethanol-methylamine-mixture",
+      "label": "Ethanol Methylamine Mixture",
+      "smiles": "CCO.CN",
+      "category": "guardrail_mixture",
+      "expected": "guarded",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-cisplatin",
+      "label": "Cisplatin",
+      "smiles": "N[Pt](Cl)(Cl)N",
+      "category": "guardrail_metal",
+      "expected": "guarded",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-iron-ion",
+      "label": "Iron Ion",
+      "smiles": "[Fe+2]",
+      "category": "guardrail_metal",
+      "expected": "guarded",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "moleculens-bismuthane",
+      "label": "Bismuthane",
+      "smiles": "[BiH3]",
+      "category": "guardrail_metal",
+      "expected": "guarded",
+      "source": "moleculens curated product and guardrail cases"
+    },
+    {
+      "id": "openclatura-acids-002",
+      "label": "Openclatura acids case 2",
+      "smiles": "CCC(=O)O",
+      "category": "acids",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_acids.py"
+    },
+    {
+      "id": "openclatura-acids-003",
+      "label": "Openclatura acids case 3",
+      "smiles": "CCN",
+      "category": "acids",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_acids.py"
+    },
+    {
+      "id": "openclatura-acids-004",
+      "label": "Openclatura acids case 4",
+      "smiles": "CC=O",
+      "category": "acids",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_acids.py"
+    },
+    {
+      "id": "openclatura-acids-005",
+      "label": "Openclatura acids case 5",
+      "smiles": "CCC=O",
+      "category": "acids",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_acids.py"
+    },
+    {
+      "id": "openclatura-acids-006",
+      "label": "Openclatura acids case 6",
+      "smiles": "CC#N",
+      "category": "acids",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_acids.py"
+    },
+    {
+      "id": "openclatura-acids-007",
+      "label": "Openclatura acids case 7",
+      "smiles": "CC(=O)N",
+      "category": "acids",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_acids.py"
+    },
+    {
+      "id": "openclatura-acids-008",
+      "label": "Openclatura acids case 8",
+      "smiles": "COC(=O)C",
+      "category": "acids",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_acids.py"
+    },
+    {
+      "id": "openclatura-acids-009",
+      "label": "Openclatura acids case 9",
+      "smiles": "CC(=O)Oc1ccccc1",
+      "category": "acids",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_acids.py"
+    },
+    {
+      "id": "openclatura-alcohols-002",
+      "label": "Openclatura alcohols case 2",
+      "smiles": "CCCO",
+      "category": "alcohols",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_alcohols.py"
+    },
+    {
+      "id": "openclatura-alcohols-003",
+      "label": "Openclatura alcohols case 3",
+      "smiles": "CC(O)C",
+      "category": "alcohols",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_alcohols.py"
+    },
+    {
+      "id": "openclatura-alcohols-004",
+      "label": "Openclatura alcohols case 4",
+      "smiles": "NCCO",
+      "category": "alcohols",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_alcohols.py"
+    },
+    {
+      "id": "openclatura-alcohols-005",
+      "label": "Openclatura alcohols case 5",
+      "smiles": "OCCO",
+      "category": "alcohols",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_alcohols.py"
+    },
+    {
+      "id": "openclatura-alcohols-006",
+      "label": "Openclatura alcohols case 6",
+      "smiles": "OCC(O)CO",
+      "category": "alcohols",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_alcohols.py"
+    },
+    {
+      "id": "openclatura-alkanes-001",
+      "label": "Openclatura alkanes case 1",
+      "smiles": "C",
+      "category": "alkanes",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_alkanes.py"
+    },
+    {
+      "id": "openclatura-alkanes-002",
+      "label": "Openclatura alkanes case 2",
+      "smiles": "CC",
+      "category": "alkanes",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_alkanes.py"
+    },
+    {
+      "id": "openclatura-alkanes-003",
+      "label": "Openclatura alkanes case 3",
+      "smiles": "CCC",
+      "category": "alkanes",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_alkanes.py"
+    },
+    {
+      "id": "openclatura-alkanes-004",
+      "label": "Openclatura alkanes case 4",
+      "smiles": "CCCC",
+      "category": "alkanes",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_alkanes.py"
+    },
+    {
+      "id": "openclatura-alkanes-005",
+      "label": "Openclatura alkanes case 5",
+      "smiles": "CC(C)C",
+      "category": "alkanes",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_alkanes.py"
+    },
+    {
+      "id": "openclatura-alkanes-006",
+      "label": "Openclatura alkanes case 6",
+      "smiles": "CC(C)(C)C",
+      "category": "alkanes",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_alkanes.py"
+    },
+    {
+      "id": "openclatura-alkanes-007",
+      "label": "Openclatura alkanes case 7",
+      "smiles": "C1CCCCC1",
+      "category": "alkanes",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_alkanes.py"
+    },
+    {
+      "id": "openclatura-alkenes_alkynes-001",
+      "label": "Openclatura alkenes_alkynes case 1",
+      "smiles": "C=C",
+      "category": "alkenes_alkynes",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_alkenes_alkynes.py"
+    },
+    {
+      "id": "openclatura-alkenes_alkynes-002",
+      "label": "Openclatura alkenes_alkynes case 2",
+      "smiles": "CC=C",
+      "category": "alkenes_alkynes",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_alkenes_alkynes.py"
+    },
+    {
+      "id": "openclatura-alkenes_alkynes-003",
+      "label": "Openclatura alkenes_alkynes case 3",
+      "smiles": "C#C",
+      "category": "alkenes_alkynes",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_alkenes_alkynes.py"
+    },
+    {
+      "id": "openclatura-alkenes_alkynes-004",
+      "label": "Openclatura alkenes_alkynes case 4",
+      "smiles": "C=CC=C",
+      "category": "alkenes_alkynes",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_alkenes_alkynes.py"
+    },
+    {
+      "id": "openclatura-alkenes_alkynes-005",
+      "label": "Openclatura alkenes_alkynes case 5",
+      "smiles": "C=CCC#C",
+      "category": "alkenes_alkynes",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_alkenes_alkynes.py"
+    },
+    {
+      "id": "openclatura-alkenes_alkynes-006",
+      "label": "Openclatura alkenes_alkynes case 6",
+      "smiles": "C1=CC=CCC1",
+      "category": "alkenes_alkynes",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_alkenes_alkynes.py"
+    },
+    {
+      "id": "openclatura-api-002",
+      "label": "Openclatura api case 2",
+      "smiles": "OCCC1CCCCC1",
+      "category": "api",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_api.py"
+    },
+    {
+      "id": "openclatura-bridges-002",
+      "label": "Openclatura bridges case 2",
+      "smiles": "C1CC1",
+      "category": "bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_bridges.py"
+    },
+    {
+      "id": "openclatura-bridges-004",
+      "label": "Openclatura bridges case 4",
+      "smiles": "CC1CC1CC",
+      "category": "bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_bridges.py"
+    },
+    {
+      "id": "openclatura-bridges-005",
+      "label": "Openclatura bridges case 5",
+      "smiles": "CCCC(C)(C)CC",
+      "category": "bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_bridges.py"
+    },
+    {
+      "id": "openclatura-bridges-006",
+      "label": "Openclatura bridges case 6",
+      "smiles": "CC1CC1CC(C(C)C)C",
+      "category": "bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_bridges.py"
+    },
+    {
+      "id": "openclatura-bridges-007",
+      "label": "Openclatura bridges case 7",
+      "smiles": "c1ccnnc1",
+      "category": "bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_bridges.py"
+    },
+    {
+      "id": "openclatura-bridges-008",
+      "label": "Openclatura bridges case 8",
+      "smiles": "c1cncnc1",
+      "category": "bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_bridges.py"
+    },
+    {
+      "id": "openclatura-bridges-010",
+      "label": "Openclatura bridges case 10",
+      "smiles": "c1cocn1",
+      "category": "bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_bridges.py"
+    },
+    {
+      "id": "openclatura-bridges-011",
+      "label": "Openclatura bridges case 11",
+      "smiles": "c1cnoc1",
+      "category": "bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_bridges.py"
+    },
+    {
+      "id": "openclatura-bridges-012",
+      "label": "Openclatura bridges case 12",
+      "smiles": "C1CCNCC1",
+      "category": "bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_bridges.py"
+    },
+    {
+      "id": "openclatura-bridges-013",
+      "label": "Openclatura bridges case 13",
+      "smiles": "C1COCCN1",
+      "category": "bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_bridges.py"
+    },
+    {
+      "id": "openclatura-bridges-014",
+      "label": "Openclatura bridges case 14",
+      "smiles": "c1ccc2ccccc2c1",
+      "category": "bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_bridges.py"
+    },
+    {
+      "id": "openclatura-bridges-015",
+      "label": "Openclatura bridges case 15",
+      "smiles": "c1ccc2ncccc2c1",
+      "category": "bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_bridges.py"
+    },
+    {
+      "id": "openclatura-bridges-016",
+      "label": "Openclatura bridges case 16",
+      "smiles": "c1ccc2occc2c1",
+      "category": "bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_bridges.py"
+    },
+    {
+      "id": "openclatura-bridges-017",
+      "label": "Openclatura bridges case 17",
+      "smiles": "c1oc2ncccc2c1",
+      "category": "bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_bridges.py"
+    },
+    {
+      "id": "openclatura-bridges-018",
+      "label": "Openclatura bridges case 18",
+      "smiles": "C1CC2CCC1C2",
+      "category": "bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_bridges.py"
+    },
+    {
+      "id": "openclatura-bridges-019",
+      "label": "Openclatura bridges case 19",
+      "smiles": "C1CCC2(CC1)CCC2",
+      "category": "bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_bridges.py"
+    },
+    {
+      "id": "openclatura-bridges-020",
+      "label": "Openclatura bridges case 20",
+      "smiles": "C1CO1",
+      "category": "bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_bridges.py"
+    },
+    {
+      "id": "openclatura-bridges-021",
+      "label": "Openclatura bridges case 21",
+      "smiles": "O1COCC1",
+      "category": "bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_bridges.py"
+    },
+    {
+      "id": "openclatura-bridges-022",
+      "label": "Openclatura bridges case 22",
+      "smiles": "O1CC=CCC1",
+      "category": "bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_bridges.py"
+    },
+    {
+      "id": "openclatura-bridges-023",
+      "label": "Openclatura bridges case 23",
+      "smiles": "C1CCCCCC1",
+      "category": "bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_bridges.py"
+    },
+    {
+      "id": "openclatura-bridges-024",
+      "label": "Openclatura bridges case 24",
+      "smiles": "C1CCCCCCC1",
+      "category": "bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_bridges.py"
+    },
+    {
+      "id": "openclatura-composite_bridges-001",
+      "label": "Openclatura composite_bridges case 1",
+      "smiles": "CCCCC",
+      "category": "composite_bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_composite_bridges.py"
+    },
+    {
+      "id": "openclatura-composite_bridges-002",
+      "label": "Openclatura composite_bridges case 2",
+      "smiles": "CC1CC1C",
+      "category": "composite_bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_composite_bridges.py"
+    },
+    {
+      "id": "openclatura-composite_bridges-004",
+      "label": "Openclatura composite_bridges case 4",
+      "smiles": "CC(C)CC",
+      "category": "composite_bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_composite_bridges.py"
+    },
+    {
+      "id": "openclatura-composite_bridges-006",
+      "label": "Openclatura composite_bridges case 6",
+      "smiles": "CCCC(C(C)C)CC",
+      "category": "composite_bridges",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_composite_bridges.py"
+    },
+    {
+      "id": "openclatura-fused_multiplicity-001",
+      "label": "Openclatura fused_multiplicity case 1",
+      "smiles": "c1oc2nc3occc3cc2c1",
+      "category": "fused_multiplicity",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_multiplicity.py"
+    },
+    {
+      "id": "openclatura-fused_multiplicity-002",
+      "label": "Openclatura fused_multiplicity case 2",
+      "smiles": "c1sc2nc3sccc3cc2c1",
+      "category": "fused_multiplicity",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_multiplicity.py"
+    },
+    {
+      "id": "openclatura-fused_parents-001",
+      "label": "Openclatura fused_parents case 1",
+      "smiles": "c1cnc2cc[nH]c2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-003",
+      "label": "Openclatura fused_parents case 3",
+      "smiles": "c1cc2ccc3cccc4ccc(c1)c2c34",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-005",
+      "label": "Openclatura fused_parents case 5",
+      "smiles": "C1CC2=CC=CC3=C2C1=CC=C3",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-007",
+      "label": "Openclatura fused_parents case 7",
+      "smiles": "c1ccc2cc3ncccc3cc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-009",
+      "label": "Openclatura fused_parents case 9",
+      "smiles": "c1ccc2cc3ccccc3cc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-010",
+      "label": "Openclatura fused_parents case 10",
+      "smiles": "c1ccc2c(c1)ccc1ccccc12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-012",
+      "label": "Openclatura fused_parents case 12",
+      "smiles": "c1ccc2cnccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-013",
+      "label": "Openclatura fused_parents case 13",
+      "smiles": "Cc1ccc2ncccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-014",
+      "label": "Openclatura fused_parents case 14",
+      "smiles": "COc1ccc2ncccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-015",
+      "label": "Openclatura fused_parents case 15",
+      "smiles": "N#Cc1ccc2ncccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-016",
+      "label": "Openclatura fused_parents case 16",
+      "smiles": "O=C(O)c1ccc2ncccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-017",
+      "label": "Openclatura fused_parents case 17",
+      "smiles": "Cc1ccc2cnccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-018",
+      "label": "Openclatura fused_parents case 18",
+      "smiles": "n1cccc2ncccc12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-019",
+      "label": "Openclatura fused_parents case 19",
+      "smiles": "n1cccc2cnccc12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-020",
+      "label": "Openclatura fused_parents case 20",
+      "smiles": "n1cccc2ccncc12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-021",
+      "label": "Openclatura fused_parents case 21",
+      "smiles": "n1cccc2cccnc12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-022",
+      "label": "Openclatura fused_parents case 22",
+      "smiles": "c1nccc2cnccc12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-023",
+      "label": "Openclatura fused_parents case 23",
+      "smiles": "c1nccc2ccncc12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-024",
+      "label": "Openclatura fused_parents case 24",
+      "smiles": "Cc1nccc2cnccc12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-025",
+      "label": "Openclatura fused_parents case 25",
+      "smiles": "n1cncc2ccccc12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-026",
+      "label": "Openclatura fused_parents case 26",
+      "smiles": "n1ccnc2ccccc12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-027",
+      "label": "Openclatura fused_parents case 27",
+      "smiles": "n1nccc2ccccc12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-028",
+      "label": "Openclatura fused_parents case 28",
+      "smiles": "c1nncc2ccccc12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-029",
+      "label": "Openclatura fused_parents case 29",
+      "smiles": "Cc1ncnc2ccccc12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-030",
+      "label": "Openclatura fused_parents case 30",
+      "smiles": "c1ccc2[nH]ccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-032",
+      "label": "Openclatura fused_parents case 32",
+      "smiles": "c1ccc2sccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-033",
+      "label": "Openclatura fused_parents case 33",
+      "smiles": "c1ccc2nc3ccccc3cc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-034",
+      "label": "Openclatura fused_parents case 34",
+      "smiles": "C1=Cc2ccccc2C1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-035",
+      "label": "Openclatura fused_parents case 35",
+      "smiles": "c1ccc2c(c1)CCc1ccccc1-2",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-036",
+      "label": "Openclatura fused_parents case 36",
+      "smiles": "c1ccc2cc3c(ccc4ccccc43)cc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-037",
+      "label": "Openclatura fused_parents case 37",
+      "smiles": "c1ccc2cc3cc4ccccc4cc3cc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-038",
+      "label": "Openclatura fused_parents case 38",
+      "smiles": "c1ccc2cc3cc4cc5ccccc5cc4cc3cc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-039",
+      "label": "Openclatura fused_parents case 39",
+      "smiles": "c1ccc2c(c1)-c1ccccc1-2",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-040",
+      "label": "Openclatura fused_parents case 40",
+      "smiles": "c1ccc2c(c1)c1ccccc1c1ccccc21",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-041",
+      "label": "Openclatura fused_parents case 41",
+      "smiles": "c1ncc2nc[nH]c2n1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-042",
+      "label": "Openclatura fused_parents case 42",
+      "smiles": "c1ccc2[nH]ncc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-047",
+      "label": "Openclatura fused_parents case 47",
+      "smiles": "c1ccc2nc3ccccc3nc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-048",
+      "label": "Openclatura fused_parents case 48",
+      "smiles": "c1ccc2c(c1)[nH]c1ccccc12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-049",
+      "label": "Openclatura fused_parents case 49",
+      "smiles": "c1ccc2c(c1)CCOc1ccccc1-2",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-050",
+      "label": "Openclatura fused_parents case 50",
+      "smiles": "c1ccc2c(c1)CCSc1ccccc1-2",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-051",
+      "label": "Openclatura fused_parents case 51",
+      "smiles": "C1=COc2ccccc2C1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-052",
+      "label": "Openclatura fused_parents case 52",
+      "smiles": "C1=Cc2ccccc2OC1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-053",
+      "label": "Openclatura fused_parents case 53",
+      "smiles": "N1CCCC2=CC=CC=C12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-054",
+      "label": "Openclatura fused_parents case 54",
+      "smiles": "C1CCC2=CC=CC=C2C1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-055",
+      "label": "Openclatura fused_parents case 55",
+      "smiles": "Oc1cccc2c1NCCC2",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-056",
+      "label": "Openclatura fused_parents case 56",
+      "smiles": "C1Cc2ncccc2O1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-057",
+      "label": "Openclatura fused_parents case 57",
+      "smiles": "N1CCc2ncccc2C1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-058",
+      "label": "Openclatura fused_parents case 58",
+      "smiles": "C1CNc2ncccc2C1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-059",
+      "label": "Openclatura fused_parents case 59",
+      "smiles": "c1[se]c2ncccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-060",
+      "label": "Openclatura fused_parents case 60",
+      "smiles": "c1oc2nccnc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-061",
+      "label": "Openclatura fused_parents case 61",
+      "smiles": "c1oc2ncncc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-062",
+      "label": "Openclatura fused_parents case 62",
+      "smiles": "c1nnc2ncccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-063",
+      "label": "Openclatura fused_parents case 63",
+      "smiles": "c1[nH]c2ncccc2n1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-064",
+      "label": "Openclatura fused_parents case 64",
+      "smiles": "c1ccc2cc3ncncc3cc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-065",
+      "label": "Openclatura fused_parents case 65",
+      "smiles": "c1ccc2cc3nccnc3cc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-066",
+      "label": "Openclatura fused_parents case 66",
+      "smiles": "c1ccc2cc3cnncc3cc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-067",
+      "label": "Openclatura fused_parents case 67",
+      "smiles": "c1ccc2cc3nnccc3cc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-068",
+      "label": "Openclatura fused_parents case 68",
+      "smiles": "c1oc2cc3ncncc3cc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-069",
+      "label": "Openclatura fused_parents case 69",
+      "smiles": "c1sc2cc3ncncc3cc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-070",
+      "label": "Openclatura fused_parents case 70",
+      "smiles": "c1oc2cc3nccnc3cc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-071",
+      "label": "Openclatura fused_parents case 71",
+      "smiles": "c1sc2cc3nccnc3cc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-072",
+      "label": "Openclatura fused_parents case 72",
+      "smiles": "c1oc2cc3cnncc3cc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-073",
+      "label": "Openclatura fused_parents case 73",
+      "smiles": "c1oc2cc3nnccc3cc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-074",
+      "label": "Openclatura fused_parents case 74",
+      "smiles": "c1oc2cc3nc4ccccc4nc3cc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-075",
+      "label": "Openclatura fused_parents case 75",
+      "smiles": "c1sc2cc3nc4ccccc4nc3cc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-076",
+      "label": "Openclatura fused_parents case 76",
+      "smiles": "c1oc2cc3[nH]ncc3cc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-077",
+      "label": "Openclatura fused_parents case 77",
+      "smiles": "c1oc2nc3occc3nc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-078",
+      "label": "Openclatura fused_parents case 78",
+      "smiles": "c1sc2nc3sccc3nc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-079",
+      "label": "Openclatura fused_parents case 79",
+      "smiles": "c1oc2nc3sccc3cc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-081",
+      "label": "Openclatura fused_parents case 81",
+      "smiles": "c1ccc2c(c1)ccc1c3ccccc3ccc21",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-082",
+      "label": "Openclatura fused_parents case 82",
+      "smiles": "c1ccc2c(c1)ccc1cc3c(ccc4ccccc43)cc12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-083",
+      "label": "Openclatura fused_parents case 83",
+      "smiles": "Cc1cccc2ccccc12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-084",
+      "label": "Openclatura fused_parents case 84",
+      "smiles": "Cc1ccc2ccccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-085",
+      "label": "Openclatura fused_parents case 85",
+      "smiles": "Oc1cccc2ccccc12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-086",
+      "label": "Openclatura fused_parents case 86",
+      "smiles": "Nc1cccc2ccccc12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-087",
+      "label": "Openclatura fused_parents case 87",
+      "smiles": "Sc1cccc2ccccc12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-088",
+      "label": "Openclatura fused_parents case 88",
+      "smiles": "Oc1cccc2ncccc12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-089",
+      "label": "Openclatura fused_parents case 89",
+      "smiles": "Nc1cccc2[nH]ccc12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-090",
+      "label": "Openclatura fused_parents case 90",
+      "smiles": "Oc1cccc2occc12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-091",
+      "label": "Openclatura fused_parents case 91",
+      "smiles": "Oc1ccc2cc3ccccc3cc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-092",
+      "label": "Openclatura fused_parents case 92",
+      "smiles": "Oc1ccc2c(c1)ccc1ccccc12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-093",
+      "label": "Openclatura fused_parents case 93",
+      "smiles": "Oc1ccc2nc3ccccc3cc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-094",
+      "label": "Openclatura fused_parents case 94",
+      "smiles": "C1=Cc2c(O)cccc2C1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-095",
+      "label": "Openclatura fused_parents case 95",
+      "smiles": "Oc1ccc2c(c1)CCc1ccccc1-2",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-096",
+      "label": "Openclatura fused_parents case 96",
+      "smiles": "Oc1cc2ccc3cccc4ccc(c1)c2c34",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-097",
+      "label": "Openclatura fused_parents case 97",
+      "smiles": "Oc1ccc2cc3c(ccc4ccccc43)cc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-098",
+      "label": "Openclatura fused_parents case 98",
+      "smiles": "Oc1ccc2[nH]ncc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-099",
+      "label": "Openclatura fused_parents case 99",
+      "smiles": "Oc1ccc2ncncc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-100",
+      "label": "Openclatura fused_parents case 100",
+      "smiles": "Oc1ccc2nccnc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-101",
+      "label": "Openclatura fused_parents case 101",
+      "smiles": "Oc1ccc2cnncc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-102",
+      "label": "Openclatura fused_parents case 102",
+      "smiles": "Oc1ccc2nnccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-103",
+      "label": "Openclatura fused_parents case 103",
+      "smiles": "Oc1ccc2nc3ccccc3nc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-104",
+      "label": "Openclatura fused_parents case 104",
+      "smiles": "Oc1ccc2c(c1)[nH]c1ccccc12",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-105",
+      "label": "Openclatura fused_parents case 105",
+      "smiles": "Oc1ccc2c(c1)CCOc1ccccc1-2",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-106",
+      "label": "Openclatura fused_parents case 106",
+      "smiles": "Oc1ccc2c(c1)CCSc1ccccc1-2",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-107",
+      "label": "Openclatura fused_parents case 107",
+      "smiles": "C1=COc2c(O)cccc2C1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-108",
+      "label": "Openclatura fused_parents case 108",
+      "smiles": "C1=CSc2c(O)cccc2C1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-109",
+      "label": "Openclatura fused_parents case 109",
+      "smiles": "C1=Cc2c(O)cccc2OC1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-110",
+      "label": "Openclatura fused_parents case 110",
+      "smiles": "C1=Cc2c(O)cccc2SC1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-111",
+      "label": "Openclatura fused_parents case 111",
+      "smiles": "CC1CC2=CC=CC3=C2C1=CC=C3",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-112",
+      "label": "Openclatura fused_parents case 112",
+      "smiles": "ClC1CC2=CC=CC3=C2C1=CC=C3",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-113",
+      "label": "Openclatura fused_parents case 113",
+      "smiles": "O1CC2=CC=CC3=C2C1=CC=C3",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-114",
+      "label": "Openclatura fused_parents case 114",
+      "smiles": "N1CC2=CC=CC3=C2C1=CC=C3",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-115",
+      "label": "Openclatura fused_parents case 115",
+      "smiles": "S1CC2=CC=CC3=C2C1=CC=C3",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-116",
+      "label": "Openclatura fused_parents case 116",
+      "smiles": "Cc1oc2ncccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-117",
+      "label": "Openclatura fused_parents case 117",
+      "smiles": "Oc1oc2ncccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-118",
+      "label": "Openclatura fused_parents case 118",
+      "smiles": "Nc1oc2ncccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-119",
+      "label": "Openclatura fused_parents case 119",
+      "smiles": "N#Cc1oc2ncccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-120",
+      "label": "Openclatura fused_parents case 120",
+      "smiles": "O=Cc1oc2ncccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-121",
+      "label": "Openclatura fused_parents case 121",
+      "smiles": "O=C(O)c1oc2ncccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-122",
+      "label": "Openclatura fused_parents case 122",
+      "smiles": "NC(=O)c1oc2ncccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-123",
+      "label": "Openclatura fused_parents case 123",
+      "smiles": "CCOC(=O)c1oc2ncccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-124",
+      "label": "Openclatura fused_parents case 124",
+      "smiles": "O=C(Cl)c1oc2ncccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-125",
+      "label": "Openclatura fused_parents case 125",
+      "smiles": "O=S(=O)(O)c1oc2ncccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-126",
+      "label": "Openclatura fused_parents case 126",
+      "smiles": "OP(=O)(O)c1oc2ncccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-127",
+      "label": "Openclatura fused_parents case 127",
+      "smiles": "OS(=O)(=O)Oc1oc2ncccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-128",
+      "label": "Openclatura fused_parents case 128",
+      "smiles": "OP(=O)(O)Oc1oc2ncccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-129",
+      "label": "Openclatura fused_parents case 129",
+      "smiles": "c1oc2ncccc2c1O[N+](=O)[O-]",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-130",
+      "label": "Openclatura fused_parents case 130",
+      "smiles": "c1oc2ncccc2c1ON=O",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-fused_parents-131",
+      "label": "Openclatura fused_parents case 131",
+      "smiles": "NS(=O)(=O)c1oc2ncccc2c1",
+      "category": "fused_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_fused_parents.py"
+    },
+    {
+      "id": "openclatura-haloalkanes-001",
+      "label": "Openclatura haloalkanes case 1",
+      "smiles": "CCCl",
+      "category": "haloalkanes",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_haloalkanes.py"
+    },
+    {
+      "id": "openclatura-haloalkanes-002",
+      "label": "Openclatura haloalkanes case 2",
+      "smiles": "ClCCO",
+      "category": "haloalkanes",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_haloalkanes.py"
+    },
+    {
+      "id": "openclatura-haloalkanes-003",
+      "label": "Openclatura haloalkanes case 3",
+      "smiles": "CC(F)C",
+      "category": "haloalkanes",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_haloalkanes.py"
+    },
+    {
+      "id": "openclatura-heteroatom_substituents-001",
+      "label": "Openclatura heteroatom_substituents case 1",
+      "smiles": "COCCO",
+      "category": "heteroatom_substituents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heteroatom_substituents.py"
+    },
+    {
+      "id": "openclatura-heteroatom_substituents-002",
+      "label": "Openclatura heteroatom_substituents case 2",
+      "smiles": "CN(C)CCO",
+      "category": "heteroatom_substituents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heteroatom_substituents.py"
+    },
+    {
+      "id": "openclatura-heteroatom_substituents-003",
+      "label": "Openclatura heteroatom_substituents case 3",
+      "smiles": "C[PH]CCO",
+      "category": "heteroatom_substituents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heteroatom_substituents.py"
+    },
+    {
+      "id": "openclatura-heteroatom_substituents-004",
+      "label": "Openclatura heteroatom_substituents case 4",
+      "smiles": "C[SeH]CCO",
+      "category": "heteroatom_substituents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heteroatom_substituents.py"
+    },
+    {
+      "id": "openclatura-heteroatom_substituents-005",
+      "label": "Openclatura heteroatom_substituents case 5",
+      "smiles": "C[SiH2]CCO",
+      "category": "heteroatom_substituents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heteroatom_substituents.py"
+    },
+    {
+      "id": "openclatura-heterocycles-002",
+      "label": "Openclatura heterocycles case 2",
+      "smiles": "c1n[nH]cn1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-003",
+      "label": "Openclatura heterocycles case 3",
+      "smiles": "OC1=CC=CCN1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-004",
+      "label": "Openclatura heterocycles case 4",
+      "smiles": "N1=C=CCCC1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-006",
+      "label": "Openclatura heterocycles case 6",
+      "smiles": "C1CN1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-007",
+      "label": "Openclatura heterocycles case 7",
+      "smiles": "C1COC1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-008",
+      "label": "Openclatura heterocycles case 8",
+      "smiles": "C1CNC1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-009",
+      "label": "Openclatura heterocycles case 9",
+      "smiles": "C1CCOC1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-010",
+      "label": "Openclatura heterocycles case 10",
+      "smiles": "C1CCNC1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-013",
+      "label": "Openclatura heterocycles case 13",
+      "smiles": "O1CCOCC1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-014",
+      "label": "Openclatura heterocycles case 14",
+      "smiles": "O1CCSCC1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-016",
+      "label": "Openclatura heterocycles case 16",
+      "smiles": "N1CCNCC1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-017",
+      "label": "Openclatura heterocycles case 17",
+      "smiles": "O1CCCOCC1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-018",
+      "label": "Openclatura heterocycles case 18",
+      "smiles": "c1ccoc1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-019",
+      "label": "Openclatura heterocycles case 19",
+      "smiles": "c1ccsc1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-020",
+      "label": "Openclatura heterocycles case 20",
+      "smiles": "c1cc[nH]c1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-024",
+      "label": "Openclatura heterocycles case 24",
+      "smiles": "c1cnccn1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-025",
+      "label": "Openclatura heterocycles case 25",
+      "smiles": "c1c[nH]nn1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-028",
+      "label": "Openclatura heterocycles case 28",
+      "smiles": "c1cscn1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-029",
+      "label": "Openclatura heterocycles case 29",
+      "smiles": "c1cnsc1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-030",
+      "label": "Openclatura heterocycles case 30",
+      "smiles": "O1CCCCCCCCCCC1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-031",
+      "label": "Openclatura heterocycles case 31",
+      "smiles": "O1CCNCCCCCCCCC1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-032",
+      "label": "Openclatura heterocycles case 32",
+      "smiles": "c1cc[se]c1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-033",
+      "label": "Openclatura heterocycles case 33",
+      "smiles": "c1cc[te]c1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-034",
+      "label": "Openclatura heterocycles case 34",
+      "smiles": "N1NCCC1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-035",
+      "label": "Openclatura heterocycles case 35",
+      "smiles": "N1CNCC1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-036",
+      "label": "Openclatura heterocycles case 36",
+      "smiles": "O1CNCC1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-037",
+      "label": "Openclatura heterocycles case 37",
+      "smiles": "S1NCCC1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-038",
+      "label": "Openclatura heterocycles case 38",
+      "smiles": "S1CCNCC1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-039",
+      "label": "Openclatura heterocycles case 39",
+      "smiles": "[Se]1CCNCC1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-040",
+      "label": "Openclatura heterocycles case 40",
+      "smiles": "[Te]1CCNCC1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-041",
+      "label": "Openclatura heterocycles case 41",
+      "smiles": "Oc1ccncc1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-042",
+      "label": "Openclatura heterocycles case 42",
+      "smiles": "Nc1ccncc1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-043",
+      "label": "Openclatura heterocycles case 43",
+      "smiles": "Sc1ccncc1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-044",
+      "label": "Openclatura heterocycles case 44",
+      "smiles": "Cc1ccncc1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-045",
+      "label": "Openclatura heterocycles case 45",
+      "smiles": "Clc1ccncc1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-046",
+      "label": "Openclatura heterocycles case 46",
+      "smiles": "O=C(O)c1ccncc1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-047",
+      "label": "Openclatura heterocycles case 47",
+      "smiles": "N#Cc1ccncc1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-048",
+      "label": "Openclatura heterocycles case 48",
+      "smiles": "O=C1CO1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-049",
+      "label": "Openclatura heterocycles case 49",
+      "smiles": "O=C1NCCCCC1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-050",
+      "label": "Openclatura heterocycles case 50",
+      "smiles": "O=C1NC=CC=C1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-051",
+      "label": "Openclatura heterocycles case 51",
+      "smiles": "N1CC=CC=C1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-053",
+      "label": "Openclatura heterocycles case 53",
+      "smiles": "N1C=CCCCC1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-054",
+      "label": "Openclatura heterocycles case 54",
+      "smiles": "N1CC=CCCCCCCC1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-heterocycles-055",
+      "label": "Openclatura heterocycles case 55",
+      "smiles": "N1CCCC=CCCCCCC1",
+      "category": "heterocycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_heterocycles.py"
+    },
+    {
+      "id": "openclatura-imines-001",
+      "label": "Openclatura imines case 1",
+      "smiles": "C=NC",
+      "category": "imines",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_imines.py"
+    },
+    {
+      "id": "openclatura-imines-002",
+      "label": "Openclatura imines case 2",
+      "smiles": "CC=NC",
+      "category": "imines",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_imines.py"
+    },
+    {
+      "id": "openclatura-imines-003",
+      "label": "Openclatura imines case 3",
+      "smiles": "CC(=N)C",
+      "category": "imines",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_imines.py"
+    },
+    {
+      "id": "openclatura-imines-004",
+      "label": "Openclatura imines case 4",
+      "smiles": "C1CCCCC1=N",
+      "category": "imines",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_imines.py"
+    },
+    {
+      "id": "openclatura-imines-005",
+      "label": "Openclatura imines case 5",
+      "smiles": "N1CCCCC1=N",
+      "category": "imines",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_imines.py"
+    },
+    {
+      "id": "openclatura-imines-006",
+      "label": "Openclatura imines case 6",
+      "smiles": "C1CCC2=CC=CC=C2C1=N",
+      "category": "imines",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_imines.py"
+    },
+    {
+      "id": "openclatura-ketones-001",
+      "label": "Openclatura ketones case 1",
+      "smiles": "CC(=O)C",
+      "category": "ketones",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_ketones.py"
+    },
+    {
+      "id": "openclatura-ketones-002",
+      "label": "Openclatura ketones case 2",
+      "smiles": "CCC(=O)C",
+      "category": "ketones",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_ketones.py"
+    },
+    {
+      "id": "openclatura-ketones-003",
+      "label": "Openclatura ketones case 3",
+      "smiles": "O=CCO",
+      "category": "ketones",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_ketones.py"
+    },
+    {
+      "id": "openclatura-nitro-002",
+      "label": "Openclatura nitro case 2",
+      "smiles": "C[N+](=O)[O-]",
+      "category": "nitro",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_nitro.py"
+    },
+    {
+      "id": "openclatura-nitro-003",
+      "label": "Openclatura nitro case 3",
+      "smiles": "CC[N+](=O)[O-]",
+      "category": "nitro",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_nitro.py"
+    },
+    {
+      "id": "openclatura-numbering-001",
+      "label": "Openclatura numbering case 1",
+      "smiles": "CC(O)CC",
+      "category": "numbering",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_numbering.py"
+    },
+    {
+      "id": "openclatura-oxyacids-001",
+      "label": "Openclatura oxyacids case 1",
+      "smiles": "CCS(=O)(=O)O",
+      "category": "oxyacids",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_oxyacids.py"
+    },
+    {
+      "id": "openclatura-oxyacids-002",
+      "label": "Openclatura oxyacids case 2",
+      "smiles": "CCP(=O)(O)O",
+      "category": "oxyacids",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_oxyacids.py"
+    },
+    {
+      "id": "openclatura-oxyacids-003",
+      "label": "Openclatura oxyacids case 3",
+      "smiles": "CO[N+](=O)[O-]",
+      "category": "oxyacids",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_oxyacids.py"
+    },
+    {
+      "id": "openclatura-oxyacids-004",
+      "label": "Openclatura oxyacids case 4",
+      "smiles": "CCO[N+](=O)[O-]",
+      "category": "oxyacids",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_oxyacids.py"
+    },
+    {
+      "id": "openclatura-oxyacids-005",
+      "label": "Openclatura oxyacids case 5",
+      "smiles": "CON=O",
+      "category": "oxyacids",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_oxyacids.py"
+    },
+    {
+      "id": "openclatura-oxyacids-006",
+      "label": "Openclatura oxyacids case 6",
+      "smiles": "CCON=O",
+      "category": "oxyacids",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_oxyacids.py"
+    },
+    {
+      "id": "openclatura-oxyacids-007",
+      "label": "Openclatura oxyacids case 7",
+      "smiles": "CCOS(=O)(=O)O",
+      "category": "oxyacids",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_oxyacids.py"
+    },
+    {
+      "id": "openclatura-oxyacids-008",
+      "label": "Openclatura oxyacids case 8",
+      "smiles": "CCOP(=O)(O)O",
+      "category": "oxyacids",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_oxyacids.py"
+    },
+    {
+      "id": "openclatura-oxyacids-009",
+      "label": "Openclatura oxyacids case 9",
+      "smiles": "CCCCC(CC)CCC(CC(C)C)OS(=O)(=O)O",
+      "category": "oxyacids",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_oxyacids.py"
+    },
+    {
+      "id": "openclatura-p13_additive-002",
+      "label": "Openclatura p13_additive case 2",
+      "smiles": "C1=CCNCC1",
+      "category": "p13_additive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_additive.py"
+    },
+    {
+      "id": "openclatura-p13_additive-003",
+      "label": "Openclatura p13_additive case 3",
+      "smiles": "CP(F)(OC)c1ccccc1",
+      "category": "p13_additive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_additive.py"
+    },
+    {
+      "id": "openclatura-p13_additive-004",
+      "label": "Openclatura p13_additive case 4",
+      "smiles": "C1COc2ncccc21",
+      "category": "p13_additive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_additive.py"
+    },
+    {
+      "id": "openclatura-p13_conjunctive-001",
+      "label": "Openclatura p13_conjunctive case 1",
+      "smiles": "c1ccccc1-c1ccccc1",
+      "category": "p13_conjunctive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_conjunctive.py"
+    },
+    {
+      "id": "openclatura-p13_conjunctive-002",
+      "label": "Openclatura p13_conjunctive case 2",
+      "smiles": "n1ccccc1-c1ccccn1",
+      "category": "p13_conjunctive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_conjunctive.py"
+    },
+    {
+      "id": "openclatura-p13_conjunctive-003",
+      "label": "Openclatura p13_conjunctive case 3",
+      "smiles": "C1CC1-C1CC1",
+      "category": "p13_conjunctive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_conjunctive.py"
+    },
+    {
+      "id": "openclatura-p13_conjunctive-004",
+      "label": "Openclatura p13_conjunctive case 4",
+      "smiles": "c1ccccc1-c2ccc(cc2)-c2ccccc2",
+      "category": "p13_conjunctive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_conjunctive.py"
+    },
+    {
+      "id": "openclatura-p13_conjunctive-005",
+      "label": "Openclatura p13_conjunctive case 5",
+      "smiles": "C1=CCCCC1-C1=CCCCC1",
+      "category": "p13_conjunctive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_conjunctive.py"
+    },
+    {
+      "id": "openclatura-p13_conjunctive-006",
+      "label": "Openclatura p13_conjunctive case 6",
+      "smiles": "C1=COC=CC1-C1=COC=CC1",
+      "category": "p13_conjunctive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_conjunctive.py"
+    },
+    {
+      "id": "openclatura-p13_conjunctive-007",
+      "label": "Openclatura p13_conjunctive case 7",
+      "smiles": "OCCc1ccncc1",
+      "category": "p13_conjunctive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_conjunctive.py"
+    },
+    {
+      "id": "openclatura-p13_conjunctive-008",
+      "label": "Openclatura p13_conjunctive case 8",
+      "smiles": "OCCc1ccccc1-c1ccccc1",
+      "category": "p13_conjunctive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_conjunctive.py"
+    },
+    {
+      "id": "openclatura-p13_conjunctive-011",
+      "label": "Openclatura p13_conjunctive case 11",
+      "smiles": "O=C(O)CC1CCCC1",
+      "category": "p13_conjunctive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_conjunctive.py"
+    },
+    {
+      "id": "openclatura-p13_conjunctive-012",
+      "label": "Openclatura p13_conjunctive case 12",
+      "smiles": "c1ccccc1CC(=O)O",
+      "category": "p13_conjunctive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_conjunctive.py"
+    },
+    {
+      "id": "openclatura-p13_conjunctive-013",
+      "label": "Openclatura p13_conjunctive case 13",
+      "smiles": "c1ccccc1CC=O",
+      "category": "p13_conjunctive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_conjunctive.py"
+    },
+    {
+      "id": "openclatura-p13_conjunctive-014",
+      "label": "Openclatura p13_conjunctive case 14",
+      "smiles": "c1ccccc1CC#N",
+      "category": "p13_conjunctive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_conjunctive.py"
+    },
+    {
+      "id": "openclatura-p13_conjunctive-015",
+      "label": "Openclatura p13_conjunctive case 15",
+      "smiles": "c1ccccc1C(C)O",
+      "category": "p13_conjunctive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_conjunctive.py"
+    },
+    {
+      "id": "openclatura-p13_conjunctive-016",
+      "label": "Openclatura p13_conjunctive case 16",
+      "smiles": "c1ccccc1CC(C)O",
+      "category": "p13_conjunctive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_conjunctive.py"
+    },
+    {
+      "id": "openclatura-p13_conjunctive-017",
+      "label": "Openclatura p13_conjunctive case 17",
+      "smiles": "n1ccccc1C(C)O",
+      "category": "p13_conjunctive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_conjunctive.py"
+    },
+    {
+      "id": "openclatura-p13_conjunctive-019",
+      "label": "Openclatura p13_conjunctive case 19",
+      "smiles": "O=C(O)Cc1ccccn1",
+      "category": "p13_conjunctive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_conjunctive.py"
+    },
+    {
+      "id": "openclatura-p13_conjunctive-020",
+      "label": "Openclatura p13_conjunctive case 20",
+      "smiles": "O=C(O)Cc1ccncc1",
+      "category": "p13_conjunctive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_conjunctive.py"
+    },
+    {
+      "id": "openclatura-p13_multiplicative-004",
+      "label": "Openclatura p13_multiplicative case 4",
+      "smiles": "CC(C)(C)Oc1nc(Cl)c(Cl)c(OC(C)(C)C)c1Cl",
+      "category": "p13_multiplicative",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_multiplicative.py"
+    },
+    {
+      "id": "openclatura-p13_multiplicative-005",
+      "label": "Openclatura p13_multiplicative case 5",
+      "smiles": "CC(O)c1cc(OC(C)(C)C)cc(OC(C)(C)C)c1",
+      "category": "p13_multiplicative",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_multiplicative.py"
+    },
+    {
+      "id": "openclatura-p13_replacement-001",
+      "label": "Openclatura p13_replacement case 1",
+      "smiles": "NOC",
+      "category": "p13_replacement",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_replacement.py"
+    },
+    {
+      "id": "openclatura-p13_replacement-002",
+      "label": "Openclatura p13_replacement case 2",
+      "smiles": "Cl[SiH]=[SiH]Cl",
+      "category": "p13_replacement",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_replacement.py"
+    },
+    {
+      "id": "openclatura-p13_replacement-003",
+      "label": "Openclatura p13_replacement case 3",
+      "smiles": "N1CC2CCC1C2",
+      "category": "p13_replacement",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_replacement.py"
+    },
+    {
+      "id": "openclatura-p13_replacement-004",
+      "label": "Openclatura p13_replacement case 4",
+      "smiles": "N1CC2CNCC1C2",
+      "category": "p13_replacement",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_replacement.py"
+    },
+    {
+      "id": "openclatura-p13_substitutive-003",
+      "label": "Openclatura p13_substitutive case 3",
+      "smiles": "CCNC(CN1CCC(C)(CC)CC1)C(C)C",
+      "category": "p13_substitutive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_substitutive.py"
+    },
+    {
+      "id": "openclatura-p13_substitutive-004",
+      "label": "Openclatura p13_substitutive case 4",
+      "smiles": "CCc1ccc(-c2nc(C3(CN)CC3)[nH]c2C)cc1",
+      "category": "p13_substitutive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_substitutive.py"
+    },
+    {
+      "id": "openclatura-p13_substitutive-005",
+      "label": "Openclatura p13_substitutive case 5",
+      "smiles": "CC=NO",
+      "category": "p13_substitutive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_substitutive.py"
+    },
+    {
+      "id": "openclatura-p13_substitutive-006",
+      "label": "Openclatura p13_substitutive case 6",
+      "smiles": "CC=NN",
+      "category": "p13_substitutive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_substitutive.py"
+    },
+    {
+      "id": "openclatura-p13_substitutive-007",
+      "label": "Openclatura p13_substitutive case 7",
+      "smiles": "CC[SeH]",
+      "category": "p13_substitutive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_substitutive.py"
+    },
+    {
+      "id": "openclatura-p13_substitutive-008",
+      "label": "Openclatura p13_substitutive case 8",
+      "smiles": "CC[TeH]",
+      "category": "p13_substitutive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_substitutive.py"
+    },
+    {
+      "id": "openclatura-p13_substitutive-009",
+      "label": "Openclatura p13_substitutive case 9",
+      "smiles": "Cc1ccc(C(=O)N[C@H](C)CC(=O)NC(C)C)c(Br)c1",
+      "category": "p13_substitutive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_substitutive.py"
+    },
+    {
+      "id": "openclatura-p13_subtractive-002",
+      "label": "Openclatura p13_subtractive case 2",
+      "smiles": "C#CC",
+      "category": "p13_subtractive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_subtractive.py"
+    },
+    {
+      "id": "openclatura-p13_subtractive-003",
+      "label": "Openclatura p13_subtractive case 3",
+      "smiles": "C1CCCC=C1",
+      "category": "p13_subtractive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_subtractive.py"
+    },
+    {
+      "id": "openclatura-p13_subtractive-004",
+      "label": "Openclatura p13_subtractive case 4",
+      "smiles": "C1CC#CCC1",
+      "category": "p13_subtractive",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_p13_subtractive.py"
+    },
+    {
+      "id": "openclatura-polycycles-001",
+      "label": "Openclatura polycycles case 1",
+      "smiles": "C1=CC2CCCCC2C1",
+      "category": "polycycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_polycycles.py"
+    },
+    {
+      "id": "openclatura-polycycles-002",
+      "label": "Openclatura polycycles case 2",
+      "smiles": "C1CCC2CCCCC2C1",
+      "category": "polycycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_polycycles.py"
+    },
+    {
+      "id": "openclatura-polycycles-004",
+      "label": "Openclatura polycycles case 4",
+      "smiles": "CC1CC2CCC1C2",
+      "category": "polycycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_polycycles.py"
+    },
+    {
+      "id": "openclatura-polycycles-006",
+      "label": "Openclatura polycycles case 6",
+      "smiles": "O1CC2CCC1C2",
+      "category": "polycycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_polycycles.py"
+    },
+    {
+      "id": "openclatura-polycycles-007",
+      "label": "Openclatura polycycles case 7",
+      "smiles": "C1CCC2(CC1)CCCCC2",
+      "category": "polycycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_polycycles.py"
+    },
+    {
+      "id": "openclatura-polycycles-008",
+      "label": "Openclatura polycycles case 8",
+      "smiles": "CC1CCC2(CC1)CCCCC2",
+      "category": "polycycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_polycycles.py"
+    },
+    {
+      "id": "openclatura-polycycles-009",
+      "label": "Openclatura polycycles case 9",
+      "smiles": "C1C2CC3CC1CC(C2)C3",
+      "category": "polycycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_polycycles.py"
+    },
+    {
+      "id": "openclatura-polycycles-010",
+      "label": "Openclatura polycycles case 10",
+      "smiles": "C12C3C4C1C1C2C3C41",
+      "category": "polycycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_polycycles.py"
+    },
+    {
+      "id": "openclatura-polycycles-011",
+      "label": "Openclatura polycycles case 11",
+      "smiles": "C1CN2CCC1CC2",
+      "category": "polycycles",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_polycycles.py"
+    },
+    {
+      "id": "openclatura-polycyclic_descriptors-002",
+      "label": "Openclatura polycyclic_descriptors case 2",
+      "smiles": "O=S1CC2CCCCC2C1",
+      "category": "polycyclic_descriptors",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_polycyclic_descriptors.py"
+    },
+    {
+      "id": "openclatura-polycyclic_descriptors-003",
+      "label": "Openclatura polycyclic_descriptors case 3",
+      "smiles": "O=S1CCCC1",
+      "category": "polycyclic_descriptors",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_polycyclic_descriptors.py"
+    },
+    {
+      "id": "openclatura-polycyclic_descriptors-004",
+      "label": "Openclatura polycyclic_descriptors case 4",
+      "smiles": "C1=CC2CCCCC2C=C1",
+      "category": "polycyclic_descriptors",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_polycyclic_descriptors.py"
+    },
+    {
+      "id": "openclatura-polycyclic_descriptors-005",
+      "label": "Openclatura polycyclic_descriptors case 5",
+      "smiles": "C1=CC2CCC1C2",
+      "category": "polycyclic_descriptors",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_polycyclic_descriptors.py"
+    },
+    {
+      "id": "openclatura-polyfunctional_fragments-002",
+      "label": "Openclatura polyfunctional_fragments case 2",
+      "smiles": "NC(=O)Nc1ccc(CCC=O)cc1",
+      "category": "polyfunctional_fragments",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_polyfunctional_fragments.py"
+    },
+    {
+      "id": "openclatura-polyfunctional_fragments-003",
+      "label": "Openclatura polyfunctional_fragments case 3",
+      "smiles": "CCNC(=NCCc1cnn(C)c1)N[C@@H]1CCN(C2CCCC2)C1",
+      "category": "polyfunctional_fragments",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_polyfunctional_fragments.py"
+    },
+    {
+      "id": "openclatura-polyfunctional_fragments-004",
+      "label": "Openclatura polyfunctional_fragments case 4",
+      "smiles": "CC(=O)c1ccnc2c([C@H](C)CNc3cc(-c4cnc(C)nc4)ncn3)cccc12",
+      "category": "polyfunctional_fragments",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_polyfunctional_fragments.py"
+    },
+    {
+      "id": "openclatura-polyfunctional_fragments-005",
+      "label": "Openclatura polyfunctional_fragments case 5",
+      "smiles": "COc1ccc(Cl)c2sc(N3CCN(C(=O)c4nn(C)cc4C)CC3)nc12",
+      "category": "polyfunctional_fragments",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_polyfunctional_fragments.py"
+    },
+    {
+      "id": "openclatura-polyfunctional_fragments-006",
+      "label": "Openclatura polyfunctional_fragments case 6",
+      "smiles": "CN(C)CCNC(=O)c1ccnc(N2CCOCC2)n1",
+      "category": "polyfunctional_fragments",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_polyfunctional_fragments.py"
+    },
+    {
+      "id": "openclatura-polyfunctional_fragments-007",
+      "label": "Openclatura polyfunctional_fragments case 7",
+      "smiles": "COc1cc(OC)cc(C(=O)NC(C(=O)NCc2ccc(C)cc2C)C(C)C)c1",
+      "category": "polyfunctional_fragments",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_polyfunctional_fragments.py"
+    },
+    {
+      "id": "openclatura-polyfunctional_fragments-008",
+      "label": "Openclatura polyfunctional_fragments case 8",
+      "smiles": "CC(=O)c1ccnc2c(C(C)CNc3cc(-c4cnc(C)nc4)ncn3)cccc12",
+      "category": "polyfunctional_fragments",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_polyfunctional_fragments.py"
+    },
+    {
+      "id": "openclatura-polyfunctional_fragments-010",
+      "label": "Openclatura polyfunctional_fragments case 10",
+      "smiles": "CCCOc1ccnc(NC(C)(CC)CCN)n1",
+      "category": "polyfunctional_fragments",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_polyfunctional_fragments.py"
+    },
+    {
+      "id": "openclatura-polyfunctional_fragments-011",
+      "label": "Openclatura polyfunctional_fragments case 11",
+      "smiles": "NC1CN(C(CO)c2ccccc2)C1",
+      "category": "polyfunctional_fragments",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_polyfunctional_fragments.py"
+    },
+    {
+      "id": "openclatura-polyfunctional_fragments-012",
+      "label": "Openclatura polyfunctional_fragments case 12",
+      "smiles": "COc1cccc(S(=O)(=O)NC(=O)[C@@H](C)NC(=O)c2ccco2)c1",
+      "category": "polyfunctional_fragments",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_polyfunctional_fragments.py"
+    },
+    {
+      "id": "openclatura-principal_group_breadth-001",
+      "label": "Openclatura principal_group_breadth case 1",
+      "smiles": "CCS(=O)O",
+      "category": "principal_group_breadth",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_principal_group_breadth.py"
+    },
+    {
+      "id": "openclatura-principal_group_breadth-002",
+      "label": "Openclatura principal_group_breadth case 2",
+      "smiles": "CCP(=O)O",
+      "category": "principal_group_breadth",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_principal_group_breadth.py"
+    },
+    {
+      "id": "openclatura-principal_group_breadth-003",
+      "label": "Openclatura principal_group_breadth case 3",
+      "smiles": "CC[Se](=O)O",
+      "category": "principal_group_breadth",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_principal_group_breadth.py"
+    },
+    {
+      "id": "openclatura-principal_group_breadth-004",
+      "label": "Openclatura principal_group_breadth case 4",
+      "smiles": "CC[Se](=O)(=O)O",
+      "category": "principal_group_breadth",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_principal_group_breadth.py"
+    },
+    {
+      "id": "openclatura-principal_group_breadth-005",
+      "label": "Openclatura principal_group_breadth case 5",
+      "smiles": "CC[Te](=O)O",
+      "category": "principal_group_breadth",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_principal_group_breadth.py"
+    },
+    {
+      "id": "openclatura-principal_group_breadth-006",
+      "label": "Openclatura principal_group_breadth case 6",
+      "smiles": "CC[Te](=O)(=O)O",
+      "category": "principal_group_breadth",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_principal_group_breadth.py"
+    },
+    {
+      "id": "openclatura-principal_group_breadth-007",
+      "label": "Openclatura principal_group_breadth case 7",
+      "smiles": "CCB(O)O",
+      "category": "principal_group_breadth",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_principal_group_breadth.py"
+    },
+    {
+      "id": "openclatura-principal_group_breadth-008",
+      "label": "Openclatura principal_group_breadth case 8",
+      "smiles": "CC(=N)N",
+      "category": "principal_group_breadth",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_principal_group_breadth.py"
+    },
+    {
+      "id": "openclatura-principal_group_breadth-009",
+      "label": "Openclatura principal_group_breadth case 9",
+      "smiles": "CC(=N)NCC",
+      "category": "principal_group_breadth",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_principal_group_breadth.py"
+    },
+    {
+      "id": "openclatura-principal_group_breadth-010",
+      "label": "Openclatura principal_group_breadth case 10",
+      "smiles": "CC(=NO)C",
+      "category": "principal_group_breadth",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_principal_group_breadth.py"
+    },
+    {
+      "id": "openclatura-principal_group_breadth-012",
+      "label": "Openclatura principal_group_breadth case 12",
+      "smiles": "CC(=NOC)C",
+      "category": "principal_group_breadth",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_principal_group_breadth.py"
+    },
+    {
+      "id": "openclatura-principal_group_breadth-013",
+      "label": "Openclatura principal_group_breadth case 13",
+      "smiles": "CC(=NN)C",
+      "category": "principal_group_breadth",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_principal_group_breadth.py"
+    },
+    {
+      "id": "openclatura-principal_group_breadth-015",
+      "label": "Openclatura principal_group_breadth case 15",
+      "smiles": "CC(=NNC)C",
+      "category": "principal_group_breadth",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_principal_group_breadth.py"
+    },
+    {
+      "id": "openclatura-principal_group_breadth-016",
+      "label": "Openclatura principal_group_breadth case 16",
+      "smiles": "COC(=N)C",
+      "category": "principal_group_breadth",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_principal_group_breadth.py"
+    },
+    {
+      "id": "openclatura-principal_group_breadth-017",
+      "label": "Openclatura principal_group_breadth case 17",
+      "smiles": "COC(=N)NCC",
+      "category": "principal_group_breadth",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_principal_group_breadth.py"
+    },
+    {
+      "id": "openclatura-principal_group_breadth-018",
+      "label": "Openclatura principal_group_breadth case 18",
+      "smiles": "O=S(O)c1oc2ncccc2c1",
+      "category": "principal_group_breadth",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_principal_group_breadth.py"
+    },
+    {
+      "id": "openclatura-principal_group_breadth-019",
+      "label": "Openclatura principal_group_breadth case 19",
+      "smiles": "OB(O)c1oc2ncccc2c1",
+      "category": "principal_group_breadth",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_principal_group_breadth.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-001",
+      "label": "Openclatura replacement_parents case 1",
+      "smiles": "OP(=O)(O)O",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-002",
+      "label": "Openclatura replacement_parents case 2",
+      "smiles": "O=S(=O)(O)O",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-003",
+      "label": "Openclatura replacement_parents case 3",
+      "smiles": "O=N(=O)O",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-004",
+      "label": "Openclatura replacement_parents case 4",
+      "smiles": "OBr",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-005",
+      "label": "Openclatura replacement_parents case 5",
+      "smiles": "C[BH2]",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-006",
+      "label": "Openclatura replacement_parents case 6",
+      "smiles": "Cl[SiH2]Cl",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-007",
+      "label": "Openclatura replacement_parents case 7",
+      "smiles": "COP(OC)OC",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-008",
+      "label": "Openclatura replacement_parents case 8",
+      "smiles": "CP(C)(C)=O",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-009",
+      "label": "Openclatura replacement_parents case 9",
+      "smiles": "CC(C)(C)O[SiH2]OC(C)(C)C",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-010",
+      "label": "Openclatura replacement_parents case 10",
+      "smiles": "CC(C)(C)O[PH](OC(C)(C)C)OC(C)(C)C",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-011",
+      "label": "Openclatura replacement_parents case 11",
+      "smiles": "[BH3]",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-012",
+      "label": "Openclatura replacement_parents case 12",
+      "smiles": "[NH3]",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-014",
+      "label": "Openclatura replacement_parents case 14",
+      "smiles": "[SiH4]",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-015",
+      "label": "Openclatura replacement_parents case 15",
+      "smiles": "[PH3]",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-016",
+      "label": "Openclatura replacement_parents case 16",
+      "smiles": "S",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-017",
+      "label": "Openclatura replacement_parents case 17",
+      "smiles": "[ClH]",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-018",
+      "label": "Openclatura replacement_parents case 18",
+      "smiles": "[AsH3]",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-019",
+      "label": "Openclatura replacement_parents case 19",
+      "smiles": "[SbH3]",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-021",
+      "label": "Openclatura replacement_parents case 21",
+      "smiles": "NN",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-022",
+      "label": "Openclatura replacement_parents case 22",
+      "smiles": "N=N",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-023",
+      "label": "Openclatura replacement_parents case 23",
+      "smiles": "NN=N",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-024",
+      "label": "Openclatura replacement_parents case 24",
+      "smiles": "[SiH]#[SiH]",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-025",
+      "label": "Openclatura replacement_parents case 25",
+      "smiles": "NNNNNNNNN",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-026",
+      "label": "Openclatura replacement_parents case 26",
+      "smiles": "SSSS",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-027",
+      "label": "Openclatura replacement_parents case 27",
+      "smiles": "[SiH3][SiH2][SiH2][SiH2][SiH3]",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-028",
+      "label": "Openclatura replacement_parents case 28",
+      "smiles": "C[SiH2][SiH2]C",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-029",
+      "label": "Openclatura replacement_parents case 29",
+      "smiles": "Cl[SiH2][SiH2]Cl",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-030",
+      "label": "Openclatura replacement_parents case 30",
+      "smiles": "CO[SiH2][SiH2]OC",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-032",
+      "label": "Openclatura replacement_parents case 32",
+      "smiles": "C[Si]#[Si]C",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-033",
+      "label": "Openclatura replacement_parents case 33",
+      "smiles": "c1ccccc1P(c2ccccc2)c2ccccc2",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-034",
+      "label": "Openclatura replacement_parents case 34",
+      "smiles": "CO[Si](Cl)(C)c1ccccc1",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-036",
+      "label": "Openclatura replacement_parents case 36",
+      "smiles": "CP(=O)(OC)c1ccccc1",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-replacement_parents-037",
+      "label": "Openclatura replacement_parents case 37",
+      "smiles": "FP(F)(F)(F)F",
+      "category": "replacement_parents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_replacement_parents.py"
+    },
+    {
+      "id": "openclatura-substituents-002",
+      "label": "Openclatura substituents case 2",
+      "smiles": "CC(C)(C)CC",
+      "category": "substituents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_substituents.py"
+    },
+    {
+      "id": "openclatura-substituents-003",
+      "label": "Openclatura substituents case 3",
+      "smiles": "CC(Cl)CO",
+      "category": "substituents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_substituents.py"
+    },
+    {
+      "id": "openclatura-substituents-004",
+      "label": "Openclatura substituents case 4",
+      "smiles": "CS(C)(=O)=O",
+      "category": "substituents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_substituents.py"
+    },
+    {
+      "id": "openclatura-substituents-005",
+      "label": "Openclatura substituents case 5",
+      "smiles": "CS(C)=O",
+      "category": "substituents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_substituents.py"
+    },
+    {
+      "id": "openclatura-substituents-006",
+      "label": "Openclatura substituents case 6",
+      "smiles": "CSC",
+      "category": "substituents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_substituents.py"
+    },
+    {
+      "id": "openclatura-substituents-007",
+      "label": "Openclatura substituents case 7",
+      "smiles": "C=CC1=CCCCC1",
+      "category": "substituents",
+      "expected": "supported",
+      "source": "openclatura==0.1.2:test_substituents.py"
+    }
+  ]
+}

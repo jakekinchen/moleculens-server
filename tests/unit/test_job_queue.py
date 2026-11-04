@@ -1,10 +1,12 @@
 """Unit tests for stale cache invalidation and job recovery."""
 
+import hashlib
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from fastapi import HTTPException
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -13,6 +15,8 @@ from moleculens.core.cache_metrics import cache_metrics
 from moleculens.db import queue as queue_module
 from moleculens.db.models import Base, CacheEntry, Job, JobStatus
 from moleculens.db.queue import JobQueue
+
+WATER = (Path(__file__).parents[1] / "golden" / "water.sdf").read_text()
 
 
 @pytest.fixture(autouse=True)
@@ -46,7 +50,7 @@ def _seed_done_job(
 ) -> tuple[str, str]:
     """Create a completed job + cache entry for the given cache key."""
     job_id, is_cached = job_queue.submit_job(
-        sdf_content="not-used",
+        sdf_content=WATER,
         method="scf",
         basis="sto-3g",
         grid_spacing=0.25,
@@ -112,7 +116,7 @@ def test_submit_job_reuses_valid_cache_and_restores_missing_result_meta(
     (cache_root / "result.json").write_text('{"orbitals": {}, "meta": {"method": "scf"}}')
 
     reused_job_id, is_cached = isolated_job_queue.submit_job(
-        sdf_content="not-used",
+        sdf_content=WATER,
         method="scf",
         basis="sto-3g",
         grid_spacing=0.25,
@@ -140,7 +144,7 @@ def test_submit_job_invalidates_stale_cache_and_requeues(
     )
 
     new_job_id, is_cached = isolated_job_queue.submit_job(
-        sdf_content="not-used",
+        sdf_content=WATER,
         method="scf",
         basis="sto-3g",
         grid_spacing=0.25,
@@ -154,8 +158,8 @@ def test_submit_job_invalidates_stale_cache_and_requeues(
 
     stale_job = isolated_job_queue.get_job(stale_job_id)
     assert stale_job is not None
-    assert stale_job.status == JobStatus.ERROR
-    assert stale_job.error_message == f"Cached result missing for cache key {cache_key[:12]}"
+    assert stale_job.status == JobStatus.DONE
+    assert stale_job.error_message is None
 
     new_job = isolated_job_queue.get_job(new_job_id)
     assert new_job is not None
@@ -165,7 +169,7 @@ def test_submit_job_invalidates_stale_cache_and_requeues(
 
 
 @pytest.mark.asyncio
-async def test_get_job_status_reports_error_for_done_job_with_missing_result(
+async def test_missing_artifact_is_unavailable_without_rewriting_completed_job(
     isolated_job_queue: JobQueue,
 ) -> None:
     stale_job_id, cache_key = _seed_done_job(
@@ -175,21 +179,19 @@ async def test_get_job_status_reports_error_for_done_job_with_missing_result(
         artifact_paths=["result.json"],
     )
 
-    response = await routes.get_job_status(stale_job_id)
-
-    assert response.status == "error"
-    assert response.error_message == f"Cached result missing for cache key {cache_key[:12]}"
-    assert response.result is None
+    with pytest.raises(HTTPException) as caught:
+        await routes.get_job_status(stale_job_id)
+    assert caught.value.status_code == 503
 
     stale_job = isolated_job_queue.get_job(stale_job_id)
     assert stale_job is not None
-    assert stale_job.status == JobStatus.ERROR
+    assert stale_job.status == JobStatus.DONE
     assert isolated_job_queue.get_cache_entry(cache_key) is None
 
 
 def test_submit_job_does_not_reuse_by_inchi_key_alone(isolated_job_queue: JobQueue) -> None:
     first_job_id, first_cached = isolated_job_queue.submit_job(
-        sdf_content="not-used",
+        sdf_content=WATER,
         method="scf",
         basis="sto-3g",
         grid_spacing=0.25,
@@ -199,7 +201,7 @@ def test_submit_job_does_not_reuse_by_inchi_key_alone(isolated_job_queue: JobQue
         geometry_hash="geom-a",
     )
     second_job_id, second_cached = isolated_job_queue.submit_job(
-        sdf_content="not-used",
+        sdf_content=WATER.replace("0.7586", "0.7587", 1),
         method="scf",
         basis="sto-3g",
         grid_spacing=0.25,
@@ -214,9 +216,11 @@ def test_submit_job_does_not_reuse_by_inchi_key_alone(isolated_job_queue: JobQue
     assert first_job_id != second_job_id
 
 
-def test_submit_job_reuses_explicit_cache_identity(isolated_job_queue: JobQueue) -> None:
+def test_submit_job_reuses_identical_bytes_despite_different_geometry_hints(
+    isolated_job_queue: JobQueue,
+) -> None:
     first_job_id, first_cached = isolated_job_queue.submit_job(
-        sdf_content="not-used",
+        sdf_content=WATER,
         method="scf",
         basis="sto-3g",
         grid_spacing=0.25,
@@ -226,7 +230,7 @@ def test_submit_job_reuses_explicit_cache_identity(isolated_job_queue: JobQueue)
         geometry_hash="geom-a",
     )
     second_job_id, second_cached = isolated_job_queue.submit_job(
-        sdf_content="not-used",
+        sdf_content=WATER,
         method="scf",
         basis="sto-3g",
         grid_spacing=0.25,
@@ -245,7 +249,7 @@ def test_submit_job_stores_geometry_cache_identity_metadata(
     isolated_job_queue: JobQueue,
 ) -> None:
     job_id, is_cached = isolated_job_queue.submit_job(
-        sdf_content="not-used",
+        sdf_content=WATER,
         method="scf",
         basis="sto-3g",
         grid_spacing=0.25,
@@ -258,15 +262,15 @@ def test_submit_job_stores_geometry_cache_identity_metadata(
 
     job = isolated_job_queue.get_job(job_id)
     assert job is not None
-    assert job.request_params["cache_identity"] == "geom-a"
-    assert job.request_params["cache_identity_source"] == "geometry_hash"
+    assert job.request_params["cache_identity"] == hashlib.sha256(WATER.encode()).hexdigest()
+    assert job.request_params["cache_identity_source"] == "full_input"
 
 
 def test_submit_job_stores_client_cache_identity_metadata(
     isolated_job_queue: JobQueue,
 ) -> None:
     job_id, is_cached = isolated_job_queue.submit_job(
-        sdf_content="not-used",
+        sdf_content=WATER,
         method="scf",
         basis="sto-3g",
         grid_spacing=0.25,
@@ -280,8 +284,8 @@ def test_submit_job_stores_client_cache_identity_metadata(
 
     job = isolated_job_queue.get_job(job_id)
     assert job is not None
-    assert job.request_params["cache_identity"] == "client-cache-key"
-    assert job.request_params["cache_identity_source"] == "client_cache_key"
+    assert job.request_params["cache_identity"] == hashlib.sha256(WATER.encode()).hexdigest()
+    assert job.request_params["cache_identity_source"] == "full_input"
 
 
 def test_cache_metrics_record_miss_and_hit(isolated_job_queue: JobQueue) -> None:
@@ -297,7 +301,7 @@ def test_cache_metrics_record_miss_and_hit(isolated_job_queue: JobQueue) -> None
     (cache_root / "result.json").write_text('{"orbitals": {}, "meta": {"method": "scf"}}')
 
     reused_job_id, is_cached = isolated_job_queue.submit_job(
-        sdf_content="not-used",
+        sdf_content=WATER,
         method="scf",
         basis="sto-3g",
         grid_spacing=0.25,
@@ -312,7 +316,7 @@ def test_cache_metrics_record_miss_and_hit(isolated_job_queue: JobQueue) -> None
     snapshot = cache_metrics.snapshot()
     assert snapshot["events"] == {"hit": 1, "miss": 1}
     assert snapshot["job_types"]["orbital"] == {"hit": 1, "miss": 1}
-    assert snapshot["identity_sources"]["geometry_hash"] == {"hit": 1, "miss": 1}
+    assert snapshot["identity_sources"]["full_input"] == {"hit": 1, "miss": 1}
 
 
 @pytest.mark.asyncio
@@ -380,9 +384,9 @@ async def test_compute_electrostatics_returns_persisted_cache_key(
     assert response.cache_key == "persisted-cache-key"
     assert (
         captured["request_params"]["cache_identity"]
-        == electrostatics_routes.parse_sdf(water_sdf).geometry_hash()
+        == hashlib.sha256(water_sdf.encode()).hexdigest()
     )
-    assert captured["request_params"]["cache_identity_source"] == "geometry_hash"
+    assert captured["request_params"]["cache_identity_source"] == "full_input"
 
 
 @pytest.mark.asyncio
@@ -390,7 +394,7 @@ async def test_cache_metrics_endpoint_returns_snapshot(
     isolated_job_queue: JobQueue,
 ) -> None:
     job_id, is_cached = isolated_job_queue.submit_job(
-        sdf_content="not-used",
+        sdf_content=WATER,
         method="scf",
         basis="sto-3g",
         grid_spacing=0.25,
@@ -407,17 +411,17 @@ async def test_cache_metrics_endpoint_returns_snapshot(
     assert response.total_events == 1
     assert response.events == {"miss": 1}
     assert response.job_types == {"orbital": {"miss": 1}}
-    assert response.identity_sources == {"geometry_hash": {"miss": 1}}
+    assert response.identity_sources == {"full_input": {"miss": 1}}
 
 
-def test_submit_job_replaces_stale_pending_job(
+def test_submit_job_never_expires_pending_work(
     isolated_job_queue: JobQueue,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(queue_module.settings, "job_stale_seconds", 60)
 
     stale_job_id, is_cached = isolated_job_queue.submit_job(
-        sdf_content="not-used",
+        sdf_content=WATER,
         method="scf",
         basis="sto-3g",
         grid_spacing=0.25,
@@ -430,7 +434,7 @@ def test_submit_job_replaces_stale_pending_job(
     _age_active_job(stale_job_id, status=JobStatus.PENDING, seconds_ago=120)
 
     new_job_id, is_cached = isolated_job_queue.submit_job(
-        sdf_content="not-used",
+        sdf_content=WATER,
         method="scf",
         basis="sto-3g",
         grid_spacing=0.25,
@@ -440,15 +444,15 @@ def test_submit_job_replaces_stale_pending_job(
     )
 
     assert is_cached is False
-    assert new_job_id != stale_job_id
+    assert new_job_id == stale_job_id
 
     stale_job = isolated_job_queue.get_job(stale_job_id)
     assert stale_job is not None
-    assert stale_job.status == JobStatus.ERROR
-    assert stale_job.error_message == "Stale pending job auto-cleared after 60s without completion"
+    assert stale_job.status == JobStatus.PENDING
+    assert stale_job.error_message is None
 
 
-def test_submit_job_with_cache_key_replaces_stale_running_job(
+def test_legacy_running_job_requires_explicit_drain(
     isolated_job_queue: JobQueue,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -468,9 +472,9 @@ def test_submit_job_with_cache_key_replaces_stale_running_job(
     )
 
     assert is_cached is False
-    assert new_job_id != stale_job_id
+    assert new_job_id == stale_job_id
 
     stale_job = isolated_job_queue.get_job(stale_job_id)
     assert stale_job is not None
-    assert stale_job.status == JobStatus.ERROR
-    assert stale_job.error_message == "Stale running job auto-cleared after 60s without completion"
+    assert stale_job.status == JobStatus.RUNNING
+    assert stale_job.error_message is None

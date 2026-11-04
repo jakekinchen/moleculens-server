@@ -1,0 +1,12 @@
+{
+  "revision": "718696e22f30b658815f093b19c02d7df2567f3a",
+  "dirty": false,
+  "go": "go version go1.27.3 darwin/arm64",
+  "binarySha256": "0da36d71f0e39c6d9af2efba028a5110bb61172bff84e7c17a2d89ca9872ce4e",
+  "images": {
+    "moleculens-engine:qualified": "sha256:57b7901dbaee58a29fa98c48b54f9c62267d68bd0bd60a89b680a40bc4293500",
+    "moleculens-go-api:candidate": "sha256:249252444c1e6bc6bac090ad81854d82a826758c1841b435adf945ec02798619",
+    "moleculens-go-worker:candidate": "sha256:a1b340861ed2deb3469423a04f392c63ae90f4f292c14dec6c51f5752949af60"
+  },
+  "platform": "linux/amd64"
+}

@@ -1,9 +1,131 @@
 """Minimal SDF parser without RDKit dependency.
 
-Parses V2000 and V3000 MOL/SDF files to extract atom coordinates and symbols.
+Parses V2000 MOL/SDF files; V3000 is explicitly unsupported.
 """
 
+import math
 from dataclasses import dataclass
+
+ELEMENTS = [
+    "H",
+    "He",
+    "Li",
+    "Be",
+    "B",
+    "C",
+    "N",
+    "O",
+    "F",
+    "Ne",
+    "Na",
+    "Mg",
+    "Al",
+    "Si",
+    "P",
+    "S",
+    "Cl",
+    "Ar",
+    "K",
+    "Ca",
+    "Sc",
+    "Ti",
+    "V",
+    "Cr",
+    "Mn",
+    "Fe",
+    "Co",
+    "Ni",
+    "Cu",
+    "Zn",
+    "Ga",
+    "Ge",
+    "As",
+    "Se",
+    "Br",
+    "Kr",
+    "Rb",
+    "Sr",
+    "Y",
+    "Zr",
+    "Nb",
+    "Mo",
+    "Tc",
+    "Ru",
+    "Rh",
+    "Pd",
+    "Ag",
+    "Cd",
+    "In",
+    "Sn",
+    "Sb",
+    "Te",
+    "I",
+    "Xe",
+    "Cs",
+    "Ba",
+    "La",
+    "Ce",
+    "Pr",
+    "Nd",
+    "Pm",
+    "Sm",
+    "Eu",
+    "Gd",
+    "Tb",
+    "Dy",
+    "Ho",
+    "Er",
+    "Tm",
+    "Yb",
+    "Lu",
+    "Hf",
+    "Ta",
+    "W",
+    "Re",
+    "Os",
+    "Ir",
+    "Pt",
+    "Au",
+    "Hg",
+    "Tl",
+    "Pb",
+    "Bi",
+    "Po",
+    "At",
+    "Rn",
+    "Fr",
+    "Ra",
+    "Ac",
+    "Th",
+    "Pa",
+    "U",
+    "Np",
+    "Pu",
+    "Am",
+    "Cm",
+    "Bk",
+    "Cf",
+    "Es",
+    "Fm",
+    "Md",
+    "No",
+    "Lr",
+    "Rf",
+    "Db",
+    "Sg",
+    "Bh",
+    "Hs",
+    "Mt",
+    "Ds",
+    "Rg",
+    "Cn",
+    "Nh",
+    "Fl",
+    "Mc",
+    "Lv",
+    "Ts",
+    "Og",
+]
 
 
 @dataclass(frozen=True)
@@ -28,7 +150,7 @@ class SDFMolecule:
     def num_atoms(self) -> int:
         return len(self.atoms)
 
-    def to_psi4_geometry(self) -> str:
+    def to_psi4_geometry(self, charge: int = 0, multiplicity: int = 1) -> str:
         """Convert to Psi4 geometry string with proper settings.
 
         Returns geometry block with:
@@ -37,6 +159,7 @@ class SDFMolecule:
         - no_reorient (no rotation)
         """
         lines = [
+            f"{charge} {multiplicity}",
             "units angstrom",
             "no_com",
             "no_reorient",
@@ -88,7 +211,9 @@ def parse_sdf(content: str) -> SDFMolecule:
     Raises:
         SDFParseError: If the file format is invalid or parsing fails.
     """
-    lines = content.strip().split("\n")
+    if len(content.encode()) > 2_000_000:
+        raise SDFParseError("SDF exceeds 2 MB limit")
+    lines = content.replace("\r\n", "\n").replace("\r", "\n").split("\n")
 
     if len(lines) < 4:
         raise SDFParseError("SDF file too short - needs at least 4 header lines")
@@ -101,27 +226,28 @@ def parse_sdf(content: str) -> SDFMolecule:
     comment = lines[2].strip() if len(lines) > 2 else ""
 
     # Line 4: Counts line - parse atom and bond counts
-    counts_line = lines[3].strip()
+    counts_line = lines[3]
 
     # Check for V3000 format
-    if "V3000" in content:
+    if "V3000" in counts_line:
         raise SDFParseError("V3000 format not yet supported - please use V2000 format")
+
+    if "V2000" not in counts_line:
+        raise SDFParseError("V2000 counts line required")
 
     # Parse V2000 counts line
     # Format: aaabbblllfffcccsssxxxrrrpppiiimmmvvvvvv
     # aaa = number of atoms, bbb = number of bonds
     try:
-        # Handle both fixed-width and space-separated formats
-        parts = counts_line.split()
-        # Use first field if space-separated, otherwise fixed-width format
-        num_atoms = int(parts[0]) if len(parts) >= 2 else int(counts_line[0:3].strip())
+        num_atoms = int(counts_line[0:3])
+        num_bonds = int(counts_line[3:6])
     except (ValueError, IndexError) as e:
         raise SDFParseError(f"Invalid counts line: {counts_line!r}") from e
 
-    if num_atoms <= 0:
+    if not 0 < num_atoms <= 999 or not 0 <= num_bonds <= 999:
         raise SDFParseError(f"Invalid atom count: {num_atoms}")
 
-    if len(lines) < 4 + num_atoms:
+    if len(lines) < 4 + num_atoms + num_bonds:
         raise SDFParseError(
             f"File has {len(lines)} lines but needs at least {4 + num_atoms} for {num_atoms} atoms"
         )
@@ -136,6 +262,14 @@ def parse_sdf(content: str) -> SDFMolecule:
         except ValueError as e:
             raise SDFParseError(f"Invalid atom line {i + 1}: {atom_line!r}") from e
 
+    for line in lines[4 + num_atoms : 4 + num_atoms + num_bonds]:
+        try:
+            if len(line) < 9 or not all(1 <= int(line[i : i + 3]) <= num_atoms for i in (0, 3)):
+                raise ValueError("Invalid bond index")
+        except ValueError as exc:
+            raise SDFParseError("Invalid bond record") from exc
+    if "M  END" not in [line.strip() for line in lines[4 + num_atoms + num_bonds :]]:
+        raise SDFParseError("Missing M END")
     return SDFMolecule(name=name, atoms=atoms, comment=comment)
 
 
@@ -149,30 +283,16 @@ def _parse_atom_line(line: str) -> Atom:
     - x, y, z: Coordinates (10 chars each)
     - aaa: Atom symbol (3 chars)
     """
-    # Try space-separated first (more common in practice)
-    parts = line.split()
+    if len(line) < 34:
+        raise ValueError(f"Atom line too short: {len(line)} chars")
+    x = float(line[0:10].strip())
+    y = float(line[10:20].strip())
+    z = float(line[20:30].strip())
+    symbol = line[31:34].strip()
 
-    if len(parts) >= 4:
-        x = float(parts[0])
-        y = float(parts[1])
-        z = float(parts[2])
-        symbol = parts[3].strip()
-    else:
-        # Fall back to fixed-width parsing
-        if len(line) < 34:
-            raise ValueError(f"Atom line too short: {len(line)} chars")
-        x = float(line[0:10].strip())
-        y = float(line[10:20].strip())
-        z = float(line[20:30].strip())
-        symbol = line[31:34].strip()
-
-    # Clean up symbol (remove any extra characters)
-    symbol = "".join(c for c in symbol if c.isalpha())
-
-    if not symbol:
-        raise ValueError("Empty atom symbol")
-
-    # Capitalize correctly (first letter upper, rest lower)
-    symbol = symbol[0].upper() + symbol[1:].lower() if len(symbol) > 1 else symbol.upper()
+    if symbol not in ELEMENTS:
+        raise ValueError("Unknown element symbol")
+    if not all(math.isfinite(v) and abs(v) <= 1_000_000 for v in (x, y, z)):
+        raise ValueError("Coordinates must be finite and within supported bounds")
 
     return Atom(symbol=symbol, x=x, y=y, z=z)

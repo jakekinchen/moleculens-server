@@ -1,0 +1,32 @@
+{
+  "baseHead": "35dd5f4b4bb174b2005074b8e1e0f16a2702dd5b",
+  "preservedSourceSHA256": {
+    "docs/architecture/MOLECULENS.md": "163204634e9e392bebde75f736b6282b82b881aa1427297b3837837fd762f2bd",
+    "docs/architecture/NOMENCLATURE.md": "de5bb6590291bcadc752854754875b70abbe16cc66092ced44459a4f45c7763b",
+    "e2e/name-builder-lens.spec.ts": "625d440ab843d94d360db6ecc89b89c82c0e7ee601ab5606ed78fc95b4f1aeed",
+    "src/__mocks__/engine.ts": "70e73d19931e75d66d51269aba615df0783a906f43f4a1bde9cfa72f176e4cf1",
+    "src/__tests__/api.fetch-molecule-by-name.smiles-fallback.test.ts": "78563bbf225f6701298b9e7f493945b90136a8555f121c7e0055c6400da3baf8",
+    "src/__tests__/api.nomenclature.explain.test.ts": "09820b621fd1f447db0afff042d1b99787be398b9729dde43f2dafde66178034",
+    "src/__tests__/nomenclature.cache.test.ts": "2f0497a88e39a9c35db44e92b2da6cd162b509c84b84a114b4cdb4461a90c90f",
+    "src/__tests__/nomenclature.moleculeProfile.test.ts": "b26ea002d4991c309310dd6f7b34e22c15bbd8bd2473c348417cdc86d20d7570",
+    "src/__tests__/ui.nomenclature.NameBuilderLensPanel.test.tsx": "c33398c89ec48d3664804b3bb7a35971e7c6c788f2fffdcda01a84a1fb5d42d6",
+    "src/__tests__/ui.panels.LensPanel.test.tsx": "b4dbc890b52b31e18bfc87c6a2fbfc3af4f198d4f70ee36b17698c25f9d86a9c",
+    "src/app/api/molecules/lookup/route.ts": "93c600c132fc0748c209e58e0bcdfddf10950384187e0f85f13a8e0634e77764",
+    "src/app/api/nomenclature/explain/route.ts": "d968fa2f39fa01112f131f29020a5231d42fbb91bf630eba3a00cf3a581667ae",
+    "src/features/nomenclature/data/nomenclature.client.ts": "08703bf516716161499c0f2eeb04c01667b4479e145bdc573509ec8f16dc132f",
+    "src/features/nomenclature/data/nomenclature.server.ts": "c7d9fceabbf7c6726c0567f549876e5f57293522851093a9b37880f87cf10823",
+    "src/features/nomenclature/data/nomenclatureCache.ts": "cff6a5931e59907f011ba281dcbf64e37694a251411c832f59d48c97b4c34816",
+    "src/features/nomenclature/hooks/useNomenclatureExplanation.ts": "52861f785663ce2a300fb5d69b623990222b039a8ce507271c7a354c77e6b624",
+    "src/features/nomenclature/ui/NameBuilderLensPanel.tsx": "f8921853d9f4d44e3b837a119e021dbaa183c7fb637f9257b15e1a0bb8f96d8a",
+    "src/features/viewer/domain/regions.ts": "fe00aac7c73724b7582528d8900030814058c3a6232ea029b4e49679409dd00d",
+    "src/features/viewer/model/moleculeProfile.ts": "eb6f14b1494240e5c4cbac3fc4c7bc12ae55ff6d02b6b6d9d1719cec0b174e9c",
+    "src/features/viewer/ui/engine/MoleculeEngine.ts": "87d7c712a262b989342e44574926daf4ec37c813c2faf2623d30752fc325f9ca",
+    "src/features/viewer/ui/panels/lens/LensPanel.constants.ts": "7c14cd84ae97c0d5deefe39342c23e699074f1547e624567aacd619544f4b2da",
+    "src/features/viewer/ui/panels/lens/LensPanel.tsx": "464c51126a1623cb7d0573405e1a8138b91a4371f2e839a2e350523e65c5293d",
+    "src/shared/lib/premium-guard.ts": "b4cc8f047741cec8e75b32a1613833f205c645f6a3a058e2b98b8a5a24685e40",
+    "src/shared/types/index.ts": "d71fee3cf8c1a9b0998d2646dd4571a330f8dc3bdfc20e57547ba2482e31076e"
+  },
+  "excludedNonSource": [
+    "packages/chem/node_modules/zod (original dependency-installation deletion; original untouched)"
+  ]
+}

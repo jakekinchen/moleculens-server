@@ -1,0 +1,11 @@
+{
+  "archiveSHA256": "7623968b9b3d3c79167c1eafab74631d7e9de2353a85a3646ac6630a79c31591",
+  "filesSHA256Verified": 5414,
+  "directoriesVerified": 440,
+  "restoredFileBytes": 11548152870,
+  "fileRollupSHA256": "010d51a60d68d9eee6164aaeb819504d162d35d3828840cd51078b6ebd309c9b",
+  "targetVolume": "moleculens-vps1_legacy",
+  "ownership": "UID/GID 65532; API mount remains read-only; original metadata remains in the retained source archive",
+  "passed": true,
+  "disk": "Filesystem       1B-blocks        Used   Available Use% Mounted on\n/dev/sda1      40424828928 27588464640 12819587072  69% /\n"
+}

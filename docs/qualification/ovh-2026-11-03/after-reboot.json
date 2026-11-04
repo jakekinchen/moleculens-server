@@ -1,0 +1,56 @@
+{
+  "bootId": "484aa991-b1f8-484e-8f7d-2a59c6d654a1",
+  "kernel": "7.0.0-14-generic",
+  "jobRowsSHA256": "87b289f29fe81dcc5809a6aa6574bf7b96dbe277acb795cca9fb2f2d5090910d",
+  "artifactFilesVerified": 29,
+  "artifactRollupSHA256": "d1d503e89c0a93cff0398f30be22238ea452cd12d23bf943d835534a8f45c494",
+  "containers": [
+    {
+      "name": "moleculens-vps1-caddy-1",
+      "image": "sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d",
+      "running": true,
+      "oomKilled": false,
+      "restartCount": 0,
+      "memoryLimitBytes": 100663296,
+      "pidsLimit": 32
+    },
+    {
+      "name": "moleculens-vps1-short-1",
+      "image": "sha256:8a5608c6b4d068e1970e621c644eec069c1cab4726dfbec69b6cb0e458dc7e14",
+      "running": true,
+      "oomKilled": false,
+      "restartCount": 1,
+      "memoryLimitBytes": 805306368,
+      "pidsLimit": 128
+    },
+    {
+      "name": "moleculens-vps1-chemistry-1",
+      "image": "sha256:8a5608c6b4d068e1970e621c644eec069c1cab4726dfbec69b6cb0e458dc7e14",
+      "running": true,
+      "oomKilled": false,
+      "restartCount": 1,
+      "memoryLimitBytes": 1879048192,
+      "pidsLimit": 128
+    },
+    {
+      "name": "moleculens-vps1-api-1",
+      "image": "sha256:a54c9f890d208e0a0a4b06f7b1c1096847d695ecc32250bac38930ec96f62574",
+      "running": true,
+      "oomKilled": false,
+      "restartCount": 1,
+      "memoryLimitBytes": 536870912,
+      "pidsLimit": 32
+    },
+    {
+      "name": "moleculens-vps1-postgres-1",
+      "image": "sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777",
+      "running": true,
+      "oomKilled": false,
+      "restartCount": 0,
+      "memoryLimitBytes": 268435456,
+      "pidsLimit": 64
+    }
+  ],
+  "disk": "Filesystem       1B-blocks       Used   Available Use% Mounted on\n/dev/sda1      40424828928 9885319168 30522732544  25% /\n/dev/sda1      40424828928 9885319168 30522732544  25% /\n",
+  "rebootPersistencePassed": true
+}

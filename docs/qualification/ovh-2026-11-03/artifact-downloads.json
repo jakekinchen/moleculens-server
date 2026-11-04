@@ -1,0 +1,25 @@
+{
+  "observedAt": "2026-11-04T01:59:17.266372+00:00",
+  "scope": "Actual old/new HTTPS artifact downloads: bytes, scientific MIME, filename and attachment disposition.",
+  "files": [
+    {
+      "filename": "Dt.cube",
+      "oldAndNewEquivalent": true,
+      "status": 200,
+      "bytes": 5624402,
+      "sha256": "b59e00537ca61e3613bcb52e2f020cf5bbb65119b1c7a0166750b72d942dfaa8",
+      "contentType": "chemical/x-gaussian-cube",
+      "disposition": "attachment"
+    },
+    {
+      "filename": "result.json",
+      "oldAndNewEquivalent": true,
+      "status": 200,
+      "bytes": 557345,
+      "sha256": "7fbd69f73302d1823c0507b79fe518a4d756e32594d147be171fcd82a708f2aa",
+      "contentType": "application/json",
+      "disposition": "attachment"
+    }
+  ],
+  "passed": true
+}

@@ -1,0 +1,36 @@
+{
+  "environment": "disposable local UTF8 PostgreSQL and packaged Linux containers",
+  "goJobId": "g_bd3482a7ba58bac6e315a1ca4703a23a",
+  "legacyJobId": "legacy-rehearsal",
+  "beforeStates": {
+    "go": "done",
+    "legacy": "done"
+  },
+  "artifactPaths": {
+    "go": "/v1/conformers/artifacts/39f0a27581ffa8d2234d046c54711a042bebc80c325f9b08c0f386c1768fc8a7/response.json",
+    "legacy": "/v1/conformers/artifacts/legacy-rehearsal/structure.sdf"
+  },
+  "beforeArtifactSHA256": {
+    "go": "efea9ca712ddf2fa44c1902b91bf4cccb7abf2319cae5edbba20025252e49287",
+    "legacy": "0df45ad228666c13ba1e6e40977f8223e2d9ad5730daff81caab6627884208f8"
+  },
+  "afterStates": {
+    "go": "done",
+    "legacy": "done"
+  },
+  "afterArtifactSHA256": {
+    "go": "efea9ca712ddf2fa44c1902b91bf4cccb7abf2319cae5edbba20025252e49287",
+    "legacy": "0df45ad228666c13ba1e6e40977f8223e2d9ad5730daff81caab6627884208f8"
+  },
+  "quiescedPostStatus": 503,
+  "quiescedPostBody": {
+    "detail": {
+      "code": "quiesced",
+      "message": "Admission is stopped for maintenance"
+    }
+  },
+  "workerStoppedAndReaped": true,
+  "apiImage": "sha256:249252444c1e6bc6bac090ad81854d82a826758c1841b435adf945ec02798619",
+  "passed": true,
+  "scope": "Actual local candidate API stopped; separate quiesced compatible API started on the same port with the same PostgreSQL and artifact mounts. Production ingress and legacy-write resumption were not exercised."
+}

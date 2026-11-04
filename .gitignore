@@ -74,3 +74,7 @@ artifacts/*
 
 # uv lock (regenerated)
 uv.lock
+
+# Isolated migration qualification state
+var/qualification-artifacts/
+var/go-artifacts/

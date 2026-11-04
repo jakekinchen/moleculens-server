@@ -1,0 +1,45 @@
+{
+  "applicationRevision": "e2abc7bc814de5acb7ef9992029b29f3990a9235",
+  "dirtyAtBuild": false,
+  "binarySHA256": "d95e1c2d5d7833dd4622124ac88997ec94113340a64e3d29780358e72a827f26",
+  "scientificEngineImage": "sha256:57b7901dbaee58a29fa98c48b54f9c62267d68bd0bd60a89b680a40bc4293500",
+  "images": {
+    "moleculens-go-api:vps1-candidate": "sha256:a54c9f890d208e0a0a4b06f7b1c1096847d695ecc32250bac38930ec96f62574",
+    "moleculens-go-worker:vps1-candidate": "sha256:8a5608c6b4d068e1970e621c644eec069c1cab4726dfbec69b6cb0e458dc7e14"
+  },
+  "platform": "linux/amd64",
+  "normalQualifiedRevisionRetained": "718696e22f30b658815f093b19c02d7df2567f3a",
+  "preparedAt": "2026-11-03",
+  "targetHost": "vps-12a3a763.vps.ovh.us",
+  "targetIPv4": "135.148.205.154",
+  "archive": "ovh-vps1-images.tar",
+  "archiveSHA256": "6b5476fe76745fb4a7bfd9a43edda3ca031aa712d30e51a4d7f53b93fca88044",
+  "archiveBytes": 1352139776,
+  "candidateOnly": true,
+  "deployed": true,
+  "archiveVerification": {
+    "allBlobSHA256Verified": true,
+    "verifiedBlobCount": 66,
+    "qualifiedApplications": [
+      {
+        "tag": "moleculens-go-api:vps1-candidate",
+        "manifestDigest": "sha256:a54c9f890d208e0a0a4b06f7b1c1096847d695ecc32250bac38930ec96f62574",
+        "configDigest": "sha256:aa70e2df1e6c40565891fd12210b42271a450a59d99a9fb320aa137926528939",
+        "platform": "linux/amd64"
+      },
+      {
+        "tag": "moleculens-go-worker:vps1-candidate",
+        "manifestDigest": "sha256:8a5608c6b4d068e1970e621c644eec069c1cab4726dfbec69b6cb0e458dc7e14",
+        "configDigest": "sha256:27d625a63df094fed20427c9197c586927fc660e25d10ec68199f0f05d8d3b9a",
+        "platform": "linux/amd64"
+      }
+    ]
+  },
+  "publicURL": "https://vps-12a3a763.vps.ovh.us",
+  "productionDNSChanged": false,
+  "actualKernelVisibleRAMBytes": 4000071680,
+  "actualHostNativeQualificationPassed": true,
+  "HTTPSVerified": true,
+  "rebootPersistencePassed": true,
+  "logicalBackupRestorePassed": true
+}

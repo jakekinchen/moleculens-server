@@ -1,0 +1,28 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.11.14, pytest-9.0.2, pluggy-1.6.0
+rootdir: /Users/kelly/Developer/moleculens-server
+configfile: pyproject.toml
+plugins: anyio-4.12.0, asyncio-1.3.0, cov-7.0.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=function, asyncio_default_test_loop_scope=function
+collected 11 items
+
+../../Users/kelly/Developer/moleculens-server/docs/analysis/2026-11-03-python-to-go/audit_probes.py {"cache_event": "miss", "job_id": "525c624c-366", "cache_key": "audit", "job_type": "orbital", "event": "Cache miss queued new job", "level": "info", "timestamp": "2026-11-03T17:13:41.708594Z"}
+{"cache_event": "miss", "job_id": "2e870d90-f79", "cache_key": "audit", "job_type": "orbital", "event": "Cache miss queued new job", "level": "info", "timestamp": "2026-11-03T17:13:41.708697Z"}
+.{"cache_event": "miss", "job_id": "6dc86fbd-adf", "cache_key": "audit", "job_type": "orbital", "event": "Cache miss queued new job", "level": "info", "timestamp": "2026-11-03T17:13:41.718147Z"}
+{"job_id": "6dc86fbd-adf", "cache_key": "audit", "previous_status": "running", "event": "Auto-cleared stale active job", "level": "warning", "timestamp": "2026-11-03T17:13:41.721999Z"}
+{"cache_event": "miss", "job_id": "b8af6293-7be", "cache_key": "audit", "job_type": "orbital", "event": "Cache miss queued new job", "level": "info", "timestamp": "2026-11-03T17:13:41.722097Z"}
+{"job_id": "6dc86fbd-adf", "cache_key": "audit", "compute_time_ms": 1, "event": "Job completed", "level": "info", "timestamp": "2026-11-03T17:13:41.724125Z"}
+.{"cache_event": "miss", "job_id": "5f4aaeaf-d31", "cache_key": "audit", "job_type": "orbital", "event": "Cache miss queued new job", "level": "info", "timestamp": "2026-11-03T17:13:41.730988Z"}
+{"job_id": "5f4aaeaf-d31", "cache_key": "audit", "compute_time_ms": 1, "event": "Job completed", "level": "info", "timestamp": "2026-11-03T17:13:41.733792Z"}
+..{"cache_event": "miss", "job_id": "23c1abb2-a94", "cache_key": "audit", "job_type": "conformer", "event": "Cache miss queued new job", "level": "info", "timestamp": "2026-11-03T17:13:41.744886Z"}
+{"job_id": "23c1abb2-a94", "cache_key": "audit", "compute_time_ms": 1, "event": "Job completed", "level": "info", "timestamp": "2026-11-03T17:13:41.747042Z"}
+{"cache_key": "audit", "event": "Result file not found", "level": "warning", "timestamp": "2026-11-03T17:13:41.748131Z"}
+{"job_id": "23c1abb2-a94", "cache_key": "audit", "event": "Completed job missing result payload; invalidating cache", "level": "warning", "timestamp": "2026-11-03T17:13:41.748154Z"}
+{"cache_event": "invalidate", "cache_key": "audit", "invalidated_jobs": 1, "job_types": ["conformer"], "reason": "Cached result missing for cache key audit", "event": "Invalidated stale cache entry", "level": "warning", "timestamp": "2026-11-03T17:13:41.749223Z"}
+.{"cache_event": "miss", "job_id": "3165c754-776", "cache_key": "da4e7d4f4420", "job_type": "orbital", "cache_identity_source": "client_cache_key", "molecule_identity": "same-client-", "method": "scf", "basis": "sto-3g", "orbitals": ["homo"], "event": "Cache miss queued new job", "level": "info", "timestamp": "2026-11-03T17:13:41.756838Z"}
+{"cache_event": "active_reuse", "cache_key": "da4e7d4f4420", "job_id": "3165c754-776", "status": "pending", "job_type": "orbital", "cache_identity_source": "client_cache_key", "molecule_identity": "same-client-", "method": "scf", "basis": "sto-3g", "orbitals": ["homo"], "event": "Cache miss reused active job", "level": "info", "timestamp": "2026-11-03T17:13:41.758321Z"}
+..sphere midpoint (expected zero): [0.024999761581421254, 0.024999761581421254, 0.024999761581421254]
+...{"error": "isolated injected DB outage", "event": "Database health check failed", "level": "warning", "timestamp": "2026-11-03T17:13:45.903529Z"}
+.
+
+============================== 11 passed in 4.50s ==============================

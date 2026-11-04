@@ -1,0 +1,16 @@
+{
+  "tables": {
+    "jobs": {
+      "rows": 448,
+      "sha256": "0c992bf026cb84a2ff1f6119727fc4ba6334bf48db94989f744c5ef6a501cbb4"
+    },
+    "cache_entries": {
+      "rows": 439,
+      "sha256": "3e01a4b4ef4c3a5cbbd9631fe6190dcc5ebaf02cf383d40063298fcb68e32272"
+    }
+  },
+  "existingGoJobsRetained": 23,
+  "publicJobsAttemptTokenDefault": "NULL for completed historical rows",
+  "passed": true,
+  "scope": "Initial historical snapshot imported into the explicitly installed schema; existing Go queue identities and requests retained. Final legacy drain/reconciliation remains pending."
+}

@@ -2,7 +2,7 @@
 
 Supports:
 - xTB (GFN2-xTB) via xtb-python or subprocess
-- RDKit Gasteiger charges as fallback
+- RDKit Gasteiger charges when explicitly requested
 """
 
 import subprocess
@@ -13,7 +13,7 @@ from pathlib import Path
 import numpy as np
 from numpy.typing import NDArray
 
-from moleculens.compute.sdf_parser import SDFMolecule
+from moleculens.compute.sdf_parser import ELEMENTS, SDFMolecule
 from moleculens.core import get_logger
 
 logger = get_logger(__name__)
@@ -31,7 +31,7 @@ class ChargeResult:
     dipole_magnitude: float  # Dipole magnitude (Debye)
     dipole_origin: NDArray[np.float64]  # Center of mass / geometry
     charge_model: str  # e.g., "xtb-gfn2", "rdkit-gasteiger"
-    convention: str  # "physics" (+ to -) or "chemistry" (- to +)
+    convention: str  # "physics" (negative to positive) or "chemistry" (opposite)
 
 
 def calculate_charges_xtb(
@@ -81,7 +81,7 @@ def _calculate_xtb_python(
     positions_bohr = positions * BOHR_PER_ANGSTROM
 
     # Set up calculator
-    calc = Calculator(Param.GFN2xTB, numbers, positions_bohr, charge=charge)
+    calc = Calculator(Param.GFN2xTB, numbers, positions_bohr, charge=charge, uhf=multiplicity - 1)
     calc.set_verbosity(VERBOSITY_MUTED)
 
     # Calculate
@@ -95,8 +95,9 @@ def _calculate_xtb_python(
     dipole_angstrom = dipole_bohr / BOHR_PER_ANGSTROM
     dipole_debye = dipole_angstrom * DEBYE_PER_E_ANGSTROM
 
-    # Compute center of geometry as dipole origin
+    # Translate the engine dipole from coordinate zero to the declared origin.
     origin = positions.mean(axis=0)
+    dipole_debye -= charge * origin * DEBYE_PER_E_ANGSTROM
 
     return ChargeResult(
         charges=charges,
@@ -104,7 +105,7 @@ def _calculate_xtb_python(
         dipole_magnitude=float(np.linalg.norm(dipole_debye)),
         dipole_origin=origin,
         charge_model="xtb-gfn2-mulliken",
-        convention="physics",  # xTB uses physics convention (+ to -)
+        convention="physics",  # Electric dipole vector points negative to positive
     )
 
 
@@ -159,23 +160,19 @@ def _calculate_xtb_subprocess(
         with json_file.open() as f:
             data = json.load(f)
 
-        # Extract charges
-        charges = np.array(data.get("partial charges", []))
-
-        # Extract dipole (in Debye)
-        dipole = data.get("dipole moment", {})
-        dipole_debye = np.array(
-            [
-                dipole.get("x", 0.0),
-                dipole.get("y", 0.0),
-                dipole.get("z", 0.0),
-            ]
-        )
-        dipole_mag = dipole.get("total", float(np.linalg.norm(dipole_debye)))
-
-        # Compute center of geometry
+        # xTB 6.7 JSON reports the vector in atomic units, not Debye.
+        # Unknown/missing schemas are errors; never synthesize a zero dipole.
+        charges = np.asarray(data["partial charges"], dtype=float)
+        dipole_au = np.asarray(data["dipole / a.u."], dtype=float)
+        if charges.shape != (molecule.num_atoms,) or dipole_au.shape != (3,):
+            raise ValueError("Unsupported xTB result shape")
+        if not np.isfinite(charges).all() or not np.isfinite(dipole_au).all():
+            raise ValueError("Non-finite xTB result")
         positions = np.array([[a.x, a.y, a.z] for a in molecule.atoms])
         origin = positions.mean(axis=0)
+        dipole_debye = dipole_au * (DEBYE_PER_E_ANGSTROM / 1.8897259886)
+        dipole_debye -= charge * origin * DEBYE_PER_E_ANGSTROM
+        dipole_mag = float(np.linalg.norm(dipole_debye))
 
         return ChargeResult(
             charges=charges,
@@ -192,7 +189,7 @@ def calculate_charges_gasteiger(
 ) -> ChargeResult:
     """Calculate Gasteiger charges using RDKit.
 
-    This is the fallback when xTB is not available.
+    This is an explicitly requested approximation, never an implicit xTB fallback.
 
     Args:
         molecule: Parsed SDF molecule
@@ -217,113 +214,30 @@ def calculate_charges_gasteiger(
         except Exception:
             mol = None
 
-    # Fallback: build molecule from atoms with simple connectivity
-    if mol is None:
-        mol = Chem.RWMol()
-        conf = Chem.Conformer(molecule.num_atoms)
-
-        for i, atom in enumerate(molecule.atoms):
-            rdatom = Chem.Atom(_element_to_number(atom.symbol))
-            mol.AddAtom(rdatom)
-            conf.SetAtomPosition(i, (atom.x, atom.y, atom.z))
-
-        mol.AddConformer(conf, assignId=True)
-
-        # Try to sanitize - if it fails, continue anyway
-        try:  # noqa: SIM105
-            Chem.SanitizeMol(mol)
-        except Exception:
-            pass  # Continue without sanitization
-
-    # Compute Gasteiger charges
-    try:
-        AllChem.ComputeGasteigerCharges(mol)
-    except Exception:
-        # Fall back to simple electronegativity-based charges
-        return _compute_simple_charges(molecule)
-
+    if mol is None or mol.GetNumAtoms() != molecule.num_atoms:
+        raise ValueError("Gasteiger requires a valid molecular graph with matching atom order")
+    AllChem.ComputeGasteigerCharges(mol, throwOnParamFailure=True)
+    # Condense implicit-H charges onto their parent positions. This convention is
+    # explicit in charge_model; total formal charge remains conserved.
     charges = np.array(
         [
-            float(mol.GetAtomWithIdx(i).GetDoubleProp("_GasteigerCharge"))
-            for i in range(mol.GetNumAtoms())
+            a.GetDoubleProp("_GasteigerCharge") + a.GetDoubleProp("_GasteigerHCharge")
+            for a in mol.GetAtoms()
         ]
     )
-
-    # Handle NaN charges (can happen for some atoms)
-    charges = np.nan_to_num(charges, nan=0.0)
-
-    # Compute dipole moment from charges and positions
-    # μ = Σ qᵢ rᵢ (in e·Å, then convert to Debye)
-    dipole_e_angstrom = np.sum(charges[:, np.newaxis] * positions, axis=0)
-    dipole_debye = dipole_e_angstrom * DEBYE_PER_E_ANGSTROM
-
-    # Center of geometry as origin
+    if not np.isfinite(charges).all():
+        raise ValueError("Gasteiger produced non-finite charges")
+    if not np.isclose(charges.sum(), Chem.GetFormalCharge(mol), atol=1e-5):
+        raise ValueError("Gasteiger charges do not conserve formal charge")
     origin = positions.mean(axis=0)
+    dipole_debye = np.sum(charges[:, None] * (positions - origin), axis=0) * DEBYE_PER_E_ANGSTROM
 
     return ChargeResult(
         charges=charges,
         dipole_vector=dipole_debye,
         dipole_magnitude=float(np.linalg.norm(dipole_debye)),
         dipole_origin=origin,
-        charge_model="rdkit-gasteiger",
-        convention="physics",
-    )
-
-
-def _compute_simple_charges(molecule: SDFMolecule) -> ChargeResult:
-    """Compute simple electronegativity-based charges.
-
-    This is a fallback when RDKit Gasteiger fails.
-    Uses simple Pauling electronegativity differences.
-    """
-    # Pauling electronegativities
-    electronegativities = {
-        "H": 2.20,
-        "C": 2.55,
-        "N": 3.04,
-        "O": 3.44,
-        "F": 3.98,
-        "P": 2.19,
-        "S": 2.58,
-        "Cl": 3.16,
-        "Br": 2.96,
-        "I": 2.66,
-        "Li": 0.98,
-        "Na": 0.93,
-        "K": 0.82,
-        "Mg": 1.31,
-        "Ca": 1.00,
-        "Fe": 1.83,
-        "Zn": 1.65,
-        "Cu": 1.90,
-    }
-
-    positions = np.array([[a.x, a.y, a.z] for a in molecule.atoms])
-
-    # Assign small charges based on electronegativity relative to carbon
-    c_en = 2.55
-    charges = np.array(
-        [
-            (c_en - electronegativities.get(a.symbol.capitalize(), c_en)) * 0.1
-            for a in molecule.atoms
-        ]
-    )
-
-    # Normalize to neutral molecule
-    charges = charges - charges.mean()
-
-    # Compute dipole
-    dipole_e_angstrom = np.sum(charges[:, np.newaxis] * positions, axis=0)
-    dipole_debye = dipole_e_angstrom * DEBYE_PER_E_ANGSTROM
-
-    origin = positions.mean(axis=0)
-
-    return ChargeResult(
-        charges=charges,
-        dipole_vector=dipole_debye,
-        dipole_magnitude=float(np.linalg.norm(dipole_debye)),
-        dipole_origin=origin,
-        charge_model="simple-electronegativity",
+        charge_model="rdkit-gasteiger-condensed-h",
         convention="physics",
     )
 
@@ -376,60 +290,7 @@ def calculate_coulombic_potential(
 
 def _element_to_number(symbol: str) -> int:
     """Convert element symbol to atomic number."""
-    elements = {
-        "H": 1,
-        "He": 2,
-        "Li": 3,
-        "Be": 4,
-        "B": 5,
-        "C": 6,
-        "N": 7,
-        "O": 8,
-        "F": 9,
-        "Ne": 10,
-        "Na": 11,
-        "Mg": 12,
-        "Al": 13,
-        "Si": 14,
-        "P": 15,
-        "S": 16,
-        "Cl": 17,
-        "Ar": 18,
-        "K": 19,
-        "Ca": 20,
-        "Sc": 21,
-        "Ti": 22,
-        "V": 23,
-        "Cr": 24,
-        "Mn": 25,
-        "Fe": 26,
-        "Co": 27,
-        "Ni": 28,
-        "Cu": 29,
-        "Zn": 30,
-        "Ga": 31,
-        "Ge": 32,
-        "As": 33,
-        "Se": 34,
-        "Br": 35,
-        "Kr": 36,
-        "Rb": 37,
-        "Sr": 38,
-        "Y": 39,
-        "Zr": 40,
-        "Nb": 41,
-        "Mo": 42,
-        "Tc": 43,
-        "Ru": 44,
-        "Rh": 45,
-        "Pd": 46,
-        "Ag": 47,
-        "Cd": 48,
-        "In": 49,
-        "Sn": 50,
-        "Sb": 51,
-        "Te": 52,
-        "I": 53,
-        "Xe": 54,
-    }
-    return elements.get(symbol.capitalize(), 6)  # Default to carbon
+    try:
+        return ELEMENTS.index(symbol) + 1
+    except ValueError as exc:
+        raise ValueError(f"Unknown element: {symbol}") from exc

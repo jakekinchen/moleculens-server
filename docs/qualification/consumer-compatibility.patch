@@ -1,0 +1,53 @@
+--- a/src/app/api/electrostatics/schema.ts
++++ b/src/app/api/electrostatics/schema.ts
+@@ -52,6 +52,12 @@
+ 
+   const requestBody: Record<string, unknown> = {
+     ...forwardPayload,
++    // Materialize defaults so the request and the browser cache key agree.
++    surface: {
++      gridSpacing: payload.surface?.gridSpacing ?? 0.25,
++      probeRadius: payload.surface?.probeRadius ?? 0.9,
++      padding: payload.surface?.padding ?? 1.2,
++    },
+   };
+ 
+   if (clientCacheKey) requestBody.client_cache_key = clientCacheKey;
+--- a/src/app/api/orbitals/schema.ts
++++ b/src/app/api/orbitals/schema.ts
+@@ -67,6 +67,7 @@
+     method?: string;
+     basis?: string;
+     grid_spacing_angstrom?: number;
++    gridSpacingAngstrom?: number;
+   };
+ }
+ 
+@@ -112,7 +113,7 @@
+           ? {
+               method: raw.result.meta.method,
+               basis: raw.result.meta.basis,
+-              grid_spacing_angstrom: raw.result.meta.grid_spacing_angstrom,
++              grid_spacing_angstrom: raw.result.meta.gridSpacingAngstrom ?? raw.result.meta.grid_spacing_angstrom,
+             }
+           : undefined,
+       }
+--- a/src/app/api/conformers/schema.ts
++++ b/src/app/api/conformers/schema.ts
+@@ -27,10 +27,13 @@
+     molblock2d: body.molblock2d,
+     geomVersion: body.method || 'etkdgv3',
+     waitMs: body.waitMs ?? 2000,
+-    seed: body.seed,
++    // One explicit scientific parameter object; old flat aliases remain accepted upstream.
++    params: {
++      method: 'etkdg_v3',
++      seed: body.seed ?? 0,
++      opt: body.optimize === false ? 'none' : (body.forceField ?? 'mmff'),
++    },
+     numConformers: body.numConformers ?? 1,
+-    optimize: body.optimize ?? true,
+-    forceField: body.forceField ?? 'mmff',
+     clientCacheKey: body.clientCacheKey,
+     smiles: body.smiles,
+     inchiKey: body.inchiKey,

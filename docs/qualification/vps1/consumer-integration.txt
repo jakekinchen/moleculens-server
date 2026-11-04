@@ -1,0 +1,15 @@
+PASS src/__integration__/go-service.consumer.test.ts
+  actual consumer handlers paired with the qualified Go API and native artifacts
+    ✓ serves and polls native Psi4 output with intact grid/density metadata (27 ms)
+    ✓ omitted browser ESP surface resolves to the already-qualified 0.9/1.2 result (10 ms)
+    ✓ proxy and server-side client resolve identical seeded MMFF conformer results (12 ms)
+    ✓ new scientific options are admitted distinctly and duplicate requests retain the same job (23 ms)
+    ✓ unsupported multiple-conformer requests remain explicit failures (1 ms)
+    ✓ invalid input cannot reuse valid output through a client hint (2 ms)
+    ✓ preserved naming consumer reads the actual Java-verified result (3 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       7 passed, 7 total
+Snapshots:   0 total
+Time:        0.219 s, estimated 1 s
+Ran all test suites within paths "src/__integration__/go-service.consumer.test.ts".

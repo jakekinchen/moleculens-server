@@ -1,0 +1,14 @@
+{
+  "temporaryFilesystemBytes": 1610612736,
+  "readinessStatus": 503,
+  "admissionStatus": 503,
+  "rejectedAdmissionCreatedNoJob": true,
+  "normalCandidateReadinessStatus": 200,
+  "detail": {
+    "detail": {
+      "code": "storage_unavailable",
+      "message": "Artifact storage unavailable"
+    }
+  },
+  "passed": true
+}

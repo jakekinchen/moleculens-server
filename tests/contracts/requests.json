@@ -1,0 +1,103 @@
+[
+  {
+    "kind": "orbital",
+    "request": {
+      "sdf_content": "water\n     RDKit          3D\n\n  3  2  0  0  0  0  0  0  0  0999 V2000\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7586    0.0000    0.5043 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.7586    0.0000    0.5043 H   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  1  3  1  0\nM  END\n",
+      "method": "scf",
+      "basis": "sto-3g",
+      "grid_spacing": 0.25,
+      "isovalue": 0.02,
+      "density_isovalue": 0.01,
+      "orbitals": [
+        "lumo",
+        "homo",
+        "density"
+      ],
+      "charge": 0,
+      "multiplicity": 1,
+      "client_cache_key": "consumer-hint"
+    },
+    "params": {
+      "method": "scf",
+      "basis": "sto-3g",
+      "gridSpacing": 0.25,
+      "isovalue": 0.02,
+      "densityIsovalue": 0.01,
+      "orbitals": [
+        "density",
+        "homo",
+        "lumo"
+      ],
+      "charge": 0,
+      "multiplicity": 1
+    },
+    "inputSha256": "9047856e46be8a494f28b41a5353bebfeb867f6244110020b4482b0f981bcaf9",
+    "key": "c3ca6c70a0f7298340e93e0a6bd2a4175faeb92b0944bae7c96bdd7d9454221c"
+  },
+  {
+    "kind": "electrostatics",
+    "request": {
+      "sdfContent": "water\n     RDKit          3D\n\n  3  2  0  0  0  0  0  0  0  0999 V2000\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7586    0.0000    0.5043 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.7586    0.0000    0.5043 H   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  1  3  1  0\nM  END\n",
+      "method": "gasteiger",
+      "no_com": true,
+      "no_reorient": true,
+      "surface": {
+        "gridSpacing": 0.25,
+        "probeRadius": 0.9,
+        "padding": 1.2
+      }
+    },
+    "params": {
+      "method": "gasteiger",
+      "charge": 0,
+      "multiplicity": 1,
+      "gridSpacing": 0.25,
+      "probeRadius": 0.9,
+      "padding": 1.2,
+      "units": "kcal/mol/e",
+      "softeningEpsilon": 0.3,
+      "clampPercentiles": [
+        5,
+        95
+      ]
+    },
+    "inputSha256": "9047856e46be8a494f28b41a5353bebfeb867f6244110020b4482b0f981bcaf9",
+    "key": "da4237e3bfe687fd23b1d8a02d508ce93b33e2c45f53df5dbce080a5927f34fb"
+  },
+  {
+    "kind": "conformer",
+    "request": {
+      "molblock2d": "water\n     RDKit          3D\n\n  3  2  0  0  0  0  0  0  0  0999 V2000\n    0.0000    0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0\n    0.7586    0.0000    0.5043 H   0  0  0  0  0  0  0  0  0  0  0  0\n   -0.7586    0.0000    0.5043 H   0  0  0  0  0  0  0  0  0  0  0  0\n  1  2  1  0\n  1  3  1  0\nM  END\n",
+      "geomVersion": "etkdgv3",
+      "waitMs": 2000,
+      "seed": 42,
+      "optimize": true,
+      "forceField": "mmff",
+      "numConformers": 1
+    },
+    "params": {
+      "method": "etkdg_v3",
+      "opt": "mmff",
+      "geomVersion": "etkdgv3",
+      "seed": 42,
+      "maxAttempts": 10,
+      "maxOptIters": 200,
+      "addHs": false
+    },
+    "inputSha256": "9047856e46be8a494f28b41a5353bebfeb867f6244110020b4482b0f981bcaf9",
+    "key": "39f0a27581ffa8d2234d046c54711a042bebc80c325f9b08c0f386c1768fc8a7"
+  },
+  {
+    "kind": "nomenclature",
+    "request": {
+      "smiles": "CCO",
+      "verifyOpsin": true
+    },
+    "params": {
+      "molblock": "",
+      "verifyOpsin": true
+    },
+    "inputSha256": "ab1de819ede91df490e6441934decfa9041b49f91d6bbadbba4df634ccff57fa",
+    "key": "cf1056ac3ffdf10f22c675cf3a964729a766d4d941c864f7184594a73b0cc26b"
+  }
+]

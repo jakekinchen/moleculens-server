@@ -1,0 +1,45 @@
+{
+  "observedAt": "2026-11-03T23:54:25.595679+00:00",
+  "source": "Authenticated Hetzner VNC console; read-only root commands after user-performed password reset",
+  "host": "5.161.53.230",
+  "serverName": "moleculens-prod",
+  "operatingSystem": "Ubuntu 22.04.5 LTS",
+  "kernel": "5.15.0-164-generic",
+  "containers": [
+    "molecule-caddy",
+    "molecule-worker",
+    "molecule-api",
+    "molecule-postgres"
+  ],
+  "images": [
+    "caddy:2-alpine",
+    "moleculens-server-molecule-worker",
+    "moleculens-server-molecule-api",
+    "postgres:16-alpine"
+  ],
+  "deploymentRoot": "/home/agent/moleculens-server",
+  "bindStorage": {
+    "cache": {
+      "source": "/home/agent/moleculens-server/var/cache",
+      "containerPath": "/var/molecule-cache",
+      "duHumanReadable": "11G"
+    },
+    "postgres": {
+      "source": "/home/agent/moleculens-server/var/postgres",
+      "containerPath": "/var/lib/postgresql/data",
+      "duHumanReadable": "65M"
+    },
+    "logs": {
+      "source": "/home/agent/moleculens-server/var/logs",
+      "containerPath": "/var/log/molecule",
+      "duHumanReadable": "4.0K"
+    }
+  },
+  "rootSSH": "disabled (PermitRootLogin no)",
+  "existingSudoAccount": "agent",
+  "migrationSSHKeyInstalled": true,
+  "productionAdmissionChanged": false,
+  "productionDataCopied": false,
+  "scope": "Initial console inventory only. Sizes are rounded du -sh observations; database schema, active job counts, exact image digests, all routes and supervisor inventory remain unverified.",
+  "correction": "The initial console text was misread as 11M/55M. Authenticated SSH inventory establishes approximately 11.55 GB cache and 67.93 MB PostgreSQL storage; see legacy-inventory.json."
+}

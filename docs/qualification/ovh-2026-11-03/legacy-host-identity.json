@@ -1,0 +1,9 @@
+{
+  "serverId": 125033108,
+  "projectId": 13948104,
+  "name": "moleculens-prod",
+  "IPv4": "5.161.53.230",
+  "fingerprint": "SHA256:LwGCFWlEeT8upiEzt3GOg4xOCa/306Zufm2jDNtOGIE",
+  "verifiedBy": "Codex read ssh-keygen output in the authenticated Hetzner VNC console after the user completed root-password recovery; the network ED25519 key exactly matches.",
+  "trust": "Strict checking with a task-specific pinned key; historical global known_hosts entries retained."
+}

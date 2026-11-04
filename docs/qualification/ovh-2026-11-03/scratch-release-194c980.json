@@ -1,0 +1,21 @@
+{
+  "revision": "194c9802c4951d06ca06c1c8903723ee04efacf5",
+  "dirty": false,
+  "go": "go version go1.27.3 darwin/arm64",
+  "binarySha256": "926807cde217d474e035afa2796370098de751374ca41d10734a82cb8d54d8b4",
+  "images": {
+    "moleculens-engine:qualified": "sha256:57b7901dbaee58a29fa98c48b54f9c62267d68bd0bd60a89b680a40bc4293500",
+    "moleculens-go-api:candidate": "sha256:8e564e5a0f4a6f82da1a5aec7fd0452627df13b2a72f46de45628cc8dfde329e",
+    "moleculens-go-worker:candidate": "sha256:ef148da572beb4807e82086025d20fbacb9def6eb5e4e9d65b75346c0c692628"
+  },
+  "platform": "linux/amd64",
+  "archiveSHA256": "ea5cf3985597aaf473079db29d90abb7da0070acd798f9aba29029a3736ca94d",
+  "archiveBytes": 1212595712,
+  "deployed": true,
+  "existingGoRowsSHA256": "ad40aa12882e7940cc10c6c7881227d5e48c1b3e5fa6297512b13f2cde029b6a",
+  "existingGoRowsByteIdentical": true,
+  "productionDNSChanged": false,
+  "temporaryAttemptBudgetBytes": 1073741824,
+  "publishedArtifactBudgetBytes": 268435456,
+  "freeSpaceGuardBytes": 2147483648
+}

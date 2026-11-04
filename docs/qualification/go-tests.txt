@@ -1,0 +1,5 @@
+?   	github.com/jakekinchen/moleculens-server/cmd/moleculens	[no test files]
+ok  	github.com/jakekinchen/moleculens-server/internal/contract	1.460s
+ok  	github.com/jakekinchen/moleculens-server/internal/engine	2.883s
+ok  	github.com/jakekinchen/moleculens-server/internal/httpapi	2.088s
+ok  	github.com/jakekinchen/moleculens-server/internal/store	2.294s

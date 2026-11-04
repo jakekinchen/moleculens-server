@@ -1,0 +1,49 @@
+{
+  "observedAt": "2026-11-03T23:37:14.118541+00:00",
+  "host": "vps-12a3a763.vps.ovh.us",
+  "tls": {
+    "protocol": "TLSv1.3",
+    "cipher": "TLS_AES_128_GCM_SHA256",
+    "hostnameVerified": true,
+    "subjectAltName": [
+      [
+        "DNS",
+        "vps-12a3a763.vps.ovh.us"
+      ]
+    ],
+    "issuer": [
+      [
+        [
+          "countryName",
+          "US"
+        ]
+      ],
+      [
+        [
+          "organizationName",
+          "Let's Encrypt"
+        ]
+      ],
+      [
+        [
+          "commonName",
+          "YE1"
+        ]
+      ]
+    ],
+    "expires": "Feb  1 22:31:21 2027 GMT"
+  },
+  "routes": {
+    "/live": {
+      "status": 200,
+      "body": "{\"status\":\"alive\"}\n"
+    },
+    "/ready": {
+      "status": 200,
+      "body": "{\"cacheDir\":true,\"database\":true,\"status\":\"healthy\",\"version\":\"go-2\"}\n"
+    },
+    "/metrics/cache": {
+      "status": 404
+    }
+  }
+}

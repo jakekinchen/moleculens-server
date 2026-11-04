@@ -1,0 +1,170 @@
+
+> moleculens@0.1.0 build /Users/kelly/.openclaw/workspace/projects/moleculens-go-contract
+> next build
+
+▲ Next.js 16.1.6 (Turbopack)
+
+  Creating an optimized production build ...
+Browserslist: browsers data (caniuse-lite) is 10 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+✓ Compiled successfully in 7.4s
+  Running TypeScript ...
+  Collecting page data using 27 workers ...
+[stripe] STRIPE_SECRET_KEY not set - Stripe features will be disabled
+⚠ Using edge runtime on a page currently disables static generation for that page
+[stripe] STRIPE_SECRET_KEY not set - Stripe features will be disabled
+[stripe] STRIPE_SECRET_KEY not set - Stripe features will be disabled
+[stripe] STRIPE_SECRET_KEY not set - Stripe features will be disabled
+  Generating static pages using 27 workers (0/89) ...
+  Generating static pages using 27 workers (22/89) 
+  Generating static pages using 27 workers (44/89) 
+[/api/lists/demo] Unexpected error: Error: Dynamic server usage: Route /api/lists/demo couldn't be rendered statically because it used `cookies`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error
+    at E (.next/server/chunks/[root-of-the-server]__7e0b2232._.js:16:30876)
+    at o (.next/server/chunks/[root-of-the-server]__c102d740._.js:1:1204)
+    at y (.next/server/chunks/2d9ba_next_dist_esm_build_templates_app-route_7ff4d9c5.js:1:3508) {
+  description: "Route /api/lists/demo couldn't be rendered statically because it used `cookies`. See more info here: https://nextjs.org/docs/messages/dynamic-server-error",
+  digest: 'DYNAMIC_SERVER_USAGE'
+}
+  Generating static pages using 27 workers (66/89) 
+✓ Generating static pages using 27 workers (89/89) in 251.0ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+├ ○ /account
+├ ƒ /api/account/delete
+├ ƒ /api/annotate
+├ ƒ /api/audio-cache
+├ ƒ /api/auth/me
+├ ƒ /api/build-info
+├ ƒ /api/cache-metrics
+├ ƒ /api/canonical-quiz
+├ ƒ /api/canonical-tour
+├ ƒ /api/conformers/compute
+├ ƒ /api/conformers/jobs/[jobId]
+├ ƒ /api/design/assets
+├ ƒ /api/design/render
+├ ƒ /api/electrostatics/compute
+├ ƒ /api/electrostatics/jobs/[jobId]
+├ ƒ /api/embed/suggestions
+├ ƒ /api/fetch-molecule-by-name
+├ ƒ /api/fetch-pdb-by-name
+├ ƒ /api/figure
+├ ƒ /api/figure/[spec_id]
+├ ƒ /api/generate/composition
+├ ƒ /api/health
+├ ƒ /api/image-cache
+├ ƒ /api/image-gen
+├ ƒ /api/lists
+├ ƒ /api/lists/[id]
+├ ƒ /api/lists/[id]/items
+├ ƒ /api/lists/[id]/items/[itemId]
+├ ƒ /api/lists/[id]/items/reorder
+├ ƒ /api/lists/demo
+├ ƒ /api/lists/membership
+├ ƒ /api/lists/public/[shareToken]
+├ ƒ /api/lists/public/[shareToken]/items/[itemId]
+├ ƒ /api/lists/share
+├ ƒ /api/mobile-config
+├ ƒ /api/molecules/lookup
+├ ƒ /api/nomenclature/explain
+├ ƒ /api/og/quiz
+├ ƒ /api/orbitals/compute
+├ ƒ /api/orbitals/jobs/[jobId]
+├ ƒ /api/pack-templates
+├ ƒ /api/pack-templates/[slug]
+├ ƒ /api/pack-templates/[slug]/import
+├ ƒ /api/packs
+├ ƒ /api/packs/[id]
+├ ƒ /api/packs/[id]/lists
+├ ƒ /api/packs/[id]/lists/[listId]
+├ ƒ /api/pipeline-profile
+├ ƒ /api/pockets/detect
+├ ƒ /api/presentations/cache
+├ ƒ /api/prompt/fetch-molecule-by-prompt
+├ ƒ /api/prompt/generate-manuscript
+├ ƒ /api/prompt/generate-molecule-diagram
+├ ƒ /api/prompt/generate-molecule-html
+├ ƒ /api/prompt/generate-presentation-script
+├ ƒ /api/prompt/generate-quiz
+├ ƒ /api/prompt/plan-presentation
+├ ƒ /api/prompt/process/[jobId]
+├ ƒ /api/prompt/suggest-molecules
+├ ƒ /api/proxy
+├ ƒ /api/pubchem/description
+├ ƒ /api/pubchem/search
+├ ƒ /api/pubchem/search/cid
+├ ƒ /api/quiz-cache
+├ ƒ /api/quiz-templates
+├ ƒ /api/quiz-templates/[id]
+├ ƒ /api/quizzes/cache
+├ ƒ /api/rdkit/map-3d-to-2d
+├ ƒ /api/rdkit/remap-2d-sdf
+├ ƒ /api/rdkit/smiles-to-2d-sdf
+├ ƒ /api/revenuecat/sync
+├ ƒ /api/revenuecat/webhook
+├ ƒ /api/stripe/checkout
+├ ƒ /api/stripe/portal
+├ ƒ /api/stripe/status
+├ ƒ /api/stripe/webhook
+├ ƒ /api/subscribe
+├ ƒ /api/tour-cache
+├ ƒ /api/transcribe
+├ ƒ /api/tts
+├ ƒ /api/user-history
+├ ƒ /api/user-history/touch
+├ ○ /apple-icon
+├ ○ /auth/auth-code-error
+├ ƒ /auth/callback
+├ ○ /auth/close
+├ ○ /auth/confirm
+├ ○ /contact
+├ ○ /demo
+├ ƒ /demo/[slug]
+├ ○ /design-studio
+├ ○ /design-studio/preview
+├ ○ /dev/molstar
+├ ○ /dev/rendering
+├ ○ /educators
+├ ƒ /embed
+├ ○ /embed/account
+├ ○ /embed/login
+├ ƒ /figure/[spec_id]
+├ ƒ /generate-composition
+├ ○ /icon
+├ ƒ /icon-192.png
+├ ƒ /icon-512.png
+├ ○ /landing
+├ ƒ /lists/[shareToken]
+├ ○ /loading-demo
+├ ○ /login
+├ ○ /manifest.webmanifest
+├ ○ /molecules
+├ ● /molecules/[slug]
+│ ├ /molecules/caffeine
+│ ├ /molecules/water
+│ ├ /molecules/ethanol
+│ └ [+22 more paths]
+├ ƒ /opengraph-image
+├ ○ /pricing
+├ ○ /privacy-policy
+├ ƒ /q/[token]
+├ ƒ /quiz/[id]
+├ ƒ /quiz/[id]/edit
+├ ○ /robots.txt
+├ ƒ /signup
+├ ○ /sitemap.xml
+├ ○ /support
+├ ○ /terms-of-service
+├ ƒ /twitter-image
+└ ○ /upgrade
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+

@@ -1,0 +1,47 @@
+# Go candidate only. Explicit migration and verified legacy drain precede startup.
+# Existing PostgreSQL and legacy artifacts remain operator-supplied.
+services:
+  migrate:
+    image: ${MOLECULENS_API_IMAGE:?set immutable API image}
+    profiles: [operations]
+    command: [migrate]
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?set database URL}
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+  api:
+    image: ${MOLECULENS_API_IMAGE:?set immutable API image}
+    command: [api, --artifacts, /var/go-artifacts, --legacy-artifacts, /var/legacy-artifacts, --capacity, '100']
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?set database URL}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+    ports: [127.0.0.1:8002:8000]
+    volumes:
+      - ${GO_ARTIFACT_ROOT:?set NEW artifact directory}:/var/go-artifacts:ro
+      - ${LEGACY_ARTIFACT_ROOT:?set legacy artifact directory}:/var/legacy-artifacts:ro
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    cpus: 1.0
+    restart: unless-stopped
+    stop_grace_period: 25s
+  worker:
+    image: ${MOLECULENS_WORKER_IMAGE:?set immutable worker image}
+    command: [worker, --artifacts, /var/go-artifacts, --python, /opt/conda/bin/python, --python-path, /app/src, --timeout, 5m, --lease, 30s]
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?set database URL}
+      ENGINE_BUILD: ${MOLECULENS_WORKER_IMAGE:?set immutable worker image}
+    volumes:
+      - ${GO_ARTIFACT_ROOT:?set NEW artifact directory}:/var/go-artifacts
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    init: true
+    mem_limit: 3g
+    cpus: 2.0
+    pids_limit: 128
+    tmpfs: ['/tmp:size=64m,mode=1777']
+    restart: unless-stopped
+    stop_grace_period: 20s

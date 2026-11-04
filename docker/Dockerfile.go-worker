@@ -1,0 +1,9 @@
+# Build the engine from its pinned recipe first. The release receipt records the
+# exact local image ID; deploy a registry digest of this produced worker image.
+ARG ENGINE_IMAGE=moleculens-engine:qualified
+FROM ${ENGINE_IMAGE}
+COPY build/moleculens-linux /usr/local/bin/moleculens
+ENV GOMEMLIMIT=256MiB
+USER 65532:65532
+ENTRYPOINT ["/usr/local/bin/moleculens"]
+CMD ["worker", "--artifacts", "/var/go-artifacts", "--python", "/opt/conda/bin/python", "--python-path", "/app/src"]

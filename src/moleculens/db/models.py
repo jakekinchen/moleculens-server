@@ -4,7 +4,7 @@ import enum
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import JSON, DateTime, Enum, Float, Index, String, Text, func
+from sqlalchemy import JSON, DateTime, Enum, Float, Index, String, Text, func, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -62,11 +62,20 @@ class Job(Base):
     # Worker info
     worker_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
+    attempt_token: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
     # Retry tracking
     attempt_count: Mapped[int] = mapped_column(default=0)
 
     # Indexes for efficient queries
     __table_args__ = (
+        Index(
+            "uq_jobs_active_key",
+            "cache_key",
+            unique=True,
+            postgresql_where=text("status IN ('pending','queued','running')"),
+            sqlite_where=text("status IN ('pending','queued','running')"),
+        ),
         Index("ix_jobs_status_created", "status", "created_at"),
         Index("ix_jobs_cache_key_status", "cache_key", "status"),
     )

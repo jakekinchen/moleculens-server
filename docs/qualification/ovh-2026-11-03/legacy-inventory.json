@@ -1,0 +1,491 @@
+{
+  "observedAt": "2026-11-04T00:17:06.962990+00:00",
+  "host": "moleculens-prod",
+  "id": "uid=1000(agent) gid=1000(agent) groups=1000(agent),27(sudo),119(docker)",
+  "authorizedKeys": "256 SHA256:cebCdJ7GH7HudJl9B/wHY+5xYjUvZFSyg9tLtQeZz7M moleculens-droplet-2026-01-03 (ED25519)\n256 SHA256:/it7tRnxWuOSX845PJSkjG8j1vkYmyvLZAA6osfNZ6g kelly-claude-moleculens-2026-03-25 (ED25519)",
+  "containers": [
+    {
+      "name": "/molecule-caddy",
+      "id": "51b72e85de0bc38ee9d3a43cac9236fbb6e9beb701b1da111d320a2c2f06e59a",
+      "image": "sha256:a4ef43ffa2b91c00698ba20caced449418d1e678f50034083882969de8c45f6e",
+      "imageReference": "caddy:2-alpine",
+      "entrypoint": null,
+      "command": [
+        "caddy",
+        "run",
+        "--config",
+        "/etc/caddy/Caddyfile",
+        "--adapter",
+        "caddyfile"
+      ],
+      "state": {
+        "Status": "running",
+        "Running": true,
+        "OOMKilled": false,
+        "ExitCode": 0,
+        "StartedAt": "2026-04-26T19:27:32.39363128Z"
+      },
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "moleculens-server_molecule-caddy-config",
+          "Source": "/var/lib/docker/volumes/moleculens-server_molecule-caddy-config/_data",
+          "Destination": "/config",
+          "Driver": "local",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": ""
+        },
+        {
+          "Type": "bind",
+          "Source": "/home/agent/moleculens-server/docker/Caddyfile.single",
+          "Destination": "/etc/caddy/Caddyfile",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "volume",
+          "Name": "moleculens-server_molecule-caddy-data",
+          "Source": "/var/lib/docker/volumes/moleculens-server_molecule-caddy-data/_data",
+          "Destination": "/data",
+          "Driver": "local",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "ports": {
+        "2019/tcp": null,
+        "443/tcp": [
+          {
+            "HostIp": "0.0.0.0",
+            "HostPort": "443"
+          },
+          {
+            "HostIp": "::",
+            "HostPort": "443"
+          }
+        ],
+        "443/udp": [
+          {
+            "HostIp": "0.0.0.0",
+            "HostPort": "443"
+          },
+          {
+            "HostIp": "::",
+            "HostPort": "443"
+          }
+        ],
+        "80/tcp": [
+          {
+            "HostIp": "0.0.0.0",
+            "HostPort": "80"
+          },
+          {
+            "HostIp": "::",
+            "HostPort": "80"
+          }
+        ]
+      },
+      "resources": {
+        "Memory": 0,
+        "NanoCpus": 0,
+        "CpuQuota": 0,
+        "CpuPeriod": 0,
+        "PidsLimit": null,
+        "RestartPolicy": {
+          "Name": "unless-stopped",
+          "MaximumRetryCount": 0
+        },
+        "LogConfig": {
+          "Type": "json-file",
+          "Config": {}
+        }
+      },
+      "environment": {
+        "MOLECULENS_DOMAIN": "api.moleculens.com"
+      }
+    },
+    {
+      "name": "/molecule-worker",
+      "id": "ddbcdf1db5b3a859b9853a39f6e81d70ed793d73ab63b4b31a4d08138a1753ab",
+      "image": "sha256:911521d3786b3d1b2858ad8fbe05e54253e90773c27d0285ae3bb4cb9a532bb4",
+      "imageReference": "moleculens-server-molecule-worker",
+      "entrypoint": [
+        "/usr/local/bin/_entrypoint.sh"
+      ],
+      "command": [
+        "python",
+        "-m",
+        "moleculens.worker.main"
+      ],
+      "state": {
+        "Status": "running",
+        "Running": true,
+        "OOMKilled": false,
+        "ExitCode": 0,
+        "StartedAt": "2026-04-26T19:27:26.714105104Z"
+      },
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/home/agent/moleculens-server/var/logs",
+          "Destination": "/var/log/molecule",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "bind",
+          "Source": "/home/agent/moleculens-server/var/cache",
+          "Destination": "/var/molecule-cache",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "bind",
+          "Source": "/home/agent/moleculens-server/var/psi4_scratch",
+          "Destination": "/var/psi4_scratch",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": "rprivate"
+        }
+      ],
+      "ports": {},
+      "resources": {
+        "Memory": 0,
+        "NanoCpus": 0,
+        "CpuQuota": 0,
+        "CpuPeriod": 0,
+        "PidsLimit": null,
+        "RestartPolicy": {
+          "Name": "unless-stopped",
+          "MaximumRetryCount": 0
+        },
+        "LogConfig": {
+          "Type": "json-file",
+          "Config": {}
+        }
+      },
+      "environment": {
+        "PSI_SCRATCH": "/var/psi4_scratch",
+        "PSI4_NUM_THREADS": "2",
+        "PSI4_MEMORY_MB": "2048",
+        "WORKER_POLL_SECONDS": "2",
+        "LOG_LEVEL": "INFO",
+        "MOLECULE_CACHE_DIR": "/var/molecule-cache"
+      }
+    },
+    {
+      "name": "/molecule-api",
+      "id": "7479403add832cf4a7d019e7c029fe0881440e5904140b45deaf6b794b2059c1",
+      "image": "sha256:a1d41cf217a9752039d01e8b7c075f7989e763e427a96229197aa1025666faf4",
+      "imageReference": "moleculens-server-molecule-api",
+      "entrypoint": null,
+      "command": [
+        "uvicorn",
+        "moleculens.api.main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000"
+      ],
+      "state": {
+        "Status": "running",
+        "Running": true,
+        "OOMKilled": false,
+        "ExitCode": 0,
+        "StartedAt": "2026-04-26T19:27:26.714841781Z"
+      },
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/home/agent/moleculens-server/var/cache",
+          "Destination": "/var/molecule-cache",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "bind",
+          "Source": "/home/agent/moleculens-server/var/logs",
+          "Destination": "/var/log/molecule",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": "rprivate"
+        }
+      ],
+      "ports": {
+        "8000/tcp": null
+      },
+      "resources": {
+        "Memory": 0,
+        "NanoCpus": 0,
+        "CpuQuota": 0,
+        "CpuPeriod": 0,
+        "PidsLimit": null,
+        "RestartPolicy": {
+          "Name": "unless-stopped",
+          "MaximumRetryCount": 0
+        },
+        "LogConfig": {
+          "Type": "json-file",
+          "Config": {}
+        }
+      },
+      "environment": {
+        "MOLECULE_CACHE_DIR": "/var/molecule-cache",
+        "LOG_LEVEL": "INFO",
+        "ALLOWED_ORIGINS": "https://moleculens.com,https://www.moleculens.com"
+      }
+    },
+    {
+      "name": "/molecule-postgres",
+      "id": "c0a7521775eb664ea308a31027a9eff0d58a81e2a637acdbeb6d909551e7b2b8",
+      "image": "sha256:108b27c919e6e7bc124350fb265deea9adac58e118eade428c6d1ad44b90debe",
+      "imageReference": "postgres:16-alpine",
+      "entrypoint": [
+        "docker-entrypoint.sh"
+      ],
+      "command": [
+        "postgres"
+      ],
+      "state": {
+        "Status": "running",
+        "Running": true,
+        "OOMKilled": false,
+        "ExitCode": 0,
+        "StartedAt": "2026-03-26T22:20:47.281868902Z"
+      },
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/home/agent/moleculens-server/var/postgres",
+          "Destination": "/var/lib/postgresql/data",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": "rprivate"
+        }
+      ],
+      "ports": {
+        "5432/tcp": null
+      },
+      "resources": {
+        "Memory": 0,
+        "NanoCpus": 0,
+        "CpuQuota": 0,
+        "CpuPeriod": 0,
+        "PidsLimit": null,
+        "RestartPolicy": {
+          "Name": "unless-stopped",
+          "MaximumRetryCount": 0
+        },
+        "LogConfig": {
+          "Type": "json-file",
+          "Config": {}
+        }
+      },
+      "environment": {
+        "POSTGRES_DB": "moleculens",
+        "POSTGRES_USER": "moleculens"
+      }
+    }
+  ],
+  "database": {
+    "version": "PostgreSQL 16.13 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+    "encoding": "UTF8",
+    "databaseBytes": 10599447,
+    "columns": [
+      {
+        "table_schema": "public",
+        "table_name": "cache_entries",
+        "column_name": "cache_key",
+        "data_type": "character varying",
+        "is_nullable": "NO"
+      },
+      {
+        "table_schema": "public",
+        "table_name": "cache_entries",
+        "column_name": "params_hash",
+        "data_type": "character varying",
+        "is_nullable": "NO"
+      },
+      {
+        "table_schema": "public",
+        "table_name": "cache_entries",
+        "column_name": "result_meta",
+        "data_type": "json",
+        "is_nullable": "NO"
+      },
+      {
+        "table_schema": "public",
+        "table_name": "cache_entries",
+        "column_name": "artifact_paths",
+        "data_type": "json",
+        "is_nullable": "NO"
+      },
+      {
+        "table_schema": "public",
+        "table_name": "cache_entries",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO"
+      },
+      {
+        "table_schema": "public",
+        "table_name": "cache_entries",
+        "column_name": "hit_count",
+        "data_type": "integer",
+        "is_nullable": "NO"
+      },
+      {
+        "table_schema": "public",
+        "table_name": "cache_entries",
+        "column_name": "last_accessed_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES"
+      },
+      {
+        "table_schema": "public",
+        "table_name": "jobs",
+        "column_name": "id",
+        "data_type": "character varying",
+        "is_nullable": "NO"
+      },
+      {
+        "table_schema": "public",
+        "table_name": "jobs",
+        "column_name": "cache_key",
+        "data_type": "character varying",
+        "is_nullable": "NO"
+      },
+      {
+        "table_schema": "public",
+        "table_name": "jobs",
+        "column_name": "status",
+        "data_type": "USER-DEFINED",
+        "is_nullable": "NO"
+      },
+      {
+        "table_schema": "public",
+        "table_name": "jobs",
+        "column_name": "request_params",
+        "data_type": "json",
+        "is_nullable": "NO"
+      },
+      {
+        "table_schema": "public",
+        "table_name": "jobs",
+        "column_name": "result_meta",
+        "data_type": "json",
+        "is_nullable": "YES"
+      },
+      {
+        "table_schema": "public",
+        "table_name": "jobs",
+        "column_name": "error_message",
+        "data_type": "text",
+        "is_nullable": "YES"
+      },
+      {
+        "table_schema": "public",
+        "table_name": "jobs",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "NO"
+      },
+      {
+        "table_schema": "public",
+        "table_name": "jobs",
+        "column_name": "started_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES"
+      },
+      {
+        "table_schema": "public",
+        "table_name": "jobs",
+        "column_name": "completed_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES"
+      },
+      {
+        "table_schema": "public",
+        "table_name": "jobs",
+        "column_name": "compute_time_ms",
+        "data_type": "double precision",
+        "is_nullable": "YES"
+      },
+      {
+        "table_schema": "public",
+        "table_name": "jobs",
+        "column_name": "worker_id",
+        "data_type": "character varying",
+        "is_nullable": "YES"
+      },
+      {
+        "table_schema": "public",
+        "table_name": "jobs",
+        "column_name": "attempt_count",
+        "data_type": "integer",
+        "is_nullable": "NO"
+      }
+    ],
+    "queue": [
+      {
+        "status": "done",
+        "count": 439
+      },
+      {
+        "status": "error",
+        "count": 9
+      }
+    ],
+    "cacheCount": 439,
+    "roles": [
+      {
+        "rolname": "moleculens",
+        "rolsuper": true,
+        "rolcanlogin": true
+      }
+    ],
+    "connections": [
+      {
+        "usename": "moleculens",
+        "application_name": "",
+        "state": "idle",
+        "count": 2
+      },
+      {
+        "usename": "moleculens",
+        "application_name": "",
+        "state": null,
+        "count": 1
+      },
+      {
+        "usename": "moleculens",
+        "application_name": "psql",
+        "state": "active",
+        "count": 1
+      },
+      {
+        "usename": null,
+        "application_name": "",
+        "state": null,
+        "count": 4
+      }
+    ]
+  },
+  "deploymentHead": "c9fce3c5d9f69212cc65d39e06ae3c18ef74eafb",
+  "deploymentStatus": "?? .env.bak.20260422014814",
+  "storage": {
+    "postgres": "67931777\t/var/lib/postgresql/data",
+    "cache": "11548152870\t/var/molecule-cache",
+    "logs": "4096\t/home/agent/moleculens-server/var/logs"
+  },
+  "disk": "Filesystem        1B-blocks        Used    Available Use% Mounted on\n/dev/sda1      160970244096 28251246592 126119706624  19% /",
+  "timers": "NEXT                        LEFT          LAST                        PASSED        UNIT                           ACTIVATES\nWed 2026-11-04 03:43:28 UTC 3h 26min left Tue 2026-11-03 10:02:07 UTC 14h ago       apt-daily.timer                apt-daily.service\nWed 2026-11-04 06:14:20 UTC 5h 57min left Tue 2026-11-03 06:49:54 UTC 17h ago       apt-daily-upgrade.timer        apt-daily-upgrade.service\nWed 2026-11-04 07:19:50 UTC 7h left       Tue 2026-11-03 17:07:42 UTC 7h ago        motd-news.timer                motd-news.service\nWed 2026-11-04 08:54:21 UTC 8h left       Tue 2026-11-03 09:59:54 UTC 14h ago       man-db.timer                   man-db.service\nWed 2026-11-04 10:54:24 UTC 10h left      Wed 2026-10-28 12:58:26 UTC 6 days ago    update-notifier-motd.timer     update-notifier-motd.service\nWed 2026-11-04 23:06:17 UTC 22h left      Tue 2026-11-03 23:06:17 UTC 1h 10min ago  update-notifier-download.timer update-notifier-download.service\nWed 2026-11-04 23:10:03 UTC 22h left      Tue 2026-11-03 23:10:03 UTC 1h 7min ago   systemd-tmpfiles-clean.timer   systemd-tmpfiles-clean.service\nThu 2026-11-05 00:00:00 UTC 23h left      Wed 2026-11-04 00:00:10 UTC 16min ago     dpkg-db-backup.timer           dpkg-db-backup.service\nThu 2026-11-05 00:00:00 UTC 23h left      Wed 2026-11-04 00:00:10 UTC 16min ago     logrotate.timer                logrotate.service\nSun 2026-11-08 03:10:24 UTC 4 days left   Sun 2026-11-01 03:10:12 UTC 2 days ago    e2scrub_all.timer              e2scrub_all.service\nMon 2026-11-09 01:38:11 UTC 5 days left   Mon 2026-11-02 01:03:17 UTC 1 day 23h ago fstrim.timer                   fstrim.service\nn/a                         n/a           n/a                         n/a           apport-autoreport.timer        apport-autoreport.service\nn/a                         n/a           n/a                         n/a           snapd.snap-repair.timer        snapd.snap-repair.service\nn/a                         n/a           n/a                         n/a           ua-timer.timer                 ua-timer.service\n\n14 timers listed.",
+  "services": "UNIT                        LOAD   ACTIVE SUB     DESCRIPTION\n  atd.service                 loaded active running Deferred execution scheduler\n  containerd.service          loaded active running containerd container runtime\n  cron.service                loaded active running Regular background program processing daemon\n  dbus.service                loaded active running D-Bus System Message Bus\n  docker.service              loaded active running Docker Application Container Engine\n  getty@tty1.service          loaded active running Getty on tty1\n  irqbalance.service          loaded active running irqbalance daemon\n  multipathd.service          loaded active running Device-Mapper Multipath Device Controller\n  networkd-dispatcher.service loaded active running Dispatcher daemon for systemd-networkd\n  packagekit.service          loaded active running PackageKit Daemon\n  polkit.service              loaded active running Authorization Manager\n  qemu-guest-agent.service    loaded active running QEMU Guest Agent\n  rsyslog.service             loaded active running System Logging Service\n  serial-getty@ttyS0.service  loaded active running Serial Getty on ttyS0\n  ssh.service                 loaded active running OpenBSD Secure Shell server\n  systemd-journald.service    loaded active running Journal Service\n  systemd-logind.service      loaded active running User Login Management\n  systemd-networkd.service    loaded active running Network Configuration\n  systemd-resolved.service    loaded active running Network Name Resolution\n  systemd-timesyncd.service   loaded active running Network Time Synchronization\n  systemd-udevd.service       loaded active running Rule-based Manager for Device Events and Files\n  unattended-upgrades.service loaded active running Unattended Upgrades Shutdown\n  user@0.service              loaded active running User Manager for UID 0\n  user@1000.service           loaded active running User Manager for UID 1000\n\nLOAD   = Reflects whether the unit definition was properly loaded.\nACTIVE = The high-level unit activation state, i.e. generalization of SUB.\nSUB    = The low-level unit activation state, values depend on unit type.\n24 loaded units listed.",
+  "scope": "Read-only inventory; credentials excluded from serialized environment."
+}

@@ -1,0 +1,11 @@
+{
+  "historicalHTTPSuccesses": 448,
+  "initialStrictComparisonsPassed": 140,
+  "differences": {
+    "response field differs: computeTimeMs": 283,
+    "scientific output differs: density": 17,
+    "scientific output differs: orbitals": 6,
+    "response field differs: cached": 2
+  },
+  "classification": "Initial comparison treated additive response fields and omitted null optional fields as differences. Inspected examples retain identical scientific values. Full semantic comparison is pending."
+}

@@ -1,0 +1,12 @@
+{
+  "root": "/Users/kelly/.openclaw/workspace/projects/moleculens",
+  "head": "35dd5f4b4bb174b2005074b8e1e0f16a2702dd5b",
+  "selected_files_status": "?? src/features/nomenclature/data/nomenclature.server.ts\n",
+  "sha256": {
+    "src/app/api/orbitals/schema.ts": "a10e5cdf2173d6a250c9fdd6a031d57908a5e02f0ac343072eb8e12cd6cb3c0f",
+    "src/app/api/electrostatics/schema.ts": "2a97c65e4ad9d599d9bc86fd2d8666b8a280e2ec0d38c7aa685f7b3780cb7937",
+    "src/app/api/conformers/schema.ts": "e6f97915e07df1444d69f4489ee9608a123bf39e12ca1c606251a7d85b9c0e61",
+    "src/shared/lib/overlays/cacheKey.ts": "dc5578299b7926e3bcefed2544882bf67d55f0848065006f586d1322a2d11a22",
+    "src/features/nomenclature/data/nomenclature.server.ts": "c7d9fceabbf7c6726c0567f549876e5f57293522851093a9b37880f87cf10823"
+  }
+}

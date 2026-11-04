@@ -1,0 +1,15 @@
+# Qualification platform is explicitly linux/amd64. Bump compatibility versions
+# on scientific, native dependency, compiler or architecture changes.
+FROM psi4/psi4@sha256:5064c27a248d1b96ae13758d78569d310df196a8b0879b9118d8bdadf32e0748
+USER root
+COPY docker/apt-engine.lock /tmp/apt-engine.lock
+RUN apt-get update && xargs apt-get install -y --no-install-recommends < /tmp/apt-engine.lock && rm -rf /var/lib/apt/lists/*
+WORKDIR /app
+COPY docker/requirements-engine.lock /app/requirements-engine.lock
+RUN /opt/conda/bin/python -m pip install --require-hashes -r requirements-engine.lock
+COPY scripts/install_xtb.py /tmp/install_xtb.py
+RUN /opt/conda/bin/python /tmp/install_xtb.py
+COPY src /app/src
+ENV PATH=/opt/xtb/bin:/opt/conda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV PYTHONPATH=/app/src ENGINE_BUILD=psi4-1.11-linux-amd64-20261103
+ENTRYPOINT ["python", "-m", "moleculens.adapter"]

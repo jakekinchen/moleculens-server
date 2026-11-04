@@ -78,15 +78,6 @@ def _log_conformer_result(
         planar_fallback=meta.quality == "planar_fallback",
     )
 
-    try:
-        job_queue._update_job_params(job.id, {"conformer_log_emitted": True})
-    except Exception as e:
-        logger.warning(
-            "Failed to mark conformer log emitted",
-            cache_key=cache_key[:12],
-            error=str(e),
-        )
-
 
 def _load_conformer_result(
     cache_key: str,
@@ -95,14 +86,19 @@ def _load_conformer_result(
     if result_meta is None:
         return None
 
-    cache_dir = settings.molecule_cache_dir / cache_key
+    cache_dir = settings.molecule_cache_dir / cache_key / result_meta.get("_artifact_dir", "")
     result_file = cache_dir / "structure.sdf"
 
     if not result_file.exists():
         logger.warning("Conformer result file not found", cache_key=cache_key[:12])
         return None
 
-    sdf3d = result_file.read_text()
+    try:
+        from moleculens.compute.result_validation import load_validated
+
+        sdf3d = load_validated("conformer", cache_dir, result_meta)["sdf3d"]
+    except (ValueError, KeyError, OSError):
+        return None
 
     timings_data = result_meta.get("timings_ms", {})
     timing = None
@@ -145,8 +141,7 @@ def _build_conformer_response(job: Any, cache_key: str) -> ConformerJobResponse:
             response.timing_ms = timing
             _log_conformer_result(job, cache_key, meta, timing)
         else:
-            response.status = "failed"
-            response.error_message = "Conformer result missing"
+            raise HTTPException(status_code=503, detail={"code": "result_unavailable"})
     elif job.status == JobStatus.ERROR:
         response.error_message = job.error_message
 
@@ -160,6 +155,7 @@ def _build_conformer_params(request: ConformerRequest) -> dict[str, Any]:
         "max_attempts": request.params.max_attempts,
         "max_opt_iters": request.params.max_opt_iters,
         "add_hs": request.params.add_hs,
+        "seed": request.params.seed,
     }
 
 
@@ -226,7 +222,7 @@ async def compute_conformer(request: ConformerRequest) -> ConformerJobResponse:
 async def get_conformer_job(job_id: str) -> ConformerJobResponse:
     """Get status and result of a conformer computation job."""
     job = job_queue.get_job(job_id)
-    if job is None:
+    if job is None or job.request_params.get("job_type", "orbital") != "conformer":
         raise HTTPException(status_code=404, detail="Job not found")
 
     return _build_conformer_response(job, job.cache_key)

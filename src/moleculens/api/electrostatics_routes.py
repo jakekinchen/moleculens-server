@@ -95,11 +95,9 @@ async def compute_electrostatics(request: ElectrostaticsRequest) -> Electrostati
     }
 
     try:
-        molecule_identity = request.client_cache_key
-        cache_identity_source = "client_cache_key"
-        if molecule_identity is None:
-            molecule_identity = parse_sdf(request.sdf_content).geometry_hash()
-            cache_identity_source = "geometry_hash"
+        parse_sdf(request.sdf_content)
+        molecule_identity = hashlib.sha256(request.sdf_content.encode()).hexdigest()
+        cache_identity_source = "full_input"
 
         cache_key = _compute_electrostatics_cache_key(
             molecule_identity=molecule_identity,
@@ -197,7 +195,7 @@ async def compute_electrostatics(request: ElectrostaticsRequest) -> Electrostati
 async def get_electrostatics_job(job_id: str) -> ElectrostaticsJobResponse:
     """Get status and result of an electrostatics computation job."""
     job = job_queue.get_job(job_id)
-    if job is None:
+    if job is None or job.request_params.get("job_type", "orbital") != "electrostatics":
         raise HTTPException(status_code=404, detail="Job not found")
 
     response = ElectrostaticsJobResponse(
@@ -212,14 +210,12 @@ async def get_electrostatics_job(job_id: str) -> ElectrostaticsJobResponse:
     if job.status == JobStatus.DONE:
         result = _load_or_invalidate_electrostatics_result(job)
         if result is None:
-            return ElectrostaticsJobResponse(
-                cached=False,
-                jobId=job.id,
-                status="error",
-                cacheKey=job.cache_key,
-                createdAt=job.created_at.isoformat() if job.created_at else None,
-                computeTimeMs=job.compute_time_ms,
-                errorMessage=_missing_electrostatics_result_error(job.cache_key),
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "code": "result_unavailable",
+                    "message": "Completed job artifacts are unavailable",
+                },
             )
 
         response.result = result
@@ -236,7 +232,7 @@ def _load_electrostatics_result(
     if result_meta is None:
         return None
 
-    cache_dir = settings.molecule_cache_dir / cache_key
+    cache_dir = settings.molecule_cache_dir / cache_key / result_meta.get("_artifact_dir", "")
     result_file = cache_dir / "electrostatics_result.json"
 
     if not result_file.exists():
@@ -244,8 +240,9 @@ def _load_electrostatics_result(
         return None
 
     try:
-        with result_file.open() as f:
-            data = json.load(f)
+        from moleculens.compute.result_validation import load_validated
+
+        data = load_validated("electrostatics", cache_dir, result_meta)
     except Exception as e:
         logger.error("Failed to load electrostatics result", cache_key=cache_key[:12], error=str(e))
         return None

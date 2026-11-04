@@ -1,0 +1,12 @@
+{
+  "applicationRevision": "e2abc7bc814de5acb7ef9992029b29f3990a9235",
+  "dirtyAtBuild": false,
+  "binarySHA256": "d95e1c2d5d7833dd4622124ac88997ec94113340a64e3d29780358e72a827f26",
+  "scientificEngineImage": "sha256:57b7901dbaee58a29fa98c48b54f9c62267d68bd0bd60a89b680a40bc4293500",
+  "images": {
+    "moleculens-go-api:vps1-candidate": "sha256:a54c9f890d208e0a0a4b06f7b1c1096847d695ecc32250bac38930ec96f62574",
+    "moleculens-go-worker:vps1-candidate": "sha256:8a5608c6b4d068e1970e621c644eec069c1cab4726dfbec69b6cb0e458dc7e14"
+  },
+  "platform": "linux/amd64",
+  "normalQualifiedRevisionRetained": "718696e22f30b658815f093b19c02d7df2567f3a"
+}

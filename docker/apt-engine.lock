@@ -1,0 +1,12 @@
+ca-certificates=20250419+deb13u1
+ca-certificates-java=20240118
+java-common=0.76
+libjpeg62-turbo=1:2.1.5-4
+liblcms2-2=2.16-2+deb13u2
+libnspr4=2:4.36-1
+libnss3=2:3.110-1+deb13u5
+libpcsclite1=2.3.3-1
+libssl3t64=3.5.7-1~deb13u3
+openjdk-21-jre-headless=21.0.13+9-1~deb13u2
+openssl=3.5.7-1~deb13u3
+openssl-provider-legacy=3.5.7-1~deb13u3

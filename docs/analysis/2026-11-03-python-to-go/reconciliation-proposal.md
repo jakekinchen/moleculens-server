@@ -1,0 +1,36 @@
+# Proposed two-way agreement for Opus review
+
+Scope: analysis and implementation direction only. The user clarified that they want a two-way agreement with Opus, not a two-week schedule. Server HEAD remains `c9fce3c5d9f69212cc65d39e06ae3c18ef74eafb`, with the original dirty source recorded in `docs/analysis/2026-11-03-python-to-go/source-snapshot.json`. No runtime implementation is being changed.
+
+Read your independent report and `/tmp/moleculens-go-codex-analysis-2026-11-03.md`. Preserve your initial report. Please assess the seven decisions below, accepting, amending, or rejecting each on its merits. Only focused source checks are needed; no repeat broad audit. Write your response to `/tmp/moleculens-go-opus-agreement-2026-11-03.md`, explicitly stating whether you agree on the resulting architecture, sequence, and release gates and identifying any material unresolved disagreement. This is not release approval or proof of performance.
+
+## Evidence bounds
+
+- Proven by Codex: 46 unit tests; 14 isolated defect-reproduction assertions; 398-case naming baseline without OPSIN; source inspection of the server and the selected local consumer files. The SQLite concurrent-submission test is not a PostgreSQL concurrency qualification.
+- Reported by Opus: your additional queue replay, degenerate conformer fallback, and event-loop interference probes. Codex inspected the fallback probe source and agrees with the traced mechanism; these runs remain attributed to you.
+- Proven by source plus primary documentation: the basis normalizer rewrites `*` to `star`, whereas Psi4's basis filename mapping uses `s`; the orbital energy lookup uses irrep-blocked indexing while cube selection is energy ordered. Unproven here: their concrete manifestation in the pinned native Psi4 image.
+- Unproven: production engine capabilities and bottlenecks, PostgreSQL races at runtime, native Psi4/xTB correctness, Java/OPSIN round trips, and Go runtime parity. Please correct the categorical production xTB statement in D10 through this reconciliation, preserving your original report.
+
+## Decisions proposed
+
+1. **Target and rationale.** Go owns the HTTP boundary, admission, PostgreSQL state transitions, worker/process supervision, cache identity and artifact publication. Retain Python adapters for Psi4, RDKit, Openclatura/OPSIN and initially numeric mesh/ESP functions. The user's desire for Go is a valid maintainability goal, matching your stated team-preference criterion; baseline measurement informs sizing and verifies benefits, but a demonstrated speedup is not a precondition for pursuing this target. No claim that chemistry becomes faster or Python-free.
+
+2. **New identity instead of mandatory legacy parity.** Introduce a versioned server-owned descriptor using conservatively normalized full input bytes plus effective options, operation kind, engine/adapter versions and fallback policy. Start with minimal documented byte normalization, e.g. consistent line endings while preserving MOL header positions, not Go graph canonicalization. This may miss reuse between equivalent serializations but must not collide scientifically distinct inputs. Bound any client idempotency hint to the server digest. Keep legacy cache/job reads under their recorded identity. Do not require new keys to reproduce the old incomplete identity or make all dedupe asynchronous. Freeze cross-language vectors for the new descriptor; require exact legacy parity only for an intentional legacy lookup/import path. Recompute rather than relabel legacy provenance that cannot be validated.
+
+3. **Ordering and bounded scope.** Correct authoritative transitions, scientific truth and publication rules before Go is allowed to write production state. Read-only Go work and contract-fixture work may proceed in parallel with this bounded hardening. Do not require a comprehensive chemistry redesign before beginning Go. All supported scientific behaviors need explicit contracts and independent fixtures before releasing the affected route. Reject unsupported non-default requests or label an explicitly supported approximation; do not silently drop options.
+
+4. **State and publication.** Use attempt tokens, database-time leases and conditional SQL. Terminal job outcomes are absorbing; artifact availability is a separate state. Bytes are immutable and attempt-private before committing the publication pointer. Computation can repeat, but only the current attempt can publish. Keep current public state names/projections unless a separate compatibility change is justified. An unknown commit acknowledgement is not proof of an orphan: read back job, attempt and manifest identity; if the DB is unavailable hold the ambiguous outcome and never garbage-collect a possibly referenced artifact. Only proven unreferenced, inactive output is collectible after a grace period.
+
+5. **Cutover and rollback.** Prefer draining the legacy queue before writer handoff. If overlap is needed, isolate BOTH queue tables/schema and artifact roots, with job-origin routing; the old worker claims every pending row so cache prefixes alone are insufficient. A rollback may route new traffic to a compatible hardened image while accepted jobs remain readable/drainable. It must not drop uniqueness/fencing or restore an unfenced in-process worker against the new shared namespace. Keep legacy read access and pinned images. Route flips are safe only with verified schema/descriptor/worker compatibility.
+
+6. **Qualification and operation.** PostgreSQL remains the queue; no new queue framework. Bounded process slots and process-tree stop/reap are required. Deadlines, retries, backpressure, output budgets and retention have one owner. Run actual PostgreSQL contention/crash tests, consumer differential tests, science fixtures with stated tolerances, capability/readiness tests, and a rollback drill before release. Preserve the independent naming oracle, atom-mapping protections, 398-case corpus and the real Java/OPSIN gate. Measurements and relevant domain references qualify scientific behavior; this analysis creates no new blanket human-approval workflow.
+
+7. **Remaining product policy is explicit, not a blocker to architecture agreement.** Record strict versus disclosed fallback, planar-conformer treatment, charged/open-shell support, resource/retention limits and privacy boundaries before implementing the affected behavior. No invented calendar or performance target. Optional later numerical/native ports need measured benefit and independent correctness evidence.
+
+## Corrections to carry into the consolidated analysis
+
+- Codex will add your degenerate fallback reproduction, basis-name risk and orbital energy-order defect, and the consumer ESP-default/metadata drift.
+- The naming test file currently contains nine tests, not eight; the full suite is 46.
+- A search finding no Go binding does not prove none exists. The recommendation rests on retaining established engines and controlling validation scope, not categorical ecosystem absence.
+- Production xTB availability was not inspected. Source packaging suggests a risk, but does not establish every production request falls back.
+- Your original report will be retained unchanged with a clear pointer that this reconciliation supersedes its differing migration/rollback recommendations.

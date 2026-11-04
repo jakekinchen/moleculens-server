@@ -1,0 +1,31 @@
+{
+  "colima": {
+    "name": "moleculens-qualification",
+    "status": "Stopped",
+    "arch": "aarch64",
+    "cpus": 2,
+    "memory": 4294967296,
+    "disk": 32212254720,
+    "runtime": "docker"
+  },
+  "postgresql": "stopped; pg_ctl reports no server running",
+  "qualificationPortsListening": [],
+  "portsChecked": [
+    55439,
+    55440,
+    58082,
+    58083,
+    58443
+  ],
+  "containers": "All five task containers and compose network removed; docker ps was empty before VM shutdown",
+  "jobsAtCleanup": {
+    "done": 21,
+    "error": 2,
+    "pending": 0,
+    "running": 0
+  },
+  "historicalJobErrors": "Two naming deadline failures from initial 0.5-CPU tuning; final workload passed",
+  "preserved": "Exact images and isolated test volumes remain in the stopped VM; no runtime database or credential is committed",
+  "brevUsed": false,
+  "paidHostingChanges": false
+}
