@@ -12,6 +12,11 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--dump", type=Path, required=True)
 parser.add_argument("--output", type=Path, required=True)
 parser.add_argument(
+    "--allow-inflight",
+    action="store_true",
+    help="Allow lease progress while checking immutable inputs and terminal snapshot records",
+)
+parser.add_argument(
     "--legacy-manifest", type=Path, help="Optional verified historical file/hash inventory"
 )
 args = parser.parse_args()
@@ -45,7 +50,34 @@ try:
     sql = "COPY (SELECT row_to_json(t)::text FROM moleculens_v2.jobs t ORDER BY id) TO STDOUT"
     original = pg("moleculens", sql)
     restored = pg(database, sql)
-    assert original == restored, "Restored job records differ."
+    snapshot_rows = [
+        json.loads(line)
+        for line in pg(
+            database, "SELECT row_to_json(t)::text FROM moleculens_v2.jobs t ORDER BY id"
+        ).splitlines()
+    ]
+    if args.allow_inflight:
+        live_rows = {
+            row["id"]: row
+            for row in (
+                json.loads(line)
+                for line in pg(
+                    "moleculens",
+                    "SELECT row_to_json(t)::text FROM moleculens_v2.jobs t ORDER BY id",
+                ).splitlines()
+            )
+        }
+        assert set(live_rows) == {row["id"] for row in snapshot_rows}, (
+            "Job identities changed during restore check."
+        )
+        for row in snapshot_rows:
+            live = live_rows[row["id"]]
+            for key in ("id", "kind", "cache_key", "request", "created_at"):
+                assert row[key] == live[key], f"Persisted job input differs: {key}"
+            if row["state"] in ("done", "error"):
+                assert row == live, "Terminal snapshot job record differs."
+    else:
+        assert original == restored, "Restored job records differ."
     legacy_tables = {}
     for table, order in [("jobs", "id"), ("cache_entries", "cache_key")]:
         query = (
@@ -126,14 +158,27 @@ try:
     receipt = {
         "dump": str(args.dump),
         "dumpSHA256": dump_hash,
-        "jobRowsByteIdentical": True,
-        "jobRowsSHA256": hashlib.sha256(original).hexdigest(),
+        "jobRowsByteIdentical": original == restored,
+        "jobRowsSHA256": hashlib.sha256(restored).hexdigest(),
         "completedJobsVerified": jobs_checked,
         "artifactFilesSHA256Verified": files_checked,
         "scope": "Logical dump restored into a separate disposable database; retained artifact bytes match restored manifests. Full OVH snapshot restore is not tested.",
     }
     receipt["historicalTables"] = legacy_tables
     receipt["historicalArtifactFilesSHA256Verified"] = historical_files
+    receipt["inflightRowsAtSnapshot"] = sum(
+        row["state"] in ("pending", "running") for row in snapshot_rows
+    )
+    receipt["persistedInputsAndTerminalRowsVerified"] = True
+    receipt["snapshotInflightDirectories"] = [
+        row["cache_key"] + "/" + row["token"]
+        for row in snapshot_rows
+        if row["state"] in ("pending", "running") and row["token"]
+    ]
+    if args.allow_inflight:
+        receipt["scope"] += (
+            " In-flight lease/state fields may advance; immutable inputs and all terminal snapshot rows are checked against live data."
+        )
     args.output.write_text(json.dumps(receipt, indent=2) + "\n")
     print(json.dumps(receipt, indent=2))
 finally:
