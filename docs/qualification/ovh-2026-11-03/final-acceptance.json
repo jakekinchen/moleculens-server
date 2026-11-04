@@ -81,7 +81,9 @@
   "backendMergedRevision": "27931a359543dea2a409a2641619df7846ba7722",
   "frontendMergedRevision": "a56e1a23fc36391dfc94b74703c9e2ad443b9c8b",
   "frontendMainDeployment": "dpl_77fKWVTXuNLtTMR9gcuKD14xGka4",
-  "hetznerRetirement": "Awaiting action-time confirmation; old API and worker remain stopped.",
+  "hetznerRetirement": "Old server, both primary IPs, unused firewall, and both empty Cloud projects deleted after user confirmation.",
   "localQualificationVM": "stopped",
-  "brevUsed": false
+  "brevUsed": false,
+  "hetznerRetirementObservedAt": "2026-11-04T04:07:20.044677+00:00",
+  "hetznerAccount": "Deletion disabled pending next invoice and payment."
 }
