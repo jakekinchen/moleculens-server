@@ -1,0 +1,25 @@
+{
+  "scope": "Actual OVH largest historical 74-atom B3LYP/6-31g(d) density input through the pinned Go/native engine; old historical result remains separately preserved.",
+  "case": {
+    "legacyJobId": "f8911833-6a6c-4e86-86a2-2790335ecd38",
+    "path": "/v1/orbitals",
+    "jobId": "g_7f87ec4087e2a99d18928be619f9555a",
+    "response": {
+      "cacheKey": "7bd0e2f4757452eb2c2b12ab568bc0a30b343382283ee9567c62e2e11be5e29d",
+      "cached": false,
+      "computeTimeMs": 2030905.3886880002,
+      "createdAt": "2026-11-04T01:46:48.689416Z",
+      "errorMessage": null,
+      "jobId": "g_7f87ec4087e2a99d18928be619f9555a",
+      "status": "done"
+    },
+    "terminal": true,
+    "densityVertices": 18802,
+    "observedTerminalAt": "2026-11-04T02:20:41.692854+00:00"
+  },
+  "scratchCapDuringReplayBytes": 17179869184,
+  "publicationCapBytes": 268435456,
+  "responseCapBytes": 33554432,
+  "nativeEngineImage": "sha256:57b7901dbaee58a29fa98c48b54f9c62267d68bd0bd60a89b680a40bc4293500",
+  "passed": true
+}

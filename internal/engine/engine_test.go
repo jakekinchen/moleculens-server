@@ -123,7 +123,7 @@ func TestAttemptScratchDoesNotExpandPublicationBudget(t *testing.T) {
 		size      int64
 		budget    int64
 		wantError bool
-	}{{"512-MiB temporary scratch", 512 << 20, 0, false}, {"scratch over default 1 GiB", MaxAttemptDisk + 1, 0, true}, {"configured large workspace", 2 << 30, MaxConfiguredAttemptDisk, false}, {"scratch over configured limit", MaxConfiguredAttemptDisk + 1, MaxConfiguredAttemptDisk, true}} {
+	}{{"512-MiB temporary scratch", 512 << 20, 0, false}, {"scratch over default 1 GiB", MaxAttemptDisk + 1, 0, true}, {"measured historical scratch within production budget", 4495376302, 8 << 30, false}, {"configured large workspace", 2 << 30, MaxConfiguredAttemptDisk, false}, {"scratch over configured limit", MaxConfiguredAttemptDisk + 1, MaxConfiguredAttemptDisk, true}} {
 		t.Run(tc.name, func(t *testing.T) {
 			src := t.TempDir()
 			pkg := filepath.Join(src, "moleculens", "adapter")

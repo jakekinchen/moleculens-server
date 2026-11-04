@@ -53,6 +53,19 @@ services:
       DATABASE_URL: ${DATABASE_URL:?set encoded PostgreSQL URL on the private network}
     depends_on:
       postgres: {condition: service_healthy}
+  gc:
+    <<: *app
+    image: ${MOLECULENS_API_IMAGE:?set immutable API image}
+    profiles: [operations]
+    restart: 'no'
+    command: [gc, --artifacts, /var/go-artifacts, --legacy-artifacts, /var/legacy-artifacts]
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?set encoded PostgreSQL URL on the private network}
+      GOMEMLIMIT: 64MiB
+    volumes: [artifacts:/var/go-artifacts]
+    mem_limit: 128m
+    cpus: 0.1
+    pids_limit: 32
   api:
     <<: *app
     image: ${MOLECULENS_API_IMAGE:?set immutable API image}
@@ -68,7 +81,7 @@ services:
   chemistry:
     <<: *app
     image: ${MOLECULENS_WORKER_IMAGE:?set immutable worker image}
-    command: [worker, --kinds, 'orbital,electrostatics', --artifacts, /var/go-artifacts, --python, /opt/conda/bin/python, --python-path, /app/src, --timeout, 2h, --attempt-disk-mib, '16384', --lease, 30s]
+    command: [worker, --kinds, 'orbital,electrostatics', --artifacts, /var/go-artifacts, --python, /opt/conda/bin/python, --python-path, /app/src, --timeout, 2h, --attempt-disk-mib, '8192', --lease, 30s]
     environment:
       DATABASE_URL: ${DATABASE_URL:?set encoded PostgreSQL URL on the private network}
       ENGINE_BUILD: ${MOLECULENS_WORKER_IMAGE:?set immutable worker image}
