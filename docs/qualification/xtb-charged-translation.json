@@ -1,0 +1,23 @@
+{
+  "engine": "native xTB 6.7.1 CLI",
+  "charge": 1,
+  "multiplicity": 1,
+  "chargeSum": 1.0,
+  "translatedChargeSum": 1.0,
+  "dipoleDebye": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "translatedDipoleDebye": [
+    1.0527914646729641e-06,
+    -6.933884879600782e-07,
+    3.594029758247075e-07
+  ],
+  "originShiftAngstrom": [
+    3.0,
+    -2.0,
+    1.0000000000000002
+  ],
+  "passed": true
+}

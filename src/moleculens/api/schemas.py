@@ -1,8 +1,8 @@
 """Pydantic schemas for API request/response validation."""
 
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class ComputeRequest(BaseModel):
@@ -40,6 +40,11 @@ class ComputeRequest(BaseModel):
         ge=0.001,
         le=0.5,
     )
+    charge: int = Field(default=0, ge=-10, le=10)
+    multiplicity: int = Field(
+        default=1, ge=1, le=1, description="Only closed-shell orbitals supported"
+    )
+    density_isovalue: float = Field(default=0.01, ge=0.001, le=0.5, alias="densityIsovalue")
     inchi_key: str | None = Field(
         default=None,
         description="Optional InChIKey for cache deduplication",
@@ -66,7 +71,7 @@ class ComputeRequest(BaseModel):
     @classmethod
     def normalize_basis(cls, v: str) -> str:
         # Normalize common basis set names
-        return v.lower().replace("*", "star")
+        return v.lower()
 
 
 class MeshDataResponse(BaseModel):
@@ -96,6 +101,10 @@ class ComputeResultMeta(BaseModel):
     method: str
     basis: str
     grid_spacing_angstrom: float = Field(alias="gridSpacingAngstrom")
+    charge: int = 0
+    multiplicity: int = 1
+    density_isovalue: float | None = Field(default=None, alias="densityIsovalue")
+    total_energy: float | None = Field(default=None, alias="totalEnergy")
     psi4_num_threads: int = Field(alias="psi4NumThreads")
     compute_time_ms: float | None = Field(default=None, alias="computeTimeMs")
 
@@ -136,6 +145,80 @@ class HealthResponse(BaseModel):
     model_config = {"populate_by_name": True}
 
 
+# =============================================================================
+# Nomenclature Schemas
+# =============================================================================
+
+
+OpsinStatus = Literal[
+    "matched",
+    "mismatched",
+    "name_unparseable",
+    "name_empty",
+    "skipped_no_opsin",
+    "skipped_no_java",
+    "error",
+    "not_requested",
+]
+
+
+class NomenclatureRequest(BaseModel):
+    """Request schema for deterministic nomenclature explanation."""
+
+    smiles: str = Field(..., min_length=1, max_length=4096)
+    molblock: str | None = Field(
+        default=None,
+        max_length=2_000_000,
+        description="Optional viewer-order molblock used to map engine atoms safely",
+    )
+    verify_opsin: bool = Field(default=True, alias="verifyOpsin")
+
+    model_config = {"populate_by_name": True}
+
+
+class NomenclatureTraceStep(BaseModel):
+    """One decision in the naming trace with explicitly separated atom domains."""
+
+    phase: str
+    decision: str
+    reason: str
+    atoms: list[int] = Field(
+        default_factory=list,
+        description="Viewer-order atom indices; empty unless mapping succeeded",
+    )
+    engine_atoms: list[int] = Field(default_factory=list, alias="engineAtoms")
+    data: dict[str, Any] = Field(default_factory=dict)
+
+    model_config = {"populate_by_name": True}
+
+
+class NomenclatureComponent(BaseModel):
+    """Human-readable explanation line for a naming phase."""
+
+    phase: str
+    text: str
+
+
+class NomenclatureResponse(BaseModel):
+    """Computed name, trace, verification, and safe viewer atom mapping."""
+
+    display_name: str = Field(alias="displayName")
+    source: Literal["openclatura"] = "openclatura"
+    verified: bool
+    opsin_status: OpsinStatus = Field(alias="opsinStatus")
+    rules_hit: list[str] = Field(default_factory=list, alias="rulesHit")
+    rule_hints: list[str] = Field(default_factory=list, alias="ruleHints")
+    trace: list[NomenclatureTraceStep] = Field(default_factory=list)
+    components: list[NomenclatureComponent] = Field(default_factory=list)
+    atom_locants: dict[str, int] = Field(default_factory=dict, alias="atomLocants")
+    mapping_status: Literal["matched", "unmatched", "not_requested"] = Field(alias="mappingStatus")
+    engine_version: str = Field(alias="engineVersion")
+    rdkit_version: str = Field(alias="rdkitVersion")
+    experimental: bool = True
+
+    model_config = {"populate_by_name": True}
+
+
 class CacheMetricsResponse(BaseModel):
     """In-process cache metrics snapshot."""
 
@@ -168,7 +251,7 @@ class SurfaceParams(BaseModel):
 class PotentialParams(BaseModel):
     """Potential calculation parameters."""
 
-    units: str = Field(default="kcal/mol/e")
+    units: Literal["kcal/mol/e"] = "kcal/mol/e"
     softening_epsilon: float = Field(default=0.3, ge=0.1, le=2.0, alias="softeningEpsilon")
     clamp_percentiles: list[float] = Field(default=[5.0, 95.0], alias="clampPercentiles")
 
@@ -331,6 +414,7 @@ class ConformerParams(BaseModel):
     max_attempts: int = Field(default=10, ge=1, le=100, alias="maxAttempts")
     max_opt_iters: int = Field(default=200, ge=0, le=2000, alias="maxOptIters")
     add_hs: bool = Field(default=False, alias="addHs")
+    seed: int = Field(default=0, ge=0, le=2147483647)
 
     model_config = {"populate_by_name": True}
 
@@ -372,6 +456,28 @@ class ConformerRequest(BaseModel):
     )
 
     model_config = {"populate_by_name": True}
+
+    @model_validator(mode="before")
+    @classmethod
+    def consumer_options(cls, value: Any) -> Any:
+        if not isinstance(value, dict):
+            return value
+        value = dict(value)
+        if value.get("numConformers", 1) != 1:
+            raise ValueError("Only one conformer is supported")
+        params = dict(value.get("params") or {})
+        for field in ("seed",):
+            if field in value and value[field] is not None:
+                if field in params and params[field] != value[field]:
+                    raise ValueError(f"Conflicting {field} options")
+                params[field] = value[field]
+        if "optimize" in value or "forceField" in value:
+            opt = value.get("forceField", "mmff") if value.get("optimize", True) else "none"
+            if "opt" in params and params["opt"] != opt:
+                raise ValueError("Conflicting optimization options")
+            params["opt"] = opt
+        value["params"] = params
+        return value
 
 
 class ConformerTimingMs(BaseModel):

@@ -1,0 +1,13 @@
+[Unit]
+Description=Collect retired unreferenced Moleculens attempts
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/moleculens
+ExecStart=/usr/bin/docker compose --env-file .env -f compose.vps1.yml run --rm --no-deps --name moleculens-gc gc gc --artifacts /var/go-artifacts --legacy-artifacts /var/legacy-artifacts --apply
+TimeoutStartSec=15min
+UMask=0077
+Nice=10
+IOSchedulingClass=idle

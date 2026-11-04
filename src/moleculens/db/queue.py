@@ -8,7 +8,7 @@ import json
 import uuid
 from collections.abc import Generator
 from contextlib import contextmanager
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -17,7 +17,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from moleculens.core import cache_metrics, get_logger, settings
-from moleculens.db.models import Base, CacheEntry, Job, JobStatus
+from moleculens.db.models import CacheEntry, Job, JobStatus
 
 logger = get_logger(__name__)
 
@@ -64,7 +64,9 @@ def db_session() -> Generator[Session, None, None]:
 def init_db() -> None:
     """Initialize database schema."""
     engine = get_db_engine()
-    Base.metadata.create_all(engine)
+    # Schema changes belong exclusively to `moleculens migrate`.
+    with engine.connect() as conn:
+        conn.execute(text("SELECT attempt_token FROM jobs LIMIT 0"))
     logger.info("Database initialized")
 
 
@@ -93,9 +95,9 @@ def compute_cache_key(
     params = {
         "molecule_identity": molecule_identity,
         "method": method.lower(),
-        "basis": basis.lower().replace("*", "star"),
-        "grid_spacing": f"{grid_spacing:.4f}",
-        "isovalue": f"{isovalue:.4f}",
+        "basis": basis.lower(),
+        "grid_spacing": float(grid_spacing).hex(),
+        "isovalue": float(isovalue).hex(),
         "orbitals": sorted(orbitals),
     }
 
@@ -186,36 +188,6 @@ class JobQueue:
         """
         self.cache_dir = cache_dir or settings.molecule_cache_dir
 
-    def _active_job_is_stale(self, job: Job) -> bool:
-        """Return whether an active job has exceeded the stale threshold."""
-        if job.status not in {JobStatus.PENDING, JobStatus.QUEUED, JobStatus.RUNNING}:
-            return False
-
-        reference_time = job.started_at or job.created_at
-        if reference_time is None:
-            return False
-        if reference_time.tzinfo is None:
-            reference_time = reference_time.replace(tzinfo=UTC)
-
-        return reference_time <= datetime.now(UTC) - timedelta(seconds=settings.job_stale_seconds)
-
-    def _mark_active_job_stale(self, job: Job) -> None:
-        """Mark an active job as stale so a fresh replacement can be created."""
-        original_status = job.status.value
-        job.status = JobStatus.ERROR
-        job.completed_at = datetime.now(UTC)
-        job.error_message = (
-            f"Stale {original_status} job auto-cleared after "
-            f"{settings.job_stale_seconds}s without completion"
-        )
-
-        logger.warning(
-            "Auto-cleared stale active job",
-            job_id=job.id[:12],
-            cache_key=job.cache_key[:12],
-            previous_status=original_status,
-        )
-
     def _get_reusable_active_job_id(
         self,
         session: Session,
@@ -236,10 +208,6 @@ class JobQueue:
         )
 
         for active_job in active_jobs:
-            if self._active_job_is_stale(active_job):
-                self._mark_active_job_stale(active_job)
-                continue
-
             logger.info(
                 "Cache miss reused active job",
                 cache_event="active_reuse",
@@ -255,16 +223,17 @@ class JobQueue:
 
     def _required_artifact_paths(self, artifact_paths: list[str]) -> list[str]:
         """Return the minimum artifact set required for a cache entry to be reusable."""
-        result_manifests = [path for path in artifact_paths if path.endswith("result.json")]
-        return result_manifests or artifact_paths
+        return artifact_paths
 
-    def _cache_artifacts_exist(self, cache_key: str, artifact_paths: list[str]) -> bool:
+    def _cache_artifacts_exist(
+        self, cache_key: str, artifact_paths: list[str], result_meta: dict | None = None
+    ) -> bool:
         """Check whether the required cache artifacts still exist on disk."""
         required_paths = self._required_artifact_paths(artifact_paths)
         if not required_paths:
             return False
 
-        cache_root = self.cache_dir / cache_key
+        cache_root = self.cache_dir / cache_key / (result_meta or {}).get("_artifact_dir", "")
         return all((cache_root / path).exists() for path in required_paths)
 
     def _invalidate_cache_key(self, session: Session, cache_key: str, error_message: str) -> None:
@@ -273,40 +242,9 @@ class JobQueue:
         if cache_entry is not None:
             session.delete(cache_entry)
 
-        stale_jobs = (
-            session.execute(
-                select(Job).where(Job.cache_key == cache_key).where(Job.status == JobStatus.DONE)
-            )
-            .scalars()
-            .all()
-        )
-
-        invalidated_jobs = 0
-        for stale_job in stale_jobs:
-            stale_job.status = JobStatus.ERROR
-            stale_job.error_message = error_message
-            stale_job.completed_at = datetime.now(UTC)
-            invalidated_jobs += 1
-
-        job_types = sorted(
-            {
-                str((stale_job.request_params or {}).get("job_type") or "orbital")
-                for stale_job in stale_jobs
-            }
-        )
-
-        logger.warning(
-            "Invalidated stale cache entry",
-            cache_event="invalidate",
-            cache_key=cache_key[:12],
-            invalidated_jobs=invalidated_jobs,
-            job_types=job_types,
-            reason=error_message[:200],
-        )
-        _record_cache_event(
-            "invalidate",
-            job_type=job_types[0] if len(job_types) == 1 else None,
-        )
+        # Artifact availability is independent of historical execution status.
+        logger.warning("Invalidated cache pointer", cache_key=cache_key[:12], reason=error_message)
+        _record_cache_event("invalidate")
 
     def invalidate_cache_key(self, cache_key: str, error_message: str) -> None:
         """Public wrapper for invalidating a corrupt cache entry."""
@@ -326,7 +264,9 @@ class JobQueue:
             return None
 
         cache_error = f"Cached result missing for cache key {cache_key[:12]}"
-        if not self._cache_artifacts_exist(cache_key, cache_entry.artifact_paths):
+        if not self._cache_artifacts_exist(
+            cache_key, cache_entry.artifact_paths, cache_entry.result_meta
+        ):
             self._invalidate_cache_key(session, cache_key, cache_error)
             return None
 
@@ -367,6 +307,9 @@ class JobQueue:
         inchi_key: str | None = None,
         cache_identity: str | None = None,
         geometry_hash: str | None = None,
+        charge: int = 0,
+        multiplicity: int = 1,
+        density_isovalue: float = 0.01,
     ) -> tuple[str, bool]:
         """Submit a new computation job or return cached result.
 
@@ -384,20 +327,11 @@ class JobQueue:
         Returns:
             Tuple of (job_id, is_cached)
         """
-        # Compute cache key
-        if geometry_hash is None and cache_identity is None:
-            # Parse SDF to get geometry hash
-            from moleculens.compute.sdf_parser import parse_sdf
+        from moleculens.compute.sdf_parser import parse_sdf
 
-            mol = parse_sdf(sdf_content)
-            geometry_hash = mol.geometry_hash()
-
-        molecule_identity = cache_identity or geometry_hash
-        if molecule_identity is None:
-            raise ValueError("A cache identity or geometry hash is required")
-        cache_identity_source = (
-            "client_cache_key" if cache_identity is not None else "geometry_hash"
-        )
+        parse_sdf(sdf_content)  # Client hints never bypass validation.
+        molecule_identity = hashlib.sha256(sdf_content.encode()).hexdigest()
+        cache_identity_source = "full_input"
         log_context = _build_cache_log_context(
             job_type="orbital",
             cache_identity_source=cache_identity_source,
@@ -416,7 +350,24 @@ class JobQueue:
             orbitals=orbitals,
         )
 
+        cache_key = hashlib.sha256(
+            json.dumps(
+                {
+                    "legacy_hardened": 1,
+                    "key": cache_key,
+                    "charge": charge,
+                    "multiplicity": multiplicity,
+                    "density_isovalue": density_isovalue,
+                },
+                sort_keys=True,
+            ).encode()
+        ).hexdigest()
         with db_session() as session:
+            if session.bind.dialect.name == "postgresql":
+                session.execute(
+                    text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"),
+                    {"key": cache_key},
+                )
             cached_job = self._reuse_cached_job_if_valid(
                 session,
                 cache_key,
@@ -440,6 +391,10 @@ class JobQueue:
                 cache_key=cache_key,
                 status=JobStatus.PENDING,
                 request_params={
+                    "job_type": "orbital",
+                    "charge": charge,
+                    "multiplicity": multiplicity,
+                    "density_isovalue": density_isovalue,
                     "sdf_content": sdf_content,
                     "method": method,
                     "basis": basis,
@@ -447,6 +402,8 @@ class JobQueue:
                     "isovalue": isovalue,
                     "orbitals": orbitals,
                     "inchi_key": inchi_key,
+                    "client_hint": cache_identity,
+                    "geometry_hint": geometry_hash,
                     "cache_identity": molecule_identity,
                     "cache_identity_source": cache_identity_source,
                 },
@@ -479,6 +436,11 @@ class JobQueue:
         """
         log_context = _cache_log_context_from_request_params(request_params)
         with db_session() as session:
+            if session.bind.dialect.name == "postgresql":
+                session.execute(
+                    text("SELECT pg_advisory_xact_lock(hashtextextended(:key, 0))"),
+                    {"key": cache_key},
+                )
             cached_job = self._reuse_cached_job_if_valid(
                 session,
                 cache_key,
@@ -569,15 +531,11 @@ class JobQueue:
                 if job is None:
                     continue
 
-                if self._active_job_is_stale(job):
-                    self._mark_active_job_stale(job)
-                    session.flush()
-                    continue
-
                 job.status = JobStatus.RUNNING
                 job.started_at = datetime.now(UTC)
                 job.worker_id = worker_id
                 job.attempt_count += 1
+                job.attempt_token = uuid.uuid4().hex
                 session.flush()
 
                 logger.info(
@@ -596,7 +554,9 @@ class JobQueue:
         result_meta: dict[str, Any],
         artifact_paths: list[str],
         compute_time_ms: float,
-    ) -> None:
+        *,
+        attempt_token: str,
+    ) -> bool:
         """Mark job as completed and create cache entry.
 
         Args:
@@ -606,11 +566,27 @@ class JobQueue:
             compute_time_ms: Computation time in milliseconds
         """
         with db_session() as session:
-            job = session.get(Job, job_id)
-            if job is None:
-                logger.error("Job not found for completion", job_id=job_id[:12])
-                return
+            job = session.execute(
+                select(Job).where(Job.id == job_id).with_for_update()
+            ).scalar_one_or_none()
+            if (
+                job is None
+                or job.status != JobStatus.RUNNING
+                or not attempt_token
+                or job.attempt_token != attempt_token
+            ):
+                return False
+            root = self.cache_dir / job.cache_key / attempt_token
+            if not artifact_paths or any(
+                Path(f).name != f or not (root / f).is_file() for f in artifact_paths
+            ):
+                raise ValueError("Incomplete attempt artifacts")
+            from moleculens.compute.result_validation import load_validated
 
+            load_validated(
+                job.request_params.get("job_type", "orbital"), root, result_meta, job.request_params
+            )
+            result_meta = dict(result_meta, _artifact_dir=attempt_token)
             job.status = JobStatus.DONE
             job.completed_at = datetime.now(UTC)
             job.result_meta = result_meta
@@ -637,7 +613,9 @@ class JobQueue:
                 compute_time_ms=compute_time_ms,
             )
 
-    def fail_job(self, job_id: str, error_message: str) -> None:
+            return True
+
+    def fail_job(self, job_id: str, error_message: str, *, attempt_token: str) -> bool:
         """Mark job as failed.
 
         Args:
@@ -645,11 +623,16 @@ class JobQueue:
             error_message: Error description
         """
         with db_session() as session:
-            job = session.get(Job, job_id)
-            if job is None:
-                logger.error("Job not found for failure", job_id=job_id[:12])
-                return
-
+            job = session.execute(
+                select(Job).where(Job.id == job_id).with_for_update()
+            ).scalar_one_or_none()
+            if (
+                job is None
+                or job.status != JobStatus.RUNNING
+                or not attempt_token
+                or job.attempt_token != attempt_token
+            ):
+                return False
             job.status = JobStatus.ERROR
             job.completed_at = datetime.now(UTC)
             job.error_message = error_message
@@ -659,6 +642,8 @@ class JobQueue:
                 job_id=job_id[:12],
                 error=error_message[:200],
             )
+
+            return True
 
     def _update_job_params(self, job_id: str, params: dict[str, Any]) -> None:
         """Update job request parameters.
@@ -705,7 +690,9 @@ class JobQueue:
         if filename not in cache_entry.artifact_paths:
             return None
 
-        full_path = self.cache_dir / cache_key / filename
+        full_path = (
+            self.cache_dir / cache_key / cache_entry.result_meta.get("_artifact_dir", "") / filename
+        )
         if full_path.exists():
             return full_path
 

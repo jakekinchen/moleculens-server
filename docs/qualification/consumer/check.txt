@@ -1,0 +1,41 @@
+
+> moleculens@0.1.0 check /Users/kelly/.openclaw/workspace/projects/moleculens-go-contract
+> pnpm theme:check && pnpm format:ratchet && pnpm slop:ratchet && pnpm lint:ci && pnpm typecheck
+
+
+> moleculens@0.1.0 theme:check /Users/kelly/.openclaw/workspace/projects/moleculens-go-contract
+> tsx scripts/generate-theme-tokens.ts --check
+
+
+> moleculens@0.1.0 format:ratchet /Users/kelly/.openclaw/workspace/projects/moleculens-go-contract
+> node tools/ratchet/prettier-check-changed.mjs
+
+Prettier ratchet OK (36 files checked)
+
+> moleculens@0.1.0 slop:ratchet /Users/kelly/.openclaw/workspace/projects/moleculens-go-contract
+> node tools/ratchet/slop-check-changed.mjs
+
+Slop check OK (24 files checked)
+
+> moleculens@0.1.0 lint:ci /Users/kelly/.openclaw/workspace/projects/moleculens-go-contract
+> pnpm lint:ratchet && pnpm lint:unused-disable:changed && pnpm lint:any:ratchet
+
+
+> moleculens@0.1.0 lint:ratchet /Users/kelly/.openclaw/workspace/projects/moleculens-go-contract
+> node tools/ratchet/eslint-ratchet.mjs
+
+ESLint ratchet OK (warnings: 0, baseline: 12)
+
+> moleculens@0.1.0 lint:unused-disable:changed /Users/kelly/.openclaw/workspace/projects/moleculens-go-contract
+> node tools/ratchet/eslint-unused-disable-changed.mjs
+
+Unused-disable check OK (33 files checked)
+
+> moleculens@0.1.0 lint:any:ratchet /Users/kelly/.openclaw/workspace/projects/moleculens-go-contract
+> node tools/ratchet/no-explicit-any-ratchet.mjs
+
+No-explicit-any ratchet OK (24 files checked)
+
+> moleculens@0.1.0 typecheck /Users/kelly/.openclaw/workspace/projects/moleculens-go-contract
+> tsc --noEmit
+

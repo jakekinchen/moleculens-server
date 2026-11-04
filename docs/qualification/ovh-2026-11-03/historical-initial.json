@@ -1,0 +1,38 @@
+{
+  "startedAt": "2026-11-04T00:30:28.019261+00:00",
+  "cases": [
+    {
+      "legacyJobId": "f8911833-6a6c-4e86-86a2-2790335ecd38",
+      "path": "/v1/orbitals",
+      "jobId": "g_de5bc9f3e93192157ef5d96983c96fbd",
+      "response": {
+        "cacheKey": "7bd0e2f4757452eb2c2b12ab568bc0a30b343382283ee9567c62e2e11be5e29d",
+        "cached": false,
+        "createdAt": "2026-11-04T00:30:28.059537Z",
+        "errorMessage": "adapter process: attempt disk budget exceeded",
+        "jobId": "g_de5bc9f3e93192157ef5d96983c96fbd",
+        "status": "error"
+      },
+      "elapsedSeconds": 105.66531922100012,
+      "terminal": true
+    },
+    {
+      "legacyJobId": "54dab9cd-de73-470e-975e-999b24780b1a",
+      "path": "/v1/conformers",
+      "jobId": "g_4037b7528646e4179cbf179fc785fa23",
+      "response": {
+        "cacheKey": "ab81d7af1a4ff413196ea969ccb6af4ad9eb3c19ea1dfbd42c767e10e7c89cea",
+        "cached": false,
+        "createdAt": "2026-11-04T00:30:28.088206Z",
+        "errorMessage": "adapter process: context deadline exceeded",
+        "jobId": "g_4037b7528646e4179cbf179fc785fa23",
+        "status": "failed"
+      },
+      "elapsedSeconds": 45.64887326500002,
+      "terminal": true
+    }
+  ],
+  "scope": "Replay of the largest historical orbital and slowest historical conformer inputs against the unchanged 4-GB profile; fixture qualification alone did not establish these cases.",
+  "passed": false,
+  "finishedAt": "2026-11-04T00:32:14.151579+00:00"
+}

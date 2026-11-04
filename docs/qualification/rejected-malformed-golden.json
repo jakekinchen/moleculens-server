@@ -1,0 +1,35 @@
+{
+  "api": "http://127.0.0.1:58081",
+  "cases": [
+    {
+      "kind": "orbital",
+      "jobId": "g_25110434ba3d5d4392aa65b529bffda2",
+      "cacheKey": "da3a76e62c52a822c95d384ebfbb94844fe05561a990edd80f6dc7b5c41b7dd2",
+      "states": [
+        "pending",
+        "running",
+        "done"
+      ],
+      "wallSeconds": 2.4697845000046073,
+      "computeTimeMs": 1996.010440000191,
+      "energiesEv": {
+        "homo": -10.563260910270138,
+        "lumo": 17.326845773797654
+      },
+      "densityVertices": 516,
+      "cacheReuseVerified": true
+    },
+    {
+      "kind": "electrostatics",
+      "jobId": "g_7f6b3170f2865f75cdce01bef50e26ff",
+      "cacheKey": "c44c909abf573fefcab7149285e9a079c4b1c69d01417100c909d7f20ddb539e",
+      "states": [
+        "pending",
+        "running",
+        "error"
+      ],
+      "wallSeconds": 0.8149271250003949,
+      "computeTimeMs": null
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+[
+  {
+    "name": "/moleculens-vps1-postgres-1",
+    "containerId": "4de989c49e761b3a564391d067def66c2c8afa430952bdf4f56684fc08feae5f",
+    "image": "sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777",
+    "startedAt": "2026-11-03T20:19:35.15600121Z",
+    "oomKilled": false,
+    "restartCount": 0,
+    "memoryLimitBytes": 268435456,
+    "nanoCpus": 250000000,
+    "pidsLimit": 64,
+    "readonlyRootfs": false,
+    "user": ""
+  },
+  {
+    "name": "/moleculens-vps1-api-1",
+    "containerId": "f682470c436ede260c6072587f56ce47efb3a712734d4cab1d0fd81f4de7ce97",
+    "image": "sha256:a54c9f890d208e0a0a4b06f7b1c1096847d695ecc32250bac38930ec96f62574",
+    "startedAt": "2026-11-03T20:29:27.536039473Z",
+    "oomKilled": false,
+    "restartCount": 0,
+    "memoryLimitBytes": 536870912,
+    "nanoCpus": 250000000,
+    "pidsLimit": 32,
+    "readonlyRootfs": true,
+    "user": "65532:65532"
+  },
+  {
+    "name": "/moleculens-vps1-chemistry-1",
+    "containerId": "40ffa0f89231141db894dde0bc0a728bfc44d865834e9e3f1ee304016770790c",
+    "image": "sha256:8a5608c6b4d068e1970e621c644eec069c1cab4726dfbec69b6cb0e458dc7e14",
+    "startedAt": "2026-11-03T20:31:28.789806086Z",
+    "oomKilled": false,
+    "restartCount": 0,
+    "memoryLimitBytes": 1879048192,
+    "nanoCpus": 1000000000,
+    "pidsLimit": 128,
+    "readonlyRootfs": true,
+    "user": "65532:65532"
+  },
+  {
+    "name": "/moleculens-vps1-short-1",
+    "containerId": "c864b97679219fc8bf1b7b6481d68d36eff7144a47c0a6261cf81e893bda8007",
+    "image": "sha256:8a5608c6b4d068e1970e621c644eec069c1cab4726dfbec69b6cb0e458dc7e14",
+    "startedAt": "2026-11-03T20:29:27.535525371Z",
+    "oomKilled": false,
+    "restartCount": 0,
+    "memoryLimitBytes": 805306368,
+    "nanoCpus": 1000000000,
+    "pidsLimit": 128,
+    "readonlyRootfs": true,
+    "user": "65532:65532"
+  },
+  {
+    "name": "/moleculens-vps1-caddy-1",
+    "containerId": "48c66e3171620a617cf6ef9d011026b4a93d974880745abede5d484227464b03",
+    "image": "sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d",
+    "startedAt": "2026-11-03T20:29:27.536553575Z",
+    "oomKilled": false,
+    "restartCount": 0,
+    "memoryLimitBytes": 100663296,
+    "nanoCpus": 100000000,
+    "pidsLimit": 32,
+    "readonlyRootfs": true,
+    "user": "65532:65532"
+  }
+]

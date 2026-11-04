@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from moleculens import __version__
 from moleculens.api.conformers_routes import router as conformers_router
 from moleculens.api.electrostatics_routes import router as electrostatics_router
+from moleculens.api.nomenclature_routes import router as nomenclature_router
 from moleculens.api.routes import router
 from moleculens.core import cache_metrics, get_logger, settings, setup_logging
 from moleculens.db import init_db
@@ -39,6 +40,7 @@ def create_app() -> FastAPI:
     app.include_router(router)
     app.include_router(electrostatics_router)
     app.include_router(conformers_router)
+    app.include_router(nomenclature_router)
 
     @app.on_event("startup")
     async def startup_event() -> None:

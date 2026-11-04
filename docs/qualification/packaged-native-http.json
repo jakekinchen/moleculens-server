@@ -1,0 +1,73 @@
+{
+  "api": "http://127.0.0.1:58082",
+  "cases": [
+    {
+      "kind": "orbital",
+      "jobId": "g_70d5302d415f0612c9c29bc6f7ca3b0c",
+      "cacheKey": "2f240691d0465a2dd8c0832e2e010287bfefff9084b078e61bfc3f961f54de2a",
+      "states": [
+        "pending",
+        "running",
+        "done"
+      ],
+      "wallSeconds": 2.955119416001253,
+      "computeTimeMs": 2218.91130899985,
+      "energiesEv": {
+        "homo": -10.563260910270138,
+        "lumo": 17.326845773797654
+      },
+      "densityVertices": 516,
+      "cacheReuseVerified": true
+    },
+    {
+      "kind": "electrostatics",
+      "jobId": "g_e7aa92100cc8f4bc3c9f7613983b2bc9",
+      "cacheKey": "da4237e3bfe687fd23b1d8a02d508ce93b33e2c45f53df5dbce080a5927f34fb",
+      "states": [
+        "pending",
+        "running",
+        "done"
+      ],
+      "wallSeconds": 2.2932832910009893,
+      "computeTimeMs": 1730.5294329999015,
+      "chargeModel": "rdkit-gasteiger-condensed-h",
+      "dipoleDebye": 0.9967814647612881,
+      "cacheReuseVerified": true
+    },
+    {
+      "kind": "electrostatics-xtb",
+      "jobId": "g_84b16c7026d900bd80f26ae7eda3a4d0",
+      "cacheKey": "edbb3e109ed1c5b6e0c405749a4169172469a795e4b8dd4d4edcc876aa1eb32a",
+      "states": [
+        "pending",
+        "running",
+        "done"
+      ],
+      "wallSeconds": 2.287267375009833,
+      "computeTimeMs": 1609.4402589997117,
+      "chargeModel": "xtb-gfn2",
+      "dipoleDebye": 2.073027298339103,
+      "cacheReuseVerified": true
+    },
+    {
+      "kind": "conformer",
+      "jobId": "g_65cfcfca466bdee6a102ea00b6402c62",
+      "cacheKey": "39f0a27581ffa8d2234d046c54711a042bebc80c325f9b08c0f386c1768fc8a7",
+      "states": [
+        "pending",
+        "done"
+      ],
+      "wallSeconds": 2.2208372080058325,
+      "computeTimeMs": 1664.5704439997644,
+      "quality": "optimized",
+      "cacheReuseVerified": true
+    }
+  ],
+  "nomenclature": {
+    "displayName": "ethanol",
+    "verified": true,
+    "opsinStatus": "matched",
+    "engineVersion": "0.1.2",
+    "rdkitVersion": "2026.03.4"
+  }
+}

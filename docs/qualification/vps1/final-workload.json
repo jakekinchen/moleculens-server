@@ -1,0 +1,137 @@
+{
+  "cases": [
+    {
+      "case": "caffeine-conformer-during-psi4",
+      "jobId": "g_319675c020e455fa1efb0dc6daeb5231",
+      "status": "done",
+      "wallSeconds": 2.618137374985963,
+      "computeTimeMs": 1812.6865589999852,
+      "meta": {
+        "addHs": false,
+        "embedStatus": "embedded",
+        "geomVersion": "etkdgv3",
+        "hasMetal": false,
+        "maxAttempts": 10,
+        "maxOptIters": 200,
+        "method": "etkdg_v3",
+        "opt": "mmff",
+        "optStatus": "optimized",
+        "quality": "optimized"
+      }
+    },
+    {
+      "case": "caffeine-24-atoms-b3lyp-6-31g(d)-orbitals-density",
+      "jobId": "g_d16c521b04c579a99dd4cf706c92253a",
+      "status": "done",
+      "wallSeconds": 67.08067270799074,
+      "computeTimeMs": 66449.77775999997,
+      "meta": {
+        "basis": "6-31g(d)",
+        "charge": 0,
+        "computeTimeMs": 65528.25140953064,
+        "densityIsovalue": 0.01,
+        "gridSpacingAngstrom": 0.25,
+        "method": "b3lyp",
+        "multiplicity": 1,
+        "psi4NumThreads": 1,
+        "totalEnergy": -680.3712676247128
+      },
+      "densityVertices": 3806
+    },
+    {
+      "case": "dense-caffeine-gasteiger",
+      "jobId": "g_5dec53e6ed945426c5415d08676bb040",
+      "status": "done",
+      "wallSeconds": 2.9544129580026492,
+      "computeTimeMs": 2273.440836999953,
+      "meta": {
+        "chargeModel": "rdkit-gasteiger-condensed-h",
+        "method": "gasteiger",
+        "molecularCharge": 0,
+        "multiplicity": 1,
+        "sdfHash": "ef785c3cb48f01df",
+        "timingsMs": {
+          "charges": 203.91178131103516,
+          "potential": 27.228355407714844,
+          "surface": 536.5040302276611,
+          "total": 786.4303588867188
+        }
+      },
+      "surfaceVertices": 44622
+    },
+    {
+      "case": "caffeine-xtb",
+      "jobId": "g_2c0cdffed2993f6e259d08e4ea9678b7",
+      "status": "done",
+      "wallSeconds": 2.363601374992868,
+      "computeTimeMs": 1673.622099000113,
+      "meta": {
+        "chargeModel": "xtb-gfn2",
+        "method": "xtb-gfn2",
+        "molecularCharge": 0,
+        "multiplicity": 1,
+        "sdfHash": "29bab2d8669f6e5d",
+        "timingsMs": {
+          "charges": 182.11960792541504,
+          "potential": 4.554510116577148,
+          "surface": 78.66787910461426,
+          "total": 283.9934825897217
+        }
+      },
+      "surfaceVertices": 7320
+    },
+    {
+      "case": "aspirin-21-atoms-after-SIGKILL",
+      "jobId": "g_b87c766fd4925489222c9afd022bb3d2",
+      "status": "done",
+      "wallSeconds": 81.55063579199486,
+      "computeTimeMs": 50679.33290999986,
+      "meta": {
+        "basis": "6-31g(d)",
+        "charge": 0,
+        "computeTimeMs": 49795.241594314575,
+        "densityIsovalue": 0.01,
+        "gridSpacingAngstrom": 0.25,
+        "method": "b3lyp",
+        "multiplicity": 1,
+        "psi4NumThreads": 1,
+        "totalEnergy": -648.6900653117553
+      },
+      "densityVertices": 3724
+    }
+  ],
+  "scope": "local 2-CPU/4-GiB VM; Linux amd64 images under Rosetta; not an OVH CPU benchmark",
+  "responsiveness": {
+    "namingSeconds": 5.064430625003297,
+    "naming": "benzoic acid",
+    "opsinStatus": "matched",
+    "longJobStateAfterShortWork": "running",
+    "distinctWorkerOwners": true,
+    "pollCount": 637,
+    "maximumPollSeconds": 0.20839825001894496,
+    "meanPollSeconds": 0.0035719985773405307,
+    "explicitBusyReadResponsesRetried": 0,
+    "busyRetryBudgetSeconds": 2
+  },
+  "interruption": {
+    "jobId": "g_b87c766fd4925489222c9afd022bb3d2",
+    "before": {
+      "attempt": 1,
+      "token": "[redacted qualification attempt 1]",
+      "owner": "worker-a5cfdcc97f1d98d8bad4e8e3f2152c1b",
+      "state": "running"
+    },
+    "after": {
+      "attempt": 2,
+      "token": "[redacted qualification attempt 2]",
+      "owner": "worker-f2076a1742790e1ce1c3abf1beef1557",
+      "state": "done"
+    },
+    "reapedPID": 0,
+    "exitCode": 137,
+    "recovery": "manual container restart, then automatic fenced lease recovery"
+  },
+  "passed": true,
+  "attemptIdentitiesDistinctVerified": true,
+  "attemptIdentitiesRedacted": true
+}

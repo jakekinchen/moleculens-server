@@ -1,0 +1,22 @@
+{
+  "observedAt": "2026-11-04T03:38:58.951665+00:00",
+  "api": "https://api.moleculens.com",
+  "frontend": "https://www.moleculens.com",
+  "apiIPv4": "135.148.205.154",
+  "dnsTTLSeconds": 300,
+  "authoritativeAndTwoPublicResolversVerified": true,
+  "apiAAAARecords": 0,
+  "trustedDirectOVHHTTPS": true,
+  "readyVersion": "go-2",
+  "productionFrontendGoAndHistoricalReadsPassed": true,
+  "metricsHTTPStatus": 404,
+  "corsPreflightHTTPStatus": 204,
+  "frontendDeployment": "dpl_4yFotHi51jQfRy5pXbVdjphFPMjw",
+  "frontendSource": "f897ed31c1a8feebf2ec0922f13c83b935021c77",
+  "oldIPForwardsGo": true,
+  "oldAPIAndWorkerStopped": true,
+  "historicalFilesUnchanged": 5414,
+  "lateLoggingFlagsSynchronized": 12,
+  "largestConformerReplay": "still running with a two-hour deadline; excluded from passed capacity claims",
+  "passed": true
+}

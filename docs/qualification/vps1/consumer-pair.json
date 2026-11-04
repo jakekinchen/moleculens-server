@@ -1,0 +1,13 @@
+{
+  "consumerApplicationRevision": "7c8254ab465032098f3ca8d55b76b895e76747fe",
+  "consumerHandoffRevision": "76c5b419e933bd0ea5d42fbf868c9704b5e59ca7",
+  "consumerBranch": "agent/go-consumer-compatibility-20261103",
+  "consumerWorktree": "/Users/kelly/.openclaw/workspace/projects/moleculens-go-contract",
+  "serverApplicationRevision": "e2abc7bc814de5acb7ef9992029b29f3990a9235",
+  "apiImage": "sha256:a54c9f890d208e0a0a4b06f7b1c1096847d695ecc32250bac38930ec96f62574",
+  "upstream": "http://127.0.0.1:58083",
+  "actualIntegrationTestsPassed": 7,
+  "transport": "Next route handlers through Caddy to Go API, actual PostgreSQL and native artifacts",
+  "mocked": "premium/access-control dependencies only",
+  "deployed": false
+}

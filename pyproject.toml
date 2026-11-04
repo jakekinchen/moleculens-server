@@ -17,6 +17,7 @@ dependencies = [
     "numpy>=1.26.0",
     "scikit-image>=0.24.0",
     "httpx>=0.28.0",
+    "openclatura[opsin]==0.1.2",
     "structlog>=24.4.0",
 ]
 
@@ -38,6 +39,7 @@ worker = [
 [project.scripts]
 moleculens-api = "moleculens.api.main:run"
 moleculens-worker = "moleculens.worker.main:run"
+moleculens-nomenclature-benchmark = "moleculens.compute.nomenclature_benchmark:main"
 
 [build-system]
 requires = ["hatchling"]

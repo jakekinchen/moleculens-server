@@ -1,0 +1,17 @@
+{
+  "consumerRevision": "7c8254ab465032098f3ca8d55b76b895e76747fe",
+  "consumerBranch": "agent/go-consumer-compatibility-20261103",
+  "consumerWorktree": "/Users/kelly/.openclaw/workspace/projects/moleculens-go-contract",
+  "preservedOverlayRevision": "be8db3f2",
+  "pairedServerApplicationRevision": "718696e22f30b658815f093b19c02d7df2567f3a",
+  "node": "24.14.0",
+  "pnpm": "9.12.3",
+  "check": "passed",
+  "build": "passed",
+  "targetedSuites": 17,
+  "targetedTestsPassed": 52,
+  "actualConsumerToGoIntegrationTestsPassed": 7,
+  "regressionsFailedBeforeFix": 8,
+  "originalSourceFilesPreserved": 24,
+  "deployed": false
+}

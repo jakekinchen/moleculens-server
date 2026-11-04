@@ -1,0 +1,73 @@
+{
+  "api": "https://vps-12a3a763.vps.ovh.us",
+  "cases": [
+    {
+      "kind": "orbital",
+      "jobId": "g_b3e8cd859c6b32b4e82b3192525ee3c2",
+      "cacheKey": "cda339b598c8d9d910d55eda6e3d00f161984afb845dca4b8e73096106524afc",
+      "states": [
+        "pending",
+        "running",
+        "done"
+      ],
+      "wallSeconds": 5.986729350000132,
+      "computeTimeMs": 5027.830927999275,
+      "energiesEv": {
+        "homo": -10.563260910270238,
+        "lumo": 17.326845773795267
+      },
+      "densityVertices": 516,
+      "cacheReuseVerified": true
+    },
+    {
+      "kind": "electrostatics",
+      "jobId": "g_3bdf9459e65f1944e12270eecc2a49ca",
+      "cacheKey": "edb2ce023596ab9f7ef6372c4ffedc638a000f457ae6f9a2b671fb12bea818fd",
+      "states": [
+        "pending",
+        "running",
+        "done"
+      ],
+      "wallSeconds": 4.206123484999807,
+      "computeTimeMs": 3359.708619999765,
+      "chargeModel": "rdkit-gasteiger-condensed-h",
+      "dipoleDebye": 0.9967814647612881,
+      "cacheReuseVerified": true
+    },
+    {
+      "kind": "electrostatics-xtb",
+      "jobId": "g_ab823a3be54bd94c64186bf35fb05805",
+      "cacheKey": "74d94fe0a5410ff681eb1ae0dc0404569da45b3c86d5938d8525799753f2b87f",
+      "states": [
+        "pending",
+        "running",
+        "done"
+      ],
+      "wallSeconds": 3.6722960670003886,
+      "computeTimeMs": 2919.065344000046,
+      "chargeModel": "xtb-gfn2",
+      "dipoleDebye": 2.073027298339103,
+      "cacheReuseVerified": true
+    },
+    {
+      "kind": "conformer",
+      "jobId": "g_eb95251996ae6a35de19c84146881361",
+      "cacheKey": "cd6b80db0ef2bb29378980581a466825bfd70e6553b6b50e571ba67f8902b8ae",
+      "states": [
+        "pending",
+        "done"
+      ],
+      "wallSeconds": 3.7497213489996284,
+      "computeTimeMs": 2953.5744429995248,
+      "quality": "optimized",
+      "cacheReuseVerified": true
+    }
+  ],
+  "nomenclature": {
+    "displayName": "ethanol",
+    "verified": true,
+    "opsinStatus": "matched",
+    "engineVersion": "0.1.2",
+    "rdkitVersion": "2026.03.4"
+  }
+}

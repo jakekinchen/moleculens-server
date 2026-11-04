@@ -1,0 +1,17 @@
+{
+  "colima": {
+    "name": "moleculens-qualification",
+    "status": "Stopped",
+    "arch": "aarch64",
+    "cpus": 4,
+    "memory": 8589934592,
+    "disk": 32212254720,
+    "runtime": "docker"
+  },
+  "postgresql": "stopped; pg_ctl reports no server running",
+  "qualificationPortsListening": [],
+  "containers": "All task qualification/build containers removed; Docker ps was empty before VM shutdown",
+  "preserved": "Stopped VM retains exact qualified release images; ignored build/ contains the Linux binary. Isolated scientific artifacts remain under ignored var/qualification-artifacts/.",
+  "brevUsed": false,
+  "paidHostingChanges": false
+}

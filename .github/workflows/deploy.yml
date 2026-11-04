@@ -1,53 +1,26 @@
-name: Deploy
-
+# Production cutover is deliberately separate from merge/build. The prior
+# push-to-main SSH job bypassed host-key verification and ran unfenced legacy
+# deployment. It cannot safely perform this schema/process ownership migration.
+name: Prepare Go Release
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
-
 jobs:
-  deploy:
-    name: Deploy to Production
+  package:
     runs-on: ubuntu-latest
-    environment: production
-
+    timeout-minutes: 30
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          echo "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
-
-      - name: Deploy to server
-        env:
-          DEPLOY_COMPOSE_FILE: ${{ secrets.DEPLOY_COMPOSE_FILE }}
-          DEPLOY_ENV: ${{ secrets.DEPLOY_ENV }}
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-        run: |
-          SSH_OPTS="-i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o ServerAliveInterval=15 -o ServerAliveCountMax=4"
-
-          printf '%s\n' "$DEPLOY_ENV" | timeout 60 ssh $SSH_OPTS "${DEPLOY_USER}@${DEPLOY_HOST}" "cat > '${DEPLOY_PATH}/.env'"
-
-          timeout 2700 ssh $SSH_OPTS "${DEPLOY_USER}@${DEPLOY_HOST}" "
-            set -euo pipefail
-            cd ${DEPLOY_PATH}
-            
-            # Pull latest code
-            echo [deploy] starting in \$(pwd)
-            git fetch origin main
-            git reset --hard origin/main
-            echo [deploy] using commit \$(git rev-parse --short HEAD)
-
-            export DEPLOY_COMPOSE_FILE='${DEPLOY_COMPOSE_FILE}'
-            ./scripts/deploy.sh
-          "
-
-      - name: Notify on failure
-        if: failure()
-        run: echo "Deployment failed\! Check logs for details."
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.3'
+      - run: scripts/build_go_release.sh
+      - name: Export immutable local images for reviewed deployment
+        run: docker save moleculens-go-api:candidate moleculens-go-worker:candidate | gzip > build/moleculens-images.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: moleculens-go-release
+          path: |
+            build/release.json
+            build/moleculens-images.tar.gz
+            compose.go.yml
+            docs/go-release-runbook.md

@@ -1,0 +1,36 @@
+?   	github.com/jakekinchen/moleculens-server/cmd/moleculens	[no test files]
+ok  	github.com/jakekinchen/moleculens-server/internal/contract	1.441s
+ok  	github.com/jakekinchen/moleculens-server/internal/engine	2.795s
+--- FAIL: TestLegacyNamespaceReadOnlyAndWorkerIsolation (0.71s)
+    api_test.go:151: failed to connect to `user=moleculens database=moleculens`:
+        	127.0.0.1:55440 (127.0.0.1): tls error: server refused TLS connection
+        	127.0.0.1:55440 (127.0.0.1): server error: FATAL: sorry, too many clients already (SQLSTATE 53300)
+--- FAIL: TestOrphanCollectionPreservesPublishedAndAmbiguous (0.30s)
+    api_test.go:191: failed to connect to `user=moleculens database=moleculens`:
+        	127.0.0.1:55440 (127.0.0.1): tls error: server refused TLS connection
+        	127.0.0.1:55440 (127.0.0.1): server error: FATAL: sorry, too many clients already (SQLSTATE 53300)
+FAIL
+FAIL	github.com/jakekinchen/moleculens-server/internal/httpapi	5.537s
+--- FAIL: TestPostgresClaimsFencingAndAbsorbingTerminal (0.20s)
+    store_test.go:92: failed to connect to `user=moleculens database=moleculens`:
+        	127.0.0.1:55440 (127.0.0.1): tls error: server refused TLS connection
+        	127.0.0.1:55440 (127.0.0.1): server error: FATAL: the database system is in recovery mode (SQLSTATE 57P03)
+--- FAIL: TestPendingDoesNotExpireAndRetryExhausts (0.09s)
+    store_test.go:169: failed to connect to `user=moleculens database=moleculens`:
+        	127.0.0.1:55440 (127.0.0.1): tls error: server refused TLS connection
+        	127.0.0.1:55440 (127.0.0.1): server error: FATAL: the database system is in recovery mode (SQLSTATE 57P03)
+--- FAIL: TestLegacyUniqueIndexRejectsRace (0.02s)
+    store_test.go:206: failed to connect to `user=moleculens database=moleculens`:
+        	127.0.0.1:55440 (127.0.0.1): tls error: server refused TLS connection
+        	127.0.0.1:55440 (127.0.0.1): server error: FATAL: the database system is in recovery mode (SQLSTATE 57P03)
+--- FAIL: TestInterruptedProcessRetriesWithNewAuthority (0.09s)
+    store_test.go:219: failed to connect to `user=moleculens database=moleculens`:
+        	127.0.0.1:55440 (127.0.0.1): tls error: server refused TLS connection
+        	127.0.0.1:55440 (127.0.0.1): server error: FATAL: the database system is in recovery mode (SQLSTATE 57P03)
+--- FAIL: TestPostgresWorkerClassesPreserveReadinessAndClaimOwnership (0.02s)
+    worker_classes_test.go:13: failed to connect to `user=moleculens database=moleculens`:
+        	127.0.0.1:55440 (127.0.0.1): tls error: server refused TLS connection
+        	127.0.0.1:55440 (127.0.0.1): server error: FATAL: the database system is in recovery mode (SQLSTATE 57P03)
+FAIL
+FAIL	github.com/jakekinchen/moleculens-server/internal/store	14.454s
+FAIL

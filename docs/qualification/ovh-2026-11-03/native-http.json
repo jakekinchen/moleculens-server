@@ -1,0 +1,73 @@
+{
+  "api": "http://127.0.0.1:58083",
+  "cases": [
+    {
+      "kind": "orbital",
+      "jobId": "g_22eddb52447a0f4b8ce5ce661689ee4a",
+      "cacheKey": "2f240691d0465a2dd8c0832e2e010287bfefff9084b078e61bfc3f961f54de2a",
+      "states": [
+        "pending",
+        "running",
+        "done"
+      ],
+      "wallSeconds": 4.402893163000016,
+      "computeTimeMs": 3565.6861680000134,
+      "energiesEv": {
+        "homo": -10.563260910270238,
+        "lumo": 17.326845773795267
+      },
+      "densityVertices": 516,
+      "cacheReuseVerified": true
+    },
+    {
+      "kind": "electrostatics",
+      "jobId": "g_4fff0c2ec7c20491cb5930987c5f00c0",
+      "cacheKey": "da4237e3bfe687fd23b1d8a02d508ce93b33e2c45f53df5dbce080a5927f34fb",
+      "states": [
+        "pending",
+        "running",
+        "done"
+      ],
+      "wallSeconds": 3.2671904880000113,
+      "computeTimeMs": 2469.5782689999814,
+      "chargeModel": "rdkit-gasteiger-condensed-h",
+      "dipoleDebye": 0.9967814647612881,
+      "cacheReuseVerified": true
+    },
+    {
+      "kind": "electrostatics-xtb",
+      "jobId": "g_c0bcdb4d7619fdc98d0a76b866556b9d",
+      "cacheKey": "edbb3e109ed1c5b6e0c405749a4169172469a795e4b8dd4d4edcc876aa1eb32a",
+      "states": [
+        "pending",
+        "running",
+        "done"
+      ],
+      "wallSeconds": 2.6556216449999965,
+      "computeTimeMs": 2194.9014679999837,
+      "chargeModel": "xtb-gfn2",
+      "dipoleDebye": 2.073027298339103,
+      "cacheReuseVerified": true
+    },
+    {
+      "kind": "conformer",
+      "jobId": "g_2bda6bac895494ee8b2bc808dee18659",
+      "cacheKey": "39f0a27581ffa8d2234d046c54711a042bebc80c325f9b08c0f386c1768fc8a7",
+      "states": [
+        "pending",
+        "done"
+      ],
+      "wallSeconds": 3.077185104999984,
+      "computeTimeMs": 2346.8939100000057,
+      "quality": "optimized",
+      "cacheReuseVerified": true
+    }
+  ],
+  "nomenclature": {
+    "displayName": "ethanol",
+    "verified": true,
+    "opsinStatus": "matched",
+    "engineVersion": "0.1.2",
+    "rdkitVersion": "2026.03.4"
+  }
+}

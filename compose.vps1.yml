@@ -1,0 +1,130 @@
+# Optional 2-CPU/4-GiB candidate. Prebuild images; run explicit init and migrate first.
+# The normal qualified deployment remains in compose.go.yml.
+name: moleculens-vps1
+x-app: &app
+  platform: linux/amd64
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  restart: unless-stopped
+  logging:
+    driver: local
+    options: {max-size: 10m, max-file: '3'}
+services:
+  postgres:
+    image: postgres:16.14-alpine@sha256:57c72fd2a128e416c7fcc499958864df5301e940bca0a56f58fddf30ffc07777
+    platform: linux/amd64
+    environment:
+      POSTGRES_USER: moleculens
+      POSTGRES_DB: moleculens
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
+      POSTGRES_INITDB_ARGS: --encoding=UTF8
+    command: [postgres, -c, shared_buffers=32MB, -c, work_mem=2MB, -c, maintenance_work_mem=32MB, -c, max_connections=32, -c, max_wal_size=256MB]
+    volumes: [postgres:/var/lib/postgresql/data]
+    mem_limit: 256m
+    cpus: 0.25
+    pids_limit: 64
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 2s
+      timeout: 2s
+      retries: 30
+    logging:
+      driver: local
+      options: {max-size: 10m, max-file: '3'}
+  init-storage:
+    <<: *app
+    image: ${MOLECULENS_WORKER_IMAGE:?set immutable worker image}
+    profiles: [operations]
+    restart: 'no'
+    user: '0:0'
+    cap_add: [CHOWN]
+    entrypoint: [/opt/conda/bin/python, -c]
+    command: ["import os; [(os.makedirs(p,exist_ok=True),os.chown(p,65532,65532)) for p in ['/artifacts','/legacy','/data','/config']]"]
+    volumes: [artifacts:/artifacts, legacy:/legacy, caddy-data:/data, caddy-config:/config]
+  migrate:
+    <<: *app
+    image: ${MOLECULENS_API_IMAGE:?set immutable API image}
+    profiles: [operations]
+    restart: 'no'
+    command: [migrate]
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?set encoded PostgreSQL URL on the private network}
+    depends_on:
+      postgres: {condition: service_healthy}
+  gc:
+    <<: *app
+    image: ${MOLECULENS_API_IMAGE:?set immutable API image}
+    profiles: [operations]
+    restart: 'no'
+    command: [gc, --artifacts, /var/go-artifacts, --legacy-artifacts, /var/legacy-artifacts]
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?set encoded PostgreSQL URL on the private network}
+      GOMEMLIMIT: 64MiB
+    volumes: [artifacts:/var/go-artifacts]
+    mem_limit: 128m
+    cpus: 0.1
+    pids_limit: 32
+  api:
+    <<: *app
+    image: ${MOLECULENS_API_IMAGE:?set immutable API image}
+    command: [api, --artifacts, /var/go-artifacts, --legacy-artifacts, /var/legacy-artifacts, --capacity, '12']
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?set encoded PostgreSQL URL on the private network}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+    volumes: [artifacts:/var/go-artifacts:ro, legacy:/var/legacy-artifacts:ro]
+    mem_limit: 512m
+    cpus: 0.25
+    pids_limit: 32
+    stop_grace_period: 25s
+  chemistry:
+    <<: *app
+    image: ${MOLECULENS_WORKER_IMAGE:?set immutable worker image}
+    command: [worker, --kinds, 'orbital,electrostatics', --artifacts, /var/go-artifacts, --python, /opt/conda/bin/python, --python-path, /app/src, --timeout, 2h, --attempt-disk-mib, '8192', --lease, 30s]
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?set encoded PostgreSQL URL on the private network}
+      ENGINE_BUILD: ${MOLECULENS_WORKER_IMAGE:?set immutable worker image}
+    volumes: [artifacts:/var/go-artifacts]
+    init: true
+    mem_limit: 1792m
+    cpus: 1.0
+    pids_limit: 128
+    tmpfs: ['/tmp:size=64m,mode=1777']
+    stop_grace_period: 20s
+  short:
+    <<: *app
+    image: ${MOLECULENS_WORKER_IMAGE:?set immutable worker image}
+    command: [worker, --kinds, 'conformer,nomenclature', --artifacts, /var/go-artifacts, --python, /opt/conda/bin/python, --python-path, /app/src, --timeout, 2h, --attempt-disk-mib, '1024', --lease, 30s]
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?set encoded PostgreSQL URL on the private network}
+      ENGINE_BUILD: ${MOLECULENS_WORKER_IMAGE:?set immutable worker image}
+      GOMEMLIMIT: 128MiB
+    volumes: [artifacts:/var/go-artifacts]
+    init: true
+    mem_limit: 768m
+    cpus: 1.0
+    pids_limit: 128
+    tmpfs: ['/tmp:size=64m,mode=1777']
+    stop_grace_period: 20s
+  caddy:
+    <<: *app
+    image: caddy:2.10.2-alpine@sha256:4c6e91c6ed0e2fa03efd5b44747b625fec79bc9cd06ac5235a779726618e530d
+    user: '65532:65532'
+    cap_add: [NET_BIND_SERVICE]
+    environment:
+      API_HOST: ${API_HOST:?set API hostname; use :80 only for local HTTP qualification}
+      GOMEMLIMIT: 48MiB
+    ports:
+      - ${HTTP_BIND:-127.0.0.1}:${HTTP_PORT:-80}:80
+      - ${HTTP_BIND:-127.0.0.1}:${HTTPS_PORT:-443}:443
+    volumes: [./docker/Caddyfile.vps1:/etc/caddy/Caddyfile:ro, caddy-data:/data, caddy-config:/config]
+    mem_limit: 96m
+    cpus: 0.1
+    pids_limit: 32
+volumes:
+  postgres:
+  artifacts:
+  legacy:
+  caddy-data:
+  caddy-config:

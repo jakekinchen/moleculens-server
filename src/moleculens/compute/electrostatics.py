@@ -120,15 +120,30 @@ def run_electrostatics_computation(
     if method.lower().startswith("xtb"):
         charge_result = calculate_charges_xtb(molecule, charge, multiplicity)
 
-    if charge_result is None:
-        # Fall back to Gasteiger
-        logger.info("Using Gasteiger charges (xTB not available or failed)")
-        try:
-            charge_result = calculate_charges_gasteiger(molecule, sdf_content)
-        except ImportError as e:
+    if method.lower().startswith("xtb") and charge_result is None:
+        raise ElectrostaticsComputationError(
+            "Requested xTB engine is unavailable; no implicit fallback"
+        )
+    if method.lower() == "gasteiger":
+        if multiplicity != 1:
+            raise ElectrostaticsComputationError("Gasteiger open-shell requests are unsupported")
+        from rdkit import Chem
+
+        graph = Chem.MolFromMolBlock(sdf_content, sanitize=True, removeHs=False)
+        if graph is None or Chem.GetFormalCharge(graph) != charge:
             raise ElectrostaticsComputationError(
-                "Neither xTB nor RDKit available for charge calculation"
-            ) from e
+                "Requested charge disagrees with the molecular graph"
+            )
+        charge_result = calculate_charges_gasteiger(molecule, sdf_content)
+    if charge_result is None:
+        raise ElectrostaticsComputationError("Unsupported charge method")
+    if (
+        charge_result.charges.shape != (molecule.num_atoms,)
+        or not np.isfinite(charge_result.charges).all()
+        or not np.isfinite(charge_result.dipole_vector).all()
+        or not np.isclose(charge_result.charges.sum(), charge, atol=1e-4)
+    ):
+        raise ElectrostaticsComputationError("Invalid charge-engine result")
 
     timings["charges"] = (time.time() - t0) * 1000
 

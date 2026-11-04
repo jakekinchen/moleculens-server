@@ -1,0 +1,66 @@
+{
+  "api": "http://127.0.0.1:58083",
+  "cases": [
+    {
+      "kind": "orbital",
+      "jobId": "g_3a6c3e34f8f9970094e7c5c3b47a7a59",
+      "cacheKey": "2f240691d0465a2dd8c0832e2e010287bfefff9084b078e61bfc3f961f54de2a",
+      "states": [
+        "done"
+      ],
+      "wallSeconds": 0.023901000007754192,
+      "computeTimeMs": 2145.6326569999646,
+      "energiesEv": {
+        "homo": -10.563260910270138,
+        "lumo": 17.326845773797654
+      },
+      "densityVertices": 516,
+      "cacheReuseVerified": true
+    },
+    {
+      "kind": "electrostatics",
+      "jobId": "g_70eac3a947ef1fba26c60dd2324a818d",
+      "cacheKey": "da4237e3bfe687fd23b1d8a02d508ce93b33e2c45f53df5dbce080a5927f34fb",
+      "states": [
+        "done"
+      ],
+      "wallSeconds": 0.003065708006033674,
+      "computeTimeMs": 1655.9770009999966,
+      "chargeModel": "rdkit-gasteiger-condensed-h",
+      "dipoleDebye": 0.9967814647612881,
+      "cacheReuseVerified": true
+    },
+    {
+      "kind": "electrostatics-xtb",
+      "jobId": "g_015b830d90f688b79f4c5e797bc62340",
+      "cacheKey": "edbb3e109ed1c5b6e0c405749a4169172469a795e4b8dd4d4edcc876aa1eb32a",
+      "states": [
+        "done"
+      ],
+      "wallSeconds": 0.007524666987592354,
+      "computeTimeMs": 1649.4207979999942,
+      "chargeModel": "xtb-gfn2",
+      "dipoleDebye": 2.073027298339103,
+      "cacheReuseVerified": true
+    },
+    {
+      "kind": "conformer",
+      "jobId": "g_c2c91f8c075f10d18bdeddff3442e07f",
+      "cacheKey": "39f0a27581ffa8d2234d046c54711a042bebc80c325f9b08c0f386c1768fc8a7",
+      "states": [
+        "done"
+      ],
+      "wallSeconds": 0.0027564589981921017,
+      "computeTimeMs": 3400.526487000036,
+      "quality": "optimized",
+      "cacheReuseVerified": true
+    }
+  ],
+  "nomenclature": {
+    "displayName": "ethanol",
+    "verified": true,
+    "opsinStatus": "matched",
+    "engineVersion": "0.1.2",
+    "rdkitVersion": "2026.03.4"
+  }
+}

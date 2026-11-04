@@ -1,0 +1,32 @@
+{
+  "os": "PRETTY_NAME=\"Ubuntu 24.04.4 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"24.04\"\nVERSION=\"24.04.4 LTS (Noble Numbat)\"\nVERSION_CODENAME=noble\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=noble\nLOGO=ubuntu-logo\n",
+  "cpus": 2,
+  "memoryTotalBytes": 4095635456,
+  "swapTotalBytes": 0,
+  "sampleIntervalSeconds": 0.5,
+  "minimumMemAvailableBytes": 2263568384,
+  "maximumSimultaneousCgroupCurrentBytes": 1516552192,
+  "containerPeakBytes": {
+    "moleculens-vps1-caddy-1": 67272704,
+    "moleculens-vps1-postgres-1": 190341120,
+    "moleculens-vps1-api-1": 50806784,
+    "moleculens-vps1-short-1": 303022080,
+    "moleculens-vps1-chemistry-1": 1248337920
+  },
+  "containerOOMEvents": {
+    "moleculens-vps1-caddy-1": 0,
+    "moleculens-vps1-postgres-1": 0,
+    "moleculens-vps1-api-1": 0,
+    "moleculens-vps1-short-1": 0,
+    "moleculens-vps1-chemistry-1": 0
+  },
+  "volumePeakLogicalBytes": {
+    "artifacts": 49963008,
+    "postgres": 80996635
+  },
+  "maximumSingleAttemptLogicalBytes": 43577699,
+  "samples": 895,
+  "elapsedSeconds": 459.990424458,
+  "diskUsageBytes": "Filesystem       1B-blocks       Used   Available Use% Mounted on\n/dev/root      19682557952 1253801984 18411978752   7% /\n/dev/vdb1      31524294656 7056261120 22840750080  24% /var/lib/docker",
+  "finalSwapUsedBytes": 0
+}

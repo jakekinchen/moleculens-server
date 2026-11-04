@@ -124,8 +124,8 @@ def _extract_isosurface(
             spacing=spacing,
             allow_degenerate=False,
         )
-    except (ValueError, RuntimeError):
-        return None
+    except (ValueError, RuntimeError) as exc:
+        raise ValueError("Isosurface extraction failed") from exc
 
     if len(verts) == 0:
         return None

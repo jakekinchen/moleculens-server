@@ -1,0 +1,22 @@
+{
+  "startedAt": "2026-11-04T01:43:42.424300+00:00",
+  "scope": "Actual OVH HTTPS ingress replacement with retained qualified API; existing Go and legacy jobs remain readable; admission quiesced.",
+  "rollbackPOSTStatus": 503,
+  "reads": [
+    {
+      "path": "/v1/conformers/jobs/g_2bda6bac895494ee8b2bc808dee18659",
+      "httpStatus": 200,
+      "sha256": "eb877f3d34b367a570dc025f907e2c7de225c68e143f56f7b3905a9901a482c4",
+      "byteIdentical": true
+    },
+    {
+      "path": "/v1/conformers/jobs/00eb114d-2d15-491f-a317-696861560eb0",
+      "httpStatus": 200,
+      "sha256": "b77767bef2d1e91d291f720812fe31f29987198a02472b38e419821bbf76e197",
+      "byteIdentical": true
+    }
+  ],
+  "passed": true,
+  "originalIngressRestored": true,
+  "finishedAt": "2026-11-04T01:43:48.115789+00:00"
+}

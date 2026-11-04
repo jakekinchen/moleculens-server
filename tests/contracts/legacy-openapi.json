@@ -1,0 +1,1851 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Moleculens API",
+    "description": "Psi4 orbital/density overlays for Three.js",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "description": "Check service health.",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics/cache": {
+      "get": {
+        "summary": "Get Cache Metrics",
+        "description": "Return in-process cache metrics for the current API instance.",
+        "operationId": "get_cache_metrics_metrics_cache_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CacheMetricsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orbitals/compute": {
+      "post": {
+        "summary": "Compute Orbitals",
+        "description": "Submit an orbital computation job.\n\nIf a cached result exists, returns immediately with cached=true.\nOtherwise, queues the job and returns job_id for polling.",
+        "operationId": "compute_orbitals_v1_orbitals_compute_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComputeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orbitals/jobs/{job_id}": {
+      "get": {
+        "summary": "Get Job Status",
+        "description": "Get status and result of a computation job.",
+        "operationId": "get_job_status_v1_orbitals_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orbitals/artifacts/{cache_key}/{filename}": {
+      "get": {
+        "summary": "Get Artifact",
+        "description": "Download a cached artifact file.\n\nUseful for downloading raw cube files or other artifacts.",
+        "operationId": "get_artifact_v1_orbitals_artifacts__cache_key___filename__get",
+        "parameters": [
+          {
+            "name": "cache_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Cache Key"
+            }
+          },
+          {
+            "name": "filename",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Filename"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/electrostatics/compute": {
+      "post": {
+        "tags": [
+          "electrostatics"
+        ],
+        "summary": "Compute Electrostatics",
+        "description": "Submit an electrostatics computation job.\n\nComputes:\n- Molecular surface mesh colored by electrostatic potential (ESP/MEP)\n- Dipole moment vector and magnitude\n\nIf a cached result exists, returns immediately with cached=true.\nOtherwise, queues the job and returns job_id for polling.",
+        "operationId": "compute_electrostatics_v1_electrostatics_compute_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ElectrostaticsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectrostaticsJobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/electrostatics/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "electrostatics"
+        ],
+        "summary": "Get Electrostatics Job",
+        "description": "Get status and result of an electrostatics computation job.",
+        "operationId": "get_electrostatics_job_v1_electrostatics_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ElectrostaticsJobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/conformers/compute": {
+      "post": {
+        "tags": [
+          "conformers"
+        ],
+        "summary": "Compute Conformer",
+        "description": "Submit a conformer computation job.",
+        "operationId": "compute_conformer_v1_conformers_compute_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConformerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConformerJobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/conformers/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "conformers"
+        ],
+        "summary": "Get Conformer Job",
+        "description": "Get status and result of a conformer computation job.",
+        "operationId": "get_conformer_job_v1_conformers_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConformerJobResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/conformers/artifacts/{cache_key}/{filename}": {
+      "get": {
+        "tags": [
+          "conformers"
+        ],
+        "summary": "Get Conformer Artifact",
+        "description": "Download a cached conformer artifact.",
+        "operationId": "get_conformer_artifact_v1_conformers_artifacts__cache_key___filename__get",
+        "parameters": [
+          {
+            "name": "cache_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Cache Key"
+            }
+          },
+          {
+            "name": "filename",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Filename"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/nomenclature/explain": {
+      "post": {
+        "tags": [
+          "nomenclature"
+        ],
+        "summary": "Explain",
+        "description": "Explain a generated name and map referenced atoms to viewer order when possible.",
+        "operationId": "explain_v1_nomenclature_explain_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NomenclatureRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NomenclatureResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CacheMetricsResponse": {
+        "properties": {
+          "startedAt": {
+            "type": "string",
+            "title": "Startedat"
+          },
+          "recordedAt": {
+            "type": "string",
+            "title": "Recordedat"
+          },
+          "uptimeSeconds": {
+            "type": "number",
+            "title": "Uptimeseconds"
+          },
+          "totalEvents": {
+            "type": "integer",
+            "title": "Totalevents"
+          },
+          "events": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Events"
+          },
+          "jobTypes": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Jobtypes"
+          },
+          "identitySources": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Identitysources"
+          }
+        },
+        "type": "object",
+        "required": [
+          "startedAt",
+          "recordedAt",
+          "uptimeSeconds",
+          "totalEvents",
+          "events",
+          "jobTypes",
+          "identitySources"
+        ],
+        "title": "CacheMetricsResponse",
+        "description": "In-process cache metrics snapshot."
+      },
+      "ComputeRequest": {
+        "properties": {
+          "sdfContent": {
+            "type": "string",
+            "minLength": 10,
+            "title": "Sdfcontent",
+            "description": "3D SDF file content with atom coordinates"
+          },
+          "method": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "title": "Method",
+            "description": "Computational method (scf, b3lyp, hf, etc.)",
+            "default": "scf"
+          },
+          "basis": {
+            "type": "string",
+            "title": "Basis",
+            "description": "Basis set (sto-3g, 6-31g*, cc-pvdz, etc.)",
+            "default": "sto-3g"
+          },
+          "orbitals": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Orbitals",
+            "description": "Orbital types to compute",
+            "default": [
+              "homo",
+              "lumo"
+            ]
+          },
+          "gridSpacing": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.1,
+            "title": "Gridspacing",
+            "description": "Grid spacing in Angstrom",
+            "default": 0.25
+          },
+          "isovalue": {
+            "type": "number",
+            "maximum": 0.5,
+            "minimum": 0.001,
+            "title": "Isovalue",
+            "description": "Isosurface value for mesh generation",
+            "default": 0.05
+          },
+          "inchiKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inchikey",
+            "description": "Optional InChIKey for cache deduplication"
+          },
+          "clientCacheKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clientcachekey",
+            "description": "Optional client-provided cache key"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sdfContent"
+        ],
+        "title": "ComputeRequest",
+        "description": "Request schema for orbital computation."
+      },
+      "ComputeResult": {
+        "properties": {
+          "orbitals": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/OrbitalResponse"
+            },
+            "type": "object",
+            "title": "Orbitals"
+          },
+          "density": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MeshDataResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ComputeResultMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "meta"
+        ],
+        "title": "ComputeResult",
+        "description": "Full computation result."
+      },
+      "ComputeResultMeta": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "basis": {
+            "type": "string",
+            "title": "Basis"
+          },
+          "gridSpacingAngstrom": {
+            "type": "number",
+            "title": "Gridspacingangstrom"
+          },
+          "psi4NumThreads": {
+            "type": "integer",
+            "title": "Psi4Numthreads"
+          },
+          "computeTimeMs": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Computetimems"
+          }
+        },
+        "type": "object",
+        "required": [
+          "method",
+          "basis",
+          "gridSpacingAngstrom",
+          "psi4NumThreads"
+        ],
+        "title": "ComputeResultMeta",
+        "description": "Metadata about the computation."
+      },
+      "ConformerJobResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "done",
+              "failed"
+            ],
+            "title": "Status"
+          },
+          "cacheKey": {
+            "type": "string",
+            "title": "Cachekey"
+          },
+          "jobId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Jobid"
+          },
+          "sdf3d": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sdf3D"
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConformerMeta"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "timingMs": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ConformerTimingMs"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "errorMessage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Errormessage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "cacheKey"
+        ],
+        "title": "ConformerJobResponse",
+        "description": "Response schema for conformer job status/result."
+      },
+      "ConformerMeta": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "opt": {
+            "type": "string",
+            "title": "Opt"
+          },
+          "maxAttempts": {
+            "type": "integer",
+            "title": "Maxattempts"
+          },
+          "maxOptIters": {
+            "type": "integer",
+            "title": "Maxoptiters"
+          },
+          "addHs": {
+            "type": "boolean",
+            "title": "Addhs"
+          },
+          "geomVersion": {
+            "type": "string",
+            "title": "Geomversion"
+          },
+          "quality": {
+            "type": "string",
+            "title": "Quality"
+          },
+          "hasMetal": {
+            "type": "boolean",
+            "title": "Hasmetal"
+          },
+          "embedStatus": {
+            "type": "string",
+            "title": "Embedstatus"
+          },
+          "optStatus": {
+            "type": "string",
+            "title": "Optstatus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "method",
+          "opt",
+          "maxAttempts",
+          "maxOptIters",
+          "addHs",
+          "geomVersion",
+          "quality",
+          "hasMetal",
+          "embedStatus",
+          "optStatus"
+        ],
+        "title": "ConformerMeta",
+        "description": "Metadata for conformer computation."
+      },
+      "ConformerParams": {
+        "properties": {
+          "method": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "title": "Method",
+            "description": "Embedding method (etkdg_v3, etkdg_v2, etkdg)",
+            "default": "etkdg_v3"
+          },
+          "opt": {
+            "type": "string",
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "title": "Opt",
+            "description": "Optimization method (uff, mmff, none)",
+            "default": "uff"
+          },
+          "maxAttempts": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Maxattempts",
+            "default": 10
+          },
+          "maxOptIters": {
+            "type": "integer",
+            "maximum": 2000.0,
+            "minimum": 0.0,
+            "title": "Maxoptiters",
+            "default": 200
+          },
+          "addHs": {
+            "type": "boolean",
+            "title": "Addhs",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "ConformerParams",
+        "description": "Parameters for conformer generation."
+      },
+      "ConformerRequest": {
+        "properties": {
+          "molblock2d": {
+            "type": "string",
+            "minLength": 10,
+            "title": "Molblock2D",
+            "description": "2D molblock/SDF content with atom ordering"
+          },
+          "params": {
+            "$ref": "#/components/schemas/ConformerParams"
+          },
+          "waitMs": {
+            "type": "integer",
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Waitms",
+            "description": "Max time to wait for job completion",
+            "default": 0
+          },
+          "geomVersion": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Geomversion",
+            "description": "Geometry cache version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "molblock2d",
+          "geomVersion"
+        ],
+        "title": "ConformerRequest",
+        "description": "Request schema for conformer computation."
+      },
+      "ConformerTimingMs": {
+        "properties": {
+          "embed": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Embed"
+          },
+          "opt": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opt"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "title": "ConformerTimingMs",
+        "description": "Timing information for conformer computation."
+      },
+      "DipoleResponse": {
+        "properties": {
+          "originAngstrom": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Originangstrom"
+          },
+          "vectorDebye": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Vectordebye"
+          },
+          "magnitudeDebye": {
+            "type": "number",
+            "title": "Magnitudedebye"
+          },
+          "convention": {
+            "type": "string",
+            "enum": [
+              "physics",
+              "chemistry"
+            ],
+            "title": "Convention"
+          }
+        },
+        "type": "object",
+        "required": [
+          "originAngstrom",
+          "vectorDebye",
+          "magnitudeDebye",
+          "convention"
+        ],
+        "title": "DipoleResponse",
+        "description": "Response schema for dipole moment."
+      },
+      "ESPMeshResponse": {
+        "properties": {
+          "vertices": {
+            "type": "string",
+            "title": "Vertices",
+            "description": "Base64 gzipped Float32Array of vertices [x0,y0,z0,...]"
+          },
+          "normals": {
+            "type": "string",
+            "title": "Normals",
+            "description": "Base64 gzipped Float32Array of normals"
+          },
+          "indices": {
+            "type": "string",
+            "title": "Indices",
+            "description": "Base64 gzipped Uint32Array of triangle indices"
+          },
+          "potential": {
+            "type": "string",
+            "title": "Potential",
+            "description": "Base64 gzipped Float32Array of per-vertex potential"
+          },
+          "vertexCount": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Vertexcount"
+          },
+          "triangleCount": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Trianglecount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "vertices",
+          "normals",
+          "indices",
+          "potential",
+          "vertexCount",
+          "triangleCount"
+        ],
+        "title": "ESPMeshResponse",
+        "description": "Response schema for ESP surface mesh."
+      },
+      "ElectrostaticsJobResponse": {
+        "properties": {
+          "cached": {
+            "type": "boolean",
+            "title": "Cached",
+            "default": false
+          },
+          "jobId": {
+            "type": "string",
+            "title": "Jobid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "queued",
+              "running",
+              "done",
+              "error"
+            ],
+            "title": "Status"
+          },
+          "cacheKey": {
+            "type": "string",
+            "title": "Cachekey"
+          },
+          "progress": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 100.0,
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Progress"
+          },
+          "step": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ElectrostaticsResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "errorMessage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Errormessage"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Createdat"
+          },
+          "computeTimeMs": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Computetimems"
+          }
+        },
+        "type": "object",
+        "required": [
+          "jobId",
+          "status",
+          "cacheKey"
+        ],
+        "title": "ElectrostaticsJobResponse",
+        "description": "Response schema for electrostatics job status/result."
+      },
+      "ElectrostaticsMeta": {
+        "properties": {
+          "chargeModel": {
+            "type": "string",
+            "title": "Chargemodel"
+          },
+          "method": {
+            "type": "string",
+            "title": "Method"
+          },
+          "timingsMs": {
+            "$ref": "#/components/schemas/ElectrostaticsTimings"
+          },
+          "sdfHash": {
+            "type": "string",
+            "title": "Sdfhash"
+          },
+          "molecularCharge": {
+            "type": "integer",
+            "title": "Molecularcharge",
+            "default": 0
+          },
+          "multiplicity": {
+            "type": "integer",
+            "title": "Multiplicity",
+            "default": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "chargeModel",
+          "method",
+          "timingsMs",
+          "sdfHash"
+        ],
+        "title": "ElectrostaticsMeta",
+        "description": "Metadata for electrostatics computation."
+      },
+      "ElectrostaticsRequest": {
+        "properties": {
+          "sdfContent": {
+            "type": "string",
+            "minLength": 10,
+            "title": "Sdfcontent",
+            "description": "3D SDF file content with atom coordinates"
+          },
+          "smiles": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Smiles",
+            "description": "Optional SMILES string"
+          },
+          "inchiKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inchikey",
+            "description": "Optional InChIKey for cache deduplication"
+          },
+          "clientCacheKey": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clientcachekey",
+            "description": "Optional client-provided cache key"
+          },
+          "charge": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": -10.0,
+            "title": "Charge",
+            "description": "Total molecular charge",
+            "default": 0
+          },
+          "multiplicity": {
+            "type": "integer",
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Multiplicity",
+            "description": "Spin multiplicity",
+            "default": 1
+          },
+          "method": {
+            "type": "string",
+            "pattern": "^(xtb-gfn2|xtb|gasteiger)$",
+            "title": "Method",
+            "description": "Charge method: 'xtb-gfn2' or 'gasteiger'",
+            "default": "xtb-gfn2"
+          },
+          "surface": {
+            "$ref": "#/components/schemas/SurfaceParams"
+          },
+          "potential": {
+            "$ref": "#/components/schemas/PotentialParams"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sdfContent"
+        ],
+        "title": "ElectrostaticsRequest",
+        "description": "Request schema for electrostatics computation."
+      },
+      "ElectrostaticsResult": {
+        "properties": {
+          "surface": {
+            "$ref": "#/components/schemas/SurfaceResponse"
+          },
+          "dipole": {
+            "$ref": "#/components/schemas/DipoleResponse"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ElectrostaticsMeta"
+          }
+        },
+        "type": "object",
+        "required": [
+          "surface",
+          "dipole",
+          "meta"
+        ],
+        "title": "ElectrostaticsResult",
+        "description": "Full electrostatics computation result."
+      },
+      "ElectrostaticsTimings": {
+        "properties": {
+          "total": {
+            "type": "number",
+            "title": "Total"
+          },
+          "surface": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Surface"
+          },
+          "charges": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Charges"
+          },
+          "potential": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Potential"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total"
+        ],
+        "title": "ElectrostaticsTimings",
+        "description": "Timing information for electrostatics computation."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "healthy",
+              "degraded",
+              "unhealthy"
+            ],
+            "title": "Status"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "database": {
+            "type": "boolean",
+            "title": "Database"
+          },
+          "cacheDir": {
+            "type": "boolean",
+            "title": "Cachedir"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status",
+          "version",
+          "database",
+          "cacheDir"
+        ],
+        "title": "HealthResponse",
+        "description": "Health check response."
+      },
+      "JobResponse": {
+        "properties": {
+          "cached": {
+            "type": "boolean",
+            "title": "Cached",
+            "default": false
+          },
+          "jobId": {
+            "type": "string",
+            "title": "Jobid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "queued",
+              "running",
+              "done",
+              "error"
+            ],
+            "title": "Status"
+          },
+          "cacheKey": {
+            "type": "string",
+            "title": "Cachekey"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ComputeResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "errorMessage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Errormessage"
+          },
+          "createdAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Createdat"
+          },
+          "computeTimeMs": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Computetimems"
+          }
+        },
+        "type": "object",
+        "required": [
+          "jobId",
+          "status",
+          "cacheKey"
+        ],
+        "title": "JobResponse",
+        "description": "Response schema for job status/result."
+      },
+      "MeshDataResponse": {
+        "properties": {
+          "vertices": {
+            "type": "string",
+            "title": "Vertices",
+            "description": "Base64 gzipped Float32Array of vertices"
+          },
+          "normals": {
+            "type": "string",
+            "title": "Normals",
+            "description": "Base64 gzipped Float32Array of normals"
+          },
+          "indices": {
+            "type": "string",
+            "title": "Indices",
+            "description": "Base64 gzipped Uint32Array of triangle indices"
+          },
+          "vertexCount": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Vertexcount"
+          },
+          "triangleCount": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Trianglecount"
+          }
+        },
+        "type": "object",
+        "required": [
+          "vertices",
+          "normals",
+          "indices",
+          "vertexCount",
+          "triangleCount"
+        ],
+        "title": "MeshDataResponse",
+        "description": "Response schema for a single mesh."
+      },
+      "NomenclatureComponent": {
+        "properties": {
+          "phase": {
+            "type": "string",
+            "title": "Phase"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "phase",
+          "text"
+        ],
+        "title": "NomenclatureComponent",
+        "description": "Human-readable explanation line for a naming phase."
+      },
+      "NomenclatureRequest": {
+        "properties": {
+          "smiles": {
+            "type": "string",
+            "maxLength": 4096,
+            "minLength": 1,
+            "title": "Smiles"
+          },
+          "molblock": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2000000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Molblock",
+            "description": "Optional viewer-order molblock used to map engine atoms safely"
+          },
+          "verifyOpsin": {
+            "type": "boolean",
+            "title": "Verifyopsin",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "smiles"
+        ],
+        "title": "NomenclatureRequest",
+        "description": "Request schema for deterministic nomenclature explanation."
+      },
+      "NomenclatureResponse": {
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "title": "Displayname"
+          },
+          "source": {
+            "type": "string",
+            "const": "openclatura",
+            "title": "Source",
+            "default": "openclatura"
+          },
+          "verified": {
+            "type": "boolean",
+            "title": "Verified"
+          },
+          "opsinStatus": {
+            "type": "string",
+            "enum": [
+              "matched",
+              "mismatched",
+              "name_unparseable",
+              "name_empty",
+              "skipped_no_opsin",
+              "skipped_no_java",
+              "error",
+              "not_requested"
+            ],
+            "title": "Opsinstatus"
+          },
+          "rulesHit": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Ruleshit"
+          },
+          "ruleHints": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Rulehints"
+          },
+          "trace": {
+            "items": {
+              "$ref": "#/components/schemas/NomenclatureTraceStep"
+            },
+            "type": "array",
+            "title": "Trace"
+          },
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/NomenclatureComponent"
+            },
+            "type": "array",
+            "title": "Components"
+          },
+          "atomLocants": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Atomlocants"
+          },
+          "mappingStatus": {
+            "type": "string",
+            "enum": [
+              "matched",
+              "unmatched",
+              "not_requested"
+            ],
+            "title": "Mappingstatus"
+          },
+          "engineVersion": {
+            "type": "string",
+            "title": "Engineversion"
+          },
+          "rdkitVersion": {
+            "type": "string",
+            "title": "Rdkitversion"
+          },
+          "experimental": {
+            "type": "boolean",
+            "title": "Experimental",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "displayName",
+          "verified",
+          "opsinStatus",
+          "mappingStatus",
+          "engineVersion",
+          "rdkitVersion"
+        ],
+        "title": "NomenclatureResponse",
+        "description": "Computed name, trace, verification, and safe viewer atom mapping."
+      },
+      "NomenclatureTraceStep": {
+        "properties": {
+          "phase": {
+            "type": "string",
+            "title": "Phase"
+          },
+          "decision": {
+            "type": "string",
+            "title": "Decision"
+          },
+          "reason": {
+            "type": "string",
+            "title": "Reason"
+          },
+          "atoms": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Atoms",
+            "description": "Viewer-order atom indices; empty unless mapping succeeded"
+          },
+          "engineAtoms": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Engineatoms"
+          },
+          "data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "phase",
+          "decision",
+          "reason"
+        ],
+        "title": "NomenclatureTraceStep",
+        "description": "One decision in the naming trace with explicitly separated atom domains."
+      },
+      "OrbitalResponse": {
+        "properties": {
+          "positive": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MeshDataResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "negative": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MeshDataResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "energyEv": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Energyev"
+          },
+          "isovalue": {
+            "type": "number",
+            "title": "Isovalue"
+          }
+        },
+        "type": "object",
+        "required": [
+          "isovalue"
+        ],
+        "title": "OrbitalResponse",
+        "description": "Response schema for a single orbital."
+      },
+      "PotentialParams": {
+        "properties": {
+          "units": {
+            "type": "string",
+            "title": "Units",
+            "default": "kcal/mol/e"
+          },
+          "softeningEpsilon": {
+            "type": "number",
+            "maximum": 2.0,
+            "minimum": 0.1,
+            "title": "Softeningepsilon",
+            "default": 0.3
+          },
+          "clampPercentiles": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Clamppercentiles",
+            "default": [
+              5.0,
+              95.0
+            ]
+          }
+        },
+        "type": "object",
+        "title": "PotentialParams",
+        "description": "Potential calculation parameters."
+      },
+      "PotentialRangeResponse": {
+        "properties": {
+          "min": {
+            "type": "number",
+            "title": "Min"
+          },
+          "max": {
+            "type": "number",
+            "title": "Max"
+          },
+          "p05": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P05"
+          },
+          "p95": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P95"
+          }
+        },
+        "type": "object",
+        "required": [
+          "min",
+          "max"
+        ],
+        "title": "PotentialRangeResponse",
+        "description": "Response schema for potential range statistics."
+      },
+      "SurfaceParams": {
+        "properties": {
+          "gridSpacing": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.1,
+            "title": "Gridspacing",
+            "default": 0.25
+          },
+          "probeRadius": {
+            "type": "number",
+            "maximum": 5.0,
+            "minimum": 0.0,
+            "title": "Proberadius",
+            "default": 1.4
+          },
+          "padding": {
+            "type": "number",
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Padding",
+            "default": 3.0
+          }
+        },
+        "type": "object",
+        "title": "SurfaceParams",
+        "description": "Surface generation parameters."
+      },
+      "SurfaceResponse": {
+        "properties": {
+          "mesh": {
+            "$ref": "#/components/schemas/ESPMeshResponse"
+          },
+          "range": {
+            "$ref": "#/components/schemas/PotentialRangeResponse"
+          },
+          "units": {
+            "$ref": "#/components/schemas/UnitsResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mesh",
+          "range",
+          "units"
+        ],
+        "title": "SurfaceResponse",
+        "description": "Response schema for ESP surface."
+      },
+      "UnitsResponse": {
+        "properties": {
+          "coords": {
+            "type": "string",
+            "title": "Coords",
+            "default": "angstrom"
+          },
+          "potential": {
+            "type": "string",
+            "title": "Potential",
+            "default": "kcal/mol/e"
+          }
+        },
+        "type": "object",
+        "title": "UnitsResponse",
+        "description": "Response schema for units specification."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

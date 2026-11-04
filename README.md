@@ -1,3 +1,8 @@
+> Go migration candidate: see [execution status](docs/implementation-status.md),
+> [protocol and state model](docs/go-protocol.md), and [release/cutover runbook](docs/go-release-runbook.md).
+> `scripts/build_go_release.sh` builds the Go API and supervised native chemistry worker.
+> The legacy automatic deploy script is retired; schema migration is explicit.
+
 # Moleculens Server
 
 Production-ready FastAPI microservice for Psi4 cubeprop orbital/density overlays for Three.js.
@@ -13,6 +18,8 @@ Given a 3D SDF (with coordinates), this service computes molecular orbital overl
 - **Compressed output**: Gzipped base64-encoded typed arrays for efficient transfer
 - **Caching**: Results cached by geometry + parameters for fast repeated queries
 - **Postgres job queue**: Scalable async processing with de-duplication
+- **Experimental nomenclature explanations**: Guarded Openclatura names, deterministic decision
+  traces, OPSIN status, and viewer-safe atom mappings
 
 ## Quick Start
 
@@ -99,6 +106,24 @@ GET /v1/conformers/jobs/{jobId}
 ```http
 GET /v1/conformers/artifacts/{cacheKey}/structure.sdf
 ```
+
+### Explain a systematic name
+
+```http
+POST /v1/nomenclature/explain
+Content-Type: application/json
+
+{
+  "smiles": "CC(=O)Nc1ccccc1",
+  "molblock": "optional viewer-order molblock",
+  "verifyOpsin": true
+}
+```
+
+The endpoint is an experimental educational/fallback surface. It rejects disconnected structures,
+mixtures, transition-metal/coordination structures, and molecules above the initial atom limit.
+`trace[].engineAtoms` always remains in the engine's atom domain; only `trace[].atoms` and
+`atomLocants` may drive viewer highlighting, and they remain empty unless graph mapping succeeds.
 
 ## Response Format
 

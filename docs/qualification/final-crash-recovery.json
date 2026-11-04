@@ -1,0 +1,19 @@
+{
+  "jobId": "g_577aa3c68e0b4e8ff7769100b8d2bc81",
+  "originalAttempt": 1,
+  "finalAttempt": 2,
+  "originalToken": "[redacted qualification attempt 1]",
+  "publishedToken": "[redacted qualification attempt 2]",
+  "containerAfterSIGKILL": {
+    "running": false,
+    "pid": 0,
+    "exitCode": 137
+  },
+  "finalStatus": "done",
+  "samePublicJobId": true,
+  "wallSeconds": 33.15546791700763,
+  "engineBuild": "sha256:a1b340861ed2deb3469423a04f392c63ae90f4f292c14dec6c51f5752949af60",
+  "passed": true,
+  "attemptIdentitiesDistinctVerified": true,
+  "attemptIdentitiesRedacted": true
+}

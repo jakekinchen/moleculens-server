@@ -1,0 +1,25 @@
+Traceback (most recent call last):
+  File "/Users/kelly/Developer/moleculens-server-go/scripts/qualify_go_service.py", line 123, in <module>
+    main()
+    ~~~~^^
+  File "/Users/kelly/Developer/moleculens-server-go/scripts/qualify_go_service.py", line 112, in main
+    naming = call(args.url, "/v1/nomenclature/explain", {"smiles": "CCO", "verifyOpsin": True})
+  File "/Users/kelly/Developer/moleculens-server-go/scripts/qualify_go_service.py", line 17, in call
+    with urllib.request.urlopen(req, timeout=15) as response:
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/kelly/.local/share/uv/python/cpython-3.13.11-macos-aarch64-none/lib/python3.13/urllib/request.py", line 189, in urlopen
+    return opener.open(url, data, timeout)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/Users/kelly/.local/share/uv/python/cpython-3.13.11-macos-aarch64-none/lib/python3.13/urllib/request.py", line 495, in open
+    response = meth(req, response)
+  File "/Users/kelly/.local/share/uv/python/cpython-3.13.11-macos-aarch64-none/lib/python3.13/urllib/request.py", line 604, in http_response
+    response = self.parent.error(
+        'http', request, response, code, msg, hdrs)
+  File "/Users/kelly/.local/share/uv/python/cpython-3.13.11-macos-aarch64-none/lib/python3.13/urllib/request.py", line 533, in error
+    return self._call_chain(*args)
+           ~~~~~~~~~~~~~~~~^^^^^^^
+  File "/Users/kelly/.local/share/uv/python/cpython-3.13.11-macos-aarch64-none/lib/python3.13/urllib/request.py", line 466, in _call_chain
+    result = func(*args)
+  File "/Users/kelly/.local/share/uv/python/cpython-3.13.11-macos-aarch64-none/lib/python3.13/urllib/request.py", line 613, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 422: Unprocessable Entity

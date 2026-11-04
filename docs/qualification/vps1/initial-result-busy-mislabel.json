@@ -1,0 +1,50 @@
+{
+  "cases": [
+    {
+      "case": "caffeine-conformer-during-psi4",
+      "jobId": "g_27a5ff55b6a185b877133a344ded8eee",
+      "status": "done",
+      "wallSeconds": 2.3402650420030113,
+      "computeTimeMs": 1763.503362999927,
+      "meta": {
+        "addHs": false,
+        "embedStatus": "embedded",
+        "geomVersion": "etkdgv3",
+        "hasMetal": false,
+        "maxAttempts": 10,
+        "maxOptIters": 200,
+        "method": "etkdg_v3",
+        "opt": "mmff",
+        "optStatus": "optimized",
+        "quality": "optimized"
+      }
+    },
+    {
+      "case": "caffeine-24-atoms-b3lyp-6-31g(d)-orbitals-density",
+      "jobId": "g_861e08d6a9378b1d0c86ed905329301b",
+      "status": "done",
+      "wallSeconds": 66.47090350001235,
+      "computeTimeMs": 65673.82800799998,
+      "meta": {
+        "basis": "6-31g(d)",
+        "charge": 0,
+        "computeTimeMs": 64775.556325912476,
+        "densityIsovalue": 0.01,
+        "gridSpacingAngstrom": 0.25,
+        "method": "b3lyp",
+        "multiplicity": 1,
+        "psi4NumThreads": 1,
+        "totalEnergy": -680.3712676247128
+      },
+      "densityVertices": 3806
+    }
+  ],
+  "scope": "local 2-CPU/4-GiB VM; Linux amd64 images under Rosetta; not an OVH CPU benchmark",
+  "responsiveness": {
+    "namingSeconds": 0.0037435000122059137,
+    "naming": "benzoic acid",
+    "opsinStatus": "matched",
+    "longJobStateAfterShortWork": "running",
+    "distinctWorkerOwners": true
+  }
+}

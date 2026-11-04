@@ -1,0 +1,9 @@
+{
+  "dump": "/var/backups/moleculens/db-20261103T233219Z.dump",
+  "dumpSHA256": "806487c70587485b91f5a477f8cf52a6cee6fe8a1abb2dcb7ee02ee578650472",
+  "jobRowsByteIdentical": true,
+  "jobRowsSHA256": "87b289f29fe81dcc5809a6aa6574bf7b96dbe277acb795cca9fb2f2d5090910d",
+  "completedJobsVerified": 11,
+  "artifactFilesSHA256Verified": 29,
+  "scope": "Logical dump restored into a separate disposable database; retained artifact bytes match restored manifests. Full OVH snapshot restore is not tested."
+}

@@ -1,0 +1,23 @@
+PASS src/shared/lib/electrostatics/__tests__/electrostaticsClient.sessionCache.test.ts
+PASS src/shared/lib/orbitals/__tests__/orbitalsClient.sessionCache.test.ts
+PASS src/shared/lib/electrostatics/__tests__/electrostaticsClient.polling.test.ts
+PASS src/__tests__/api.nomenclature.explain.test.ts
+PASS src/shared/lib/orbitals/__tests__/orbitalsClient.polling.test.ts
+PASS src/shared/lib/electrostatics/__tests__/electrostaticsClient.inflight.test.ts
+PASS src/shared/lib/orbitals/__tests__/orbitalsClient.inflight.test.ts
+PASS src/shared/lib/orbitals/__tests__/orbitalsClient.cacheKey.test.ts
+PASS src/__tests__/nomenclature.moleculeProfile.test.ts
+PASS src/shared/lib/overlays/__tests__/cacheKey.test.ts
+PASS src/shared/lib/orbitals/__tests__/orbitalsClient.decodeMeshPart.test.ts
+PASS src/app/api/orbitals/schema.test.ts
+PASS src/__tests__/nomenclature.cache.test.ts
+PASS src/shared/lib/overlays/__tests__/goCompatibility.test.ts
+PASS src/shared/lib/conformers/__tests__/conformerClient.test.ts
+PASS src/__tests__/api.compute-go-contract.test.ts
+PASS src/shared/lib/conformers/__tests__/conformerClient.sessionCache.test.ts
+
+Test Suites: 17 passed, 17 total
+Tests:       52 passed, 52 total
+Snapshots:   0 total
+Time:        1.244 s
+Ran all test suites within paths "src/__tests__/api.compute-go-contract.test.ts", "src/app/api/orbitals/schema.test.ts", "src/shared/lib/conformers/__tests__/conformerClient.test.ts", "src/shared/lib/conformers/__tests__/conformerClient.sessionCache.test.ts", "src/shared/lib/orbitals/__tests__/orbitalsClient.cacheKey.test.ts", "src/shared/lib/orbitals/__tests__/orbitalsClient.sessionCache.test.ts", "src/shared/lib/orbitals/__tests__/orbitalsClient.inflight.test.ts", "src/shared/lib/orbitals/__tests__/orbitalsClient.polling.test.ts", "src/shared/lib/orbitals/__tests__/orbitalsClient.decodeMeshPart.test.ts", "src/shared/lib/electrostatics/__tests__/electrostaticsClient.sessionCache.test.ts", "src/shared/lib/electrostatics/__tests__/electrostaticsClient.inflight.test.ts", "src/shared/lib/electrostatics/__tests__/electrostaticsClient.polling.test.ts", "src/shared/lib/overlays/__tests__/cacheKey.test.ts", "src/shared/lib/overlays/__tests__/goCompatibility.test.ts", "src/__tests__/api.nomenclature.explain.test.ts", "src/__tests__/nomenclature.cache.test.ts", "src/__tests__/nomenclature.moleculeProfile.test.ts".

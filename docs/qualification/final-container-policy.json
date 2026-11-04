@@ -1,0 +1,50 @@
+[
+  {
+    "name": "/moleculens-release-api",
+    "image": "sha256:249252444c1e6bc6bac090ad81854d82a826758c1841b435adf945ec02798619",
+    "user": "65532:65532",
+    "readOnlyRootfs": true,
+    "memoryBytes": 536870912,
+    "nanoCpus": 0,
+    "pidsLimit": null,
+    "capDrop": [
+      "ALL"
+    ],
+    "securityOpt": [
+      "no-new-privileges"
+    ],
+    "init": false,
+    "mounts": [
+      {
+        "destination": "/var/go-artifacts",
+        "writable": false
+      },
+      {
+        "destination": "/var/legacy-artifacts",
+        "writable": false
+      }
+    ]
+  },
+  {
+    "name": "/moleculens-release-worker",
+    "image": "sha256:a1b340861ed2deb3469423a04f392c63ae90f4f292c14dec6c51f5752949af60",
+    "user": "65532:65532",
+    "readOnlyRootfs": true,
+    "memoryBytes": 3221225472,
+    "nanoCpus": 2000000000,
+    "pidsLimit": 128,
+    "capDrop": [
+      "ALL"
+    ],
+    "securityOpt": [
+      "no-new-privileges"
+    ],
+    "init": true,
+    "mounts": [
+      {
+        "destination": "/var/go-artifacts",
+        "writable": true
+      }
+    ]
+  }
+]

@@ -1,0 +1,32 @@
+{
+  "os": "PRETTY_NAME=\"Ubuntu 26.04.1 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"26.04\"\nVERSION=\"26.04.1 LTS (Resolute Raccoon)\"\nVERSION_CODENAME=resolute\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=resolute\nLOGO=ubuntu-logo\n",
+  "cpus": 2,
+  "memoryTotalBytes": 4000067584,
+  "swapTotalBytes": 0,
+  "sampleIntervalSeconds": 0.5,
+  "minimumMemAvailableBytes": 1775759360,
+  "maximumSimultaneousCgroupCurrentBytes": 2278588416,
+  "containerPeakBytes": {
+    "moleculens-vps1-api-1": 19730432,
+    "moleculens-vps1-chemistry-1": 1879048192,
+    "moleculens-vps1-short-1": 278028288,
+    "moleculens-vps1-caddy-1": 45522944,
+    "moleculens-vps1-postgres-1": 126201856
+  },
+  "containerOOMEvents": {
+    "moleculens-vps1-api-1": 0,
+    "moleculens-vps1-chemistry-1": 0,
+    "moleculens-vps1-short-1": 0,
+    "moleculens-vps1-caddy-1": 0,
+    "moleculens-vps1-postgres-1": 0
+  },
+  "volumePeakLogicalBytes": {
+    "artifacts": 4512624633,
+    "postgres": 78371612
+  },
+  "maximumSingleAttemptLogicalBytes": 4495376302,
+  "samples": 3749,
+  "elapsedSeconds": 2032.723662026001,
+  "diskUsageBytes": "Filesystem       1B-blocks        Used   Available Use% Mounted on\n/dev/sda1      40424828928 20397510656 20010541056  51% /\n/dev/sda1      40424828928 20397510656 20010541056  51% /",
+  "finalSwapUsedBytes": 0
+}

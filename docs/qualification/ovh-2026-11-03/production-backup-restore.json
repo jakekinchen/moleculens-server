@@ -1,0 +1,25 @@
+{
+  "dump": "/var/backups/moleculens/db-20261104T033340Z.dump",
+  "dumpSHA256": "96ee20004ebe9cb3089a3dead042a399cd844d80f91a05656ffd124351f06979",
+  "jobRowsByteIdentical": true,
+  "jobRowsSHA256": "cf8c952873d0808f97091ed702e8d997167f0c2da50f6ee2d653d936e44777f9",
+  "completedJobsVerified": 23,
+  "artifactFilesSHA256Verified": 60,
+  "scope": "Logical dump restored into a separate disposable database; retained artifact bytes match restored manifests. Full OVH snapshot restore is not tested. In-flight lease/state fields may advance; immutable inputs and all terminal snapshot rows are checked against live data.",
+  "historicalTables": {
+    "jobs": {
+      "rows": 448,
+      "sha256": "264c27956ea50d5fa730d96667db3be05f68ef706bf9b25715fd38ae7e8e18ee"
+    },
+    "cache_entries": {
+      "rows": 439,
+      "sha256": "72b27ce4ed115174c75f0339ad9e30e182c632a13ac2acd6fad9c3364422ce10"
+    }
+  },
+  "historicalArtifactFilesSHA256Verified": 5414,
+  "inflightRowsAtSnapshot": 1,
+  "persistedInputsAndTerminalRowsVerified": true,
+  "offHostCopiesVerified": true,
+  "goArchiveFilesReadbackVerified": 201,
+  "privateWorkspacesExcluded": true
+}

@@ -1,7 +1,5 @@
 """FastAPI route handlers."""
 
-import json
-
 from fastapi import APIRouter, HTTPException, Response
 from fastapi.responses import FileResponse
 
@@ -67,6 +65,9 @@ async def health_check() -> HealthResponse:
     elif not cache_ok:
         status = "degraded"
 
+    if not db_ok or not cache_ok:
+        raise HTTPException(status_code=503, detail={"code": "not_ready", "status": status})
+
     return HealthResponse(
         status=status,  # type: ignore[arg-type]
         version=__version__,
@@ -98,6 +99,9 @@ async def compute_orbitals(request: ComputeRequest) -> JobResponse:
             orbitals=request.orbitals,
             inchi_key=request.inchi_key,
             cache_identity=request.client_cache_key,
+            charge=request.charge,
+            multiplicity=request.multiplicity,
+            density_isovalue=request.density_isovalue,
         )
     except Exception as e:
         logger.error("Failed to submit job", error=str(e))
@@ -129,6 +133,9 @@ async def compute_orbitals(request: ComputeRequest) -> JobResponse:
                 orbitals=request.orbitals,
                 inchi_key=request.inchi_key,
                 cache_identity=request.client_cache_key,
+                charge=request.charge,
+                multiplicity=request.multiplicity,
+                density_isovalue=request.density_isovalue,
             )
             retry_job = job_queue.get_job(retry_job_id)
             if retry_job is None:
@@ -172,7 +179,7 @@ async def compute_orbitals(request: ComputeRequest) -> JobResponse:
 async def get_job_status(job_id: str) -> JobResponse:
     """Get status and result of a computation job."""
     job = job_queue.get_job(job_id)
-    if job is None:
+    if job is None or job.request_params.get("job_type", "orbital") != "orbital":
         raise HTTPException(status_code=404, detail="Job not found")
 
     response = JobResponse(
@@ -187,14 +194,12 @@ async def get_job_status(job_id: str) -> JobResponse:
     if job.status == JobStatus.DONE:
         result = _load_or_invalidate_done_result(job)
         if result is None:
-            return JobResponse(
-                cached=False,
-                jobId=job.id,
-                status="error",
-                cacheKey=job.cache_key,
-                createdAt=job.created_at.isoformat() if job.created_at else None,
-                computeTimeMs=job.compute_time_ms,
-                errorMessage=_missing_result_error(job.cache_key),
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "code": "result_unavailable",
+                    "message": "Completed job artifacts are unavailable",
+                },
             )
 
         response.result = result
@@ -237,7 +242,7 @@ def _load_result(cache_key: str, result_meta: dict | None) -> ComputeResult | No
     if result_meta is None:
         return None
 
-    cache_dir = settings.molecule_cache_dir / cache_key
+    cache_dir = settings.molecule_cache_dir / cache_key / result_meta.get("_artifact_dir", "")
     result_file = cache_dir / "result.json"
 
     if not result_file.exists():
@@ -245,8 +250,9 @@ def _load_result(cache_key: str, result_meta: dict | None) -> ComputeResult | No
         return None
 
     try:
-        with result_file.open() as f:
-            data = json.load(f)
+        from moleculens.compute.result_validation import load_validated
+
+        data = load_validated("orbital", cache_dir, result_meta)
     except Exception as e:
         logger.error("Failed to load result", cache_key=cache_key[:12], error=str(e))
         return None
@@ -298,6 +304,10 @@ def _load_result(cache_key: str, result_meta: dict | None) -> ComputeResult | No
         density=density,
         meta=ComputeResultMeta(
             method=meta.get("method", "unknown"),
+            charge=meta.get("charge", 0),
+            multiplicity=meta.get("multiplicity", 1),
+            densityIsovalue=meta.get("densityIsovalue"),
+            totalEnergy=meta.get("totalEnergy"),
             basis=meta.get("basis", "unknown"),
             gridSpacingAngstrom=meta.get("gridSpacingAngstrom", 0.25),
             psi4NumThreads=meta.get("psi4NumThreads", 1),

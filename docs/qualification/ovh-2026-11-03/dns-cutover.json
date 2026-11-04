@@ -1,0 +1,45 @@
+{
+  "observedAt": "2026-11-04T03:27:05.065583+00:00",
+  "records": [
+    {
+      "resolver": "gigi.ns.cloudflare.com.",
+      "type": "A",
+      "answer": "; <<>> DiG 9.10.6 <<>> +time=2 +tries=1 @gigi.ns.cloudflare.com. api.moleculens.com A +noall +answer\n; (6 servers found)\n;; global options: +cmd\napi.moleculens.com.\t300\tIN\tA\t135.148.205.154"
+    },
+    {
+      "resolver": "gigi.ns.cloudflare.com.",
+      "type": "AAAA",
+      "answer": "; <<>> DiG 9.10.6 <<>> +time=2 +tries=1 @gigi.ns.cloudflare.com. api.moleculens.com AAAA +noall +answer\n; (6 servers found)\n;; global options: +cmd"
+    },
+    {
+      "resolver": "troy.ns.cloudflare.com.",
+      "type": "A",
+      "answer": "; <<>> DiG 9.10.6 <<>> +time=2 +tries=1 @troy.ns.cloudflare.com. api.moleculens.com A +noall +answer\n; (6 servers found)\n;; global options: +cmd\napi.moleculens.com.\t300\tIN\tA\t135.148.205.154"
+    },
+    {
+      "resolver": "troy.ns.cloudflare.com.",
+      "type": "AAAA",
+      "answer": "; <<>> DiG 9.10.6 <<>> +time=2 +tries=1 @troy.ns.cloudflare.com. api.moleculens.com AAAA +noall +answer\n; (6 servers found)\n;; global options: +cmd"
+    },
+    {
+      "resolver": "1.1.1.1",
+      "type": "A",
+      "answer": "; <<>> DiG 9.10.6 <<>> +time=2 +tries=1 @1.1.1.1 api.moleculens.com A +noall +answer\n; (1 server found)\n;; global options: +cmd\napi.moleculens.com.\t300\tIN\tA\t135.148.205.154"
+    },
+    {
+      "resolver": "1.1.1.1",
+      "type": "AAAA",
+      "answer": "; <<>> DiG 9.10.6 <<>> +time=2 +tries=1 @1.1.1.1 api.moleculens.com AAAA +noall +answer\n; (1 server found)\n;; global options: +cmd"
+    },
+    {
+      "resolver": "8.8.8.8",
+      "type": "A",
+      "answer": "; <<>> DiG 9.10.6 <<>> +time=2 +tries=1 @8.8.8.8 api.moleculens.com A +noall +answer\n; (1 server found)\n;; global options: +cmd\napi.moleculens.com.\t300\tIN\tA\t135.148.205.154"
+    },
+    {
+      "resolver": "8.8.8.8",
+      "type": "AAAA",
+      "answer": "; <<>> DiG 9.10.6 <<>> +time=2 +tries=1 @8.8.8.8 api.moleculens.com AAAA +noall +answer\n; (1 server found)\n;; global options: +cmd"
+    }
+  ]
+}
